@@ -1,3 +1,7 @@
+<h1 align="left">
+  <img width="500" alt="Mittens" src="images/mittens_logo.svg">
+</h1>
+
 # Mittens
 Mittens is a -command line- tool that can be used as a warm-up routine against an http application over HTTP (REST) or/and gRPC.
 
