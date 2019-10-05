@@ -47,26 +47,29 @@ _Note_: For both HTTP and gRPC requests you can use {today} and {today+n} to obt
 ## How to build and run
 Mittens is written in Go and the simplest way to run it is as a cmd application. It receives a number of command line arguments (also see "Required arguments") including the requests that will be sent to warm up the main service. Depending on the format of the requests this will invoke REST or/and gRPC calls.
 
-### Go
-#### Build project
+The project uses [Go Modules](https://github.com/golang/go/wiki/Modules). 
+We provide a [Makefile](Makefile) which can be used to generate an executable binary and a Dockerfile if you prefer to run using Docker.
 
-This project uses [Go 1.11 Modules](https://github.com/golang/go/wiki/Modules). To enable Go Modules:
+### Binary
+#### Build binary executable
 
-    GO111MODULE=on
-
-You can build the project using the following command:
+To build the project run the following:
     
     make build
 
-#### Run service locally
-    
-    ./build/mittens -readinessPath=/ready -durationSeconds=60 -httpTimeoutSeconds=15 -concurrency=3 -httpHeader=X-Forwarded-Proto=https -warmupRequest=http:get:/hotel/potatoes -warmupRequest=http:get:/hotel/tomatoes -warmupRequest="http:post:/hotel/aubergines:{\"foo\":\"bar\"}" -warmupRequest="grpc:service/method:{\"foo\":\"bar\"}" -requestDelayMilliseconds=10
-    
-#### Run tests locally
-  
-  You can also add **-v** parameter to enable verbose logging.
+This will generate a binary executable.
+
+#### Run tests
+
+To run the tests:
 
     make test
+    
+#### Run the executable
+
+To run the binary:
+        
+    ./mittens -readinessPath=/ready -durationSeconds=60 -httpTimeoutSeconds=15 -concurrency=3 -httpHeader=X-Forwarded-Proto=https -warmupRequest=http:get:/hotel/potatoes -warmupRequest=http:get:/hotel/tomatoes -warmupRequest="http:post:/hotel/aubergines:{\"foo\":\"bar\"}" -warmupRequest="grpc:service/method:{\"foo\":\"bar\"}" -requestDelayMilliseconds=10
 
 ### Docker
 #### Build image
@@ -76,6 +79,8 @@ To build a Docker image named `mittens`:
     make docker
 
 #### Run container
+
+To run the container:
 
     docker run mittens:latest -readinessPath=/ready -durationSeconds=60 -httpTimeoutSeconds=15 -concurrency=3 -httpHeader=X-Forwarded-Proto=https -warmupRequest=http:get:/hotel/potatoes -warmupRequest=http:get:/hotel/tomatoes -warmupRequest="http:post:/hotel/aubergines:{\"foo\":\"bar\"}" -warmupRequest="grpc:service/method:{\"foo\": \"bar\"}"
 
@@ -180,6 +185,9 @@ What happens is that after these initial 30 seconds, the warmup will start but u
 Note that during the warmup _someRequest_ and _anotherRequest_ will be called randomly and not in any particular order.
 
 If the application is not ready after the defined 60 seconds, we skip the warmup routine.
+
+## References
+* [Mittens at Docker Hub](https://hub.docker.com/r/expediagroup/mittens/)
 
 ## Legal
 
