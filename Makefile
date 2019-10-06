@@ -1,19 +1,12 @@
 .PHONY: all build test
 
-override GOOS:=$(shell uname)
-override GO111MODULE=on
-
 all: build
 
-dependencies:
-	@go mod download
-
 test:
-	@go test ./...
+	GO111MODULE=on go test ./...
 
 build: test
-	@mkdir -p build
-	@CGO_ENABLED=0 go build -a -installsuffix cgo -o build/mittens .
+	GO111MODULE=on go build
 
 docker:
 	@docker build -t mittens .
