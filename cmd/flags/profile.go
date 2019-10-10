@@ -12,15 +12,34 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-package main
+package flags
 
 import (
-	"mittens/cmd"
-	"os"
+	"fmt"
+	"github.com/spf13/cobra"
 )
 
-func main() {
-	if err := cmd.RootCmd.Execute(); err != nil {
-		os.Exit(2)
-	}
+type Profile struct {
+	CPU    string
+	Memory string
+}
+
+func (p *Profile) String() string {
+	return fmt.Sprintf("%+v", *p)
+}
+
+func (p *Profile) InitFlags(cmd *cobra.Command) {
+
+	cmd.Flags().StringVar(
+		&p.CPU,
+		"profile-cpu",
+		"",
+		"Name of the file where to write CPU profile data",
+	)
+	cmd.Flags().StringVar(
+		&p.Memory,
+		"profile-memory",
+		"",
+		"Name of the file where to write memory profile data",
+	)
 }
