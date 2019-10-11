@@ -7,7 +7,7 @@ title: How to Run
 
 You can run the binary executable as follows:
 
-    ./mittens -readinessPath=/ready -durationSeconds=60 -httpTimeoutSeconds=15 -concurrency=3 -httpHeader=X-Forwarded-Proto=https -warmupRequest=http:get:/hotel/potatoes -warmupRequest=http:get:/hotel/tomatoes -warmupRequest="http:post:/hotel/aubergines:{\"foo\":\"bar\"}" -warmupRequest="grpc:service/method:{\"foo\":\"bar\"}" -requestDelayMilliseconds=10
+    ./mittens -readinessPath=/ready -durationSeconds=60 -httpTimeoutSeconds=15 -concurrency=3 -warmupRequest=http:get:/hotel/potatoes -warmupRequest=http:get:/hotel/tomatoes -warmupRequest="http:post:/hotel/aubergines:{\"foo\":\"bar\"}" -warmupRequest="grpc:service/method:{\"foo\":\"bar\"}" -requestDelayMilliseconds=10
 
 ## Run as a linked Docker container
 
@@ -24,7 +24,7 @@ You can run the binary executable as follows:
         image: expediagroup/mittens:latest
         links:
           - app
-        command: "-targetHost=app -readinessPath=/ready -durationSeconds=60 -httpTimeoutSeconds=15 -concurrency=3 -httpHeader=X-Forwarded-Proto=https -warmupRequest=http:get:/hotel/potatoes -warmupRequest=http:get:/hotel/tomatoes -warmupRequest="http:post:/hotel/aubergines:{\"foo\":\"bar\"}" -warmupRequest="grpc:service/method:{\"foo\": \"bar\"}"
+        command: "-targetHost=app -readinessPath=/ready -durationSeconds=60 -httpTimeoutSeconds=15 -concurrency=3 -warmupRequest=http:get:/hotel/potatoes -warmupRequest=http:get:/hotel/tomatoes -warmupRequest="http:post:/hotel/aubergines:{\"foo\":\"bar\"}" -warmupRequest="grpc:service/method:{\"foo\": \"bar\"}"
     
 ## Run as a sidecar on Kubernetes
 
@@ -85,6 +85,4 @@ spec:
         - "http:post:/hotel/aubergines:{\"foo\":\"bar\"}
         - "-warmupRequest"
         - "grpc:service/method:{\"foo\":\"bar\"}
-        - "-httpHeader"
-        - "X-Forwarded-Proto=https"
 ```
