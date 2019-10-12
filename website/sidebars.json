@@ -1,0 +1,16 @@
+{
+  "docs": {
+    "About": [
+      "about/introduction",
+      "about/getting-started"
+    ],
+    "Installation": [
+      "installation/building",
+      "installation/running"
+
+    ],
+    "Contributing": [
+      "contributing/contributing"
+    ]
+  }
+}

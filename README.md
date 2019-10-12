@@ -73,7 +73,7 @@ To run the tests:
 
 To run the binary:
         
-    ./mittens -readinessPath=/ready -durationSeconds=60 -httpTimeoutSeconds=15 -concurrency=3 -httpHeader=X-Forwarded-Proto=https -warmupRequest=http:get:/hotel/potatoes -warmupRequest=http:get:/hotel/tomatoes -warmupRequest="http:post:/hotel/aubergines:{\"foo\":\"bar\"}" -warmupRequest="grpc:service/method:{\"foo\":\"bar\"}" -requestDelayMilliseconds=10
+    ./mittens -readinessPath=/ready -durationSeconds=60 -httpTimeoutSeconds=15 -concurrency=3 -warmupRequest=http:get:/hotel/potatoes -warmupRequest=http:get:/hotel/tomatoes -warmupRequest="http:post:/hotel/aubergines:{\"foo\":\"bar\"}" -warmupRequest="grpc:service/method:{\"foo\":\"bar\"}" -requestDelayMilliseconds=10
 
 ### Docker
 #### Build image
@@ -86,7 +86,7 @@ To build a Docker image named `mittens`:
 
 To run the container:
 
-    docker run mittens:latest -readinessPath=/ready -durationSeconds=60 -httpTimeoutSeconds=15 -concurrency=3 -httpHeader=X-Forwarded-Proto=https -warmupRequest=http:get:/hotel/potatoes -warmupRequest=http:get:/hotel/tomatoes -warmupRequest="http:post:/hotel/aubergines:{\"foo\":\"bar\"}" -warmupRequest="grpc:service/method:{\"foo\": \"bar\"}"
+    docker run mittens:latest -readinessPath=/ready -durationSeconds=60 -httpTimeoutSeconds=15 -concurrency=3 -warmupRequest=http:get:/hotel/potatoes -warmupRequest=http:get:/hotel/tomatoes -warmupRequest="http:post:/hotel/aubergines:{\"foo\":\"bar\"}" -warmupRequest="grpc:service/method:{\"foo\": \"bar\"}"
 
 _Note_: If you use Docker for Mac you might need to set `targetHost` to `docker.for.mac.localhost`, or `docker.for.mac.host.internal`, or `host.docker.internal` (depending on your version of Docker) so that your container can resolve localhost.
 
@@ -149,8 +149,6 @@ spec:
         - "http:post:/hotel/aubergines:{\"foo\":\"bar\"}
         - "-warmupRequest"
         - "grpc:service/method:{\"foo\":\"bar\"}
-        - "-httpHeader"
-        - "X-Forwarded-Proto=https"
 ```
 
 ### Notes about warmup duration
