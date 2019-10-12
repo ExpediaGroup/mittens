@@ -1,0 +1,135 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>How to Run · Mittens</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="## Run as a cmd application"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="How to Run · Mittens"/><meta property="og:type" content="website"/><meta property="og:url" content="https://expediagroup.github.io/mittens/"/><meta property="og:description" content="## Run as a cmd application"/><meta property="og:image" content="https://expediagroup.github.io/mittens/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://expediagroup.github.io/mittens/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/mittens/img/mittens_intuit.svg"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/mittens/js/scrollSpy.js"></script><link rel="stylesheet" href="/mittens/css/main.css"/><script src="/mittens/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/mittens/"><img class="logo" src="/mittens/img/mittens_intuit.svg" alt="Mittens"/><h2 class="headerTitleWithLogo">Mittens</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a target="_self"></a></li><li class="siteNavGroupActive"><a href="/mittens/docs/about/introduction" target="_self">Docs</a></li><li class=""><a href="https://github.com/ExpediaGroup/mittens" target="_self">GitHub</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Installation</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle collapsible">About<span class="arrow"><svg width="24" height="24" viewBox="0 0 24 24"><path fill="#565656" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"></path><path d="M0 0h24v24H0z" fill="none"></path></svg></span></h3><ul class="hide"><li class="navListItem"><a class="navItem" href="/mittens/docs/about/introduction">Introduction</a></li><li class="navListItem"><a class="navItem" href="/mittens/docs/about/getting-started">Getting Started</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle collapsible">Installation<span class="arrow"><svg width="24" height="24" viewBox="0 0 24 24"><path fill="#565656" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"></path><path d="M0 0h24v24H0z" fill="none"></path></svg></span></h3><ul class="hide"><li class="navListItem"><a class="navItem" href="/mittens/docs/installation/building">How to Build</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/mittens/docs/installation/running">How to Run</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle collapsible">Contributing<span class="arrow"><svg width="24" height="24" viewBox="0 0 24 24"><path fill="#565656" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"></path><path d="M0 0h24v24H0z" fill="none"></path></svg></span></h3><ul class="hide"><li class="navListItem"><a class="navItem" href="/mittens/docs/contributing/contributing">How to Contribute</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">How to Run</h1></header><article><div><span><h2><a class="anchor" aria-hidden="true" id="run-as-a-cmd-application"></a><a href="#run-as-a-cmd-application" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Run as a cmd application</h2>
+<p>You can run the binary executable as follows:</p>
+<pre><code class="hljs">./mittens -readinessPath=/ready -durationSeconds=60 -httpTimeoutSeconds=15 -concurrency=3 -warmupRequest=http:get:/hotel/potatoes -warmupRequest=http:get:/hotel/tomatoes -warmupRequest=&quot;http:post:/hotel/aubergines:{\&quot;foo\&quot;:\&quot;bar\&quot;}&quot; -warmupRequest=&quot;grpc:service/method:{\&quot;foo\&quot;:\&quot;bar\&quot;}&quot; -requestDelayMilliseconds=10
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="run-as-a-linked-docker-container"></a><a href="#run-as-a-linked-docker-container" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Run as a linked Docker container</h2>
+<pre><code class="hljs">version: &quot;2&quot;
+
+services:
+
+  foo:
+    image: lorem/ipsum:1.0
+    ports:
+      - &quot;8080:8080&quot;
+
+  mittens:
+    image: expediagroup/mittens:latest
+    links:
+      - app
+    command: &quot;-targetHost=app -readinessPath=/ready -durationSeconds=60 -httpTimeoutSeconds=15 -concurrency=3 -warmupRequest=http:get:/hotel/potatoes -warmupRequest=http:get:/hotel/tomatoes -warmupRequest=&quot;http:post:/hotel/aubergines:{\&quot;foo\&quot;:\&quot;bar\&quot;}&quot; -warmupRequest=&quot;grpc:service/method:{\&quot;foo\&quot;: \&quot;bar\&quot;}&quot;
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="run-as-a-sidecar-on-kubernetes"></a><a href="#run-as-a-sidecar-on-kubernetes" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Run as a sidecar on Kubernetes</h2>
+<pre><code class="hljs css language-yaml"><span class="hljs-comment"># for versions after 1.9.0 you can use apps/v1</span>
+<span class="hljs-comment"># for versions before 1.6.0 use extensions/v1beta1</span>
+<span class="hljs-attr">apiVersion:</span> <span class="hljs-string">apps/v1beta1</span>
+<span class="hljs-attr">kind:</span> <span class="hljs-string">Deployment</span>
+<span class="hljs-attr">metadata:</span>
+<span class="hljs-attr">  name:</span> <span class="hljs-string">mittens</span>
+<span class="hljs-attr">spec:</span>
+<span class="hljs-attr">  replicas:</span> <span class="hljs-number">1</span>
+<span class="hljs-attr">  template:</span>
+<span class="hljs-attr">    metadata:</span>
+<span class="hljs-attr">      labels:</span>
+<span class="hljs-attr">        app:</span> <span class="hljs-string">mittens</span>
+<span class="hljs-attr">    spec:</span>
+<span class="hljs-attr">      containers:</span>
+      <span class="hljs-comment"># primary container goes here</span>
+      <span class="hljs-comment"># - name: foo</span>
+      <span class="hljs-comment">#   image: lorem/ipsum:1.0</span>
+      <span class="hljs-comment"># side car follows</span>
+<span class="hljs-attr">      - name:</span> <span class="hljs-string">mittens</span>
+<span class="hljs-attr">        image:</span> <span class="hljs-attr">mittens:latest</span>
+<span class="hljs-attr">        resources:</span>
+<span class="hljs-attr">          limits:</span>
+<span class="hljs-attr">            memory:</span> <span class="hljs-number">40</span><span class="hljs-string">Mi</span>
+<span class="hljs-attr">            cpu:</span> <span class="hljs-number">20</span><span class="hljs-string">m</span>
+<span class="hljs-attr">          requests:</span>
+<span class="hljs-attr">            memory:</span> <span class="hljs-number">40</span><span class="hljs-string">Mi</span>
+<span class="hljs-attr">            cpu:</span> <span class="hljs-number">20</span><span class="hljs-string">m</span>
+<span class="hljs-attr">        readinessProbe:</span> 
+<span class="hljs-attr">            exec:</span>
+<span class="hljs-attr">              command:</span>
+<span class="hljs-bullet">              -</span> <span class="hljs-string">cat</span>
+<span class="hljs-bullet">              -</span> <span class="hljs-string">ready</span>
+<span class="hljs-attr">            initialDelaySeconds:</span> <span class="hljs-number">10</span>
+<span class="hljs-attr">            periodSeconds:</span> <span class="hljs-number">30</span>
+<span class="hljs-attr">        livenessProbe:</span> 
+<span class="hljs-attr">            exec:</span>
+<span class="hljs-attr">              command:</span>
+<span class="hljs-bullet">              -</span> <span class="hljs-string">cat</span>
+<span class="hljs-bullet">              -</span> <span class="hljs-string">alive</span>
+<span class="hljs-attr">            initialDelaySeconds:</span> <span class="hljs-number">10</span>
+<span class="hljs-attr">            periodSeconds:</span> <span class="hljs-number">30</span>
+<span class="hljs-attr">        args:</span> 
+<span class="hljs-bullet">        -</span> <span class="hljs-string">"-concurrency"</span>
+<span class="hljs-bullet">        -</span> <span class="hljs-string">"2"</span>
+<span class="hljs-bullet">        -</span> <span class="hljs-string">"-durationSeconds"</span>
+<span class="hljs-bullet">        -</span> <span class="hljs-string">"120"</span>
+<span class="hljs-bullet">        -</span> <span class="hljs-string">"-readinessPath"</span>
+<span class="hljs-bullet">        -</span> <span class="hljs-string">"/ready"</span>
+<span class="hljs-bullet">        -</span> <span class="hljs-string">"-warmupRequest"</span>
+<span class="hljs-bullet">        -</span> <span class="hljs-string">"http:get:/tomatoes/"</span>
+<span class="hljs-bullet">        -</span> <span class="hljs-string">"-warmupRequest"</span>
+<span class="hljs-bullet">        -</span> <span class="hljs-string">"http:get:/potatoes"</span>
+<span class="hljs-bullet">        -</span> <span class="hljs-string">"-warmupRequest"</span>
+<span class="hljs-bullet">        -</span> <span class="hljs-string">"http:post:/hotel/aubergines:{\"foo\":\"bar\"}
+        - "</span><span class="hljs-bullet">-warmupRequest"</span>
+<span class="hljs-bullet">        -</span> <span class="hljs-string">"grpc:service/method:{\"foo\":\"bar\"}
+</span></code></pre>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/mittens/docs/installation/building"><span class="arrow-prev">← </span><span>How to Build</span></a><a class="docs-next button" href="/mittens/docs/contributing/contributing"><span>How to Contribute</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#run-as-a-cmd-application">Run as a cmd application</a></li><li><a href="#run-as-a-linked-docker-container">Run as a linked Docker container</a></li><li><a href="#run-as-a-sidecar-on-kubernetes">Run as a sidecar on Kubernetes</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/mittens/" class="nav-home"><img src="/mittens/img/mittens_intuit.svg" alt="Mittens" width="66" height="58"/></a><div><h5>Docs</h5><a href="/mittens/docs/about/introduction.html">Introduction</a></div><div><h5>Community</h5><a href="/mittens/en/users.html">User Showcase</a></div><div><h5>More</h5><a href="https://github.com/ExpediaGroup/mittens">GitHub</a><a class="github-button" href="https://github.com/ExpediaGroup/mittens" data-icon="octicon-star" data-count-href="/ExpediaGroup/mittens/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://expediagroup.github.io" target="_blank" rel="noreferrer noopener" class="egOpenSource"><img src="/mittens/img/expedia_oss_logo.png" alt="Expedia Group Open Source" width="170" height="45" class="center"/></a><section class="copyright">Copyright © 2019 Expedia, Inc.</section></footer></div></body></html>
