@@ -12,25 +12,24 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-// Performs operations on files.
-
-package routine
+package flags
 
 import (
-	"io/ioutil"
 	"log"
+	"strings"
 )
 
-// Writes dummy content to a file. This file can be used as a liveness/readiness check in Kubernetes.
-func writeFile(file string) {
-	log.Printf("writing file %s\n", file)
+func toHeaders(headersFlag []string) map[string]string {
 
-	fileBytes := []byte("foo bar")
-	err := ioutil.WriteFile(file, fileBytes, 0644)
-
-	if err = ioutil.WriteFile(file, fileBytes, 0644); err != nil {
-		log.Printf("writing to file failed with error %v\n", err)
-		return
+	headers := make(map[string]string)
+	for _, h := range headersFlag {
+		kv := strings.SplitN(h, ":", 2)
+		if len(kv) == 1 {
+			log.Printf("cannot find ':' separator in supplied header %s", h)
+			headers[strings.TrimSpace(kv[0])] = ""
+			continue
+		}
+		headers[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
 	}
-	log.Printf("wrote file %s\n", file)
+	return headers
 }

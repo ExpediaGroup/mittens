@@ -14,39 +14,53 @@ An overview of the architecture is shown below:
 
 This can also run as a linked container, or even as a sidecar in Kubernetes.
 
-## Required arguments
+## Usage
 
-| Argument                        | Default value   | Description                                                                                                                                                                                            |
-|:--------------------------------|:----------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| readinessPath                   | /ready          | Path used as an http readiness probe; we consider the main app to be ready when a GET request to this path returns a 200 http status code.                                                             |
-| timeoutForReadinessProbeSeconds | durationSeconds | How long we should wait for the readiness probe before running Mittens (time in seconds). When missing it waits for "durationSeconds".                                                                 |
-| durationSeconds                 | 60              | Duration of the warmup routine. If "timeoutForReadinessProbeSeconds" is set this is the duration of the warmup step only. If "timeoutForReadinessProbeSeconds" is not set, this is the total duration. |
-| httpTimeoutSeconds              | 10              | Timeout for the http client (for both readiness checks and for the actual warmup routine).                                                                                                             |
-| concurrency                     | 2               | Number of concurrent requests during the warmup routine.                                                                                                                                               |
-| httpHeader                      | N/A             | Http headers to be sent during the warmup routine. Format: "Header=Value".                                                                                                                             |
-| grpcHeader                      | N/A             | Grpc headers to be sent during the warmup routine. Format: "Header:Value".                                                                                                                             |
-| warmupRequest                   | N/A             | Request to be used during the warmup routine. See the subsection below on how to format your request.                                                                                                  |
-| targetProtocol                  | http            | Protocol for target server. Possible values are http (default) or https.                                                                                                                               |
-| targetHost                      | localhost       | The target server.                                                                                                                                                                                     |
-| targetHttpPort                  | 8080            | Port for target http server.                                                                                                                                                                           |
-| targetGrpcPort                  | 50051           | Port for target grpc server.                                                                                                                                                                           |
-| requestDelayMilliseconds        | 0               | Adds a delay between requests.                                                                                                                                                                         |
+    mittens [flags]
 
-### Warmup request format
+### Flags
+
+| Flag                               | Type    | Default value    | Description                                                                                                     |
+|:-----------------------------------|:--------|:-----------------|:----------------------------------------------------------------------------------------------------------------|
+| --concurrency                      | int     | 2                | Number of concurrent requests for warm up                                                                       |
+| --exit-after-warmup                | bool    | false            | If warm up process should finish after completion. This is useful to prevent container restarts.                |
+| --grpc-headers                     | strings | N/A              | gRPC headers to be sent with warm up requests.                                                                  |
+| --grpc-requests                    | strings | N/A              | gRPC request to be sent. Request is in '<service>/<method>[:message]' format. E.g. health/ping:{"key": "value"} |
+| --help, -h                         |         |                  | N/A Help for warmup-sidecar                                                                                     |
+| --http-headers                     | strings | N/A              | Http headers to be sent with warm up requests.                                                                  |
+| --http-requests                    | strings | N/A              | Http request to be sent. Request is in '<http-method>:<path>[:body]' format. E.g. post:/ping:{"key": "value"}   |
+| --probe-liveness-path              | strings | /alive           | Warm up sidecar liveness probe path                                                                             |
+| --probe-port                       | int     | /8000            | Warm up sidecar port for liveness and readiness probe                                                           |
+| --probe-readiness-path             | string  | /ready           | Warm up sidecar readiness probe path                                                                            |
+| --profile-cpu                      | string  | N/A              | Name of the file where to write CPU profile data                                                                |
+| --profile-memory                   | string  | N/A              | Name of the file where to write memory profile data                                                             |
+| --request-delay-milliseconds       | int     | 50               | Delay in milliseconds between requests                                                                          |
+| --target-grpc-host                 | string  | localhost        | gRPC host to warm up                                                                                            |
+| --target-grpc-port                 | int     | 50051            | gRPC port for warm up requests                                                                                  |
+| --target-http-host                 | string  | http://localhost | Http host to warm up                                                                                            |
+| --target-http-port                 | int     | 8080             | Http port for warm up requests                                                                                  |
+| --target-insecure                  | bool    | false            | Whether to skip TLS validation                                                                                  |
+| --target-readiness-path            | string  | /ready           | The path used for target readiness probe                                                                        |
+| --target-readiness-timeout-seconds | int     | -1               | Timeout for target readiness probe                                                                              |
+| --timeout-seconds                  | int     | 60               | Time after which warm up will stop making requests                                                              |
+
+### Warmup request
 A warmup request can be an HTTP one (over REST) or a gRPC one.
 
-#### HTTP (REST) requests
-HTTP requests are in the form `http:method:url:body` where `method` is one of `get`, `post`, or `put`, `url` is the url where the request will be sent, and `body` is a properly escaped JSON-formatted string.
+#### HTTP requests
 
-Indicative examples are shown below:
-- `http:get:/health`: HTTP GET request.
-- `http:post:/warmupUrl:{"key":"value"}`: POST request with its url being `/warmupUrl` and its body being `{"key":"value"}`.
-- `http:put:/warmupUrl:{"key":"value"}`: PUT request with its url being `/warmupUrl` its body being `{"key":"value"}`.
+HTTP requests are in the form `method:path:body` (`body` is optional).
+Host and port are taken from `--target-http-host` and
+`--target-http-port` flags.
+
+E.g.:
+ - `get:/health`: HTTP GET request.
+ - `post:/warmupUrl:{"key":"value"}`: POST request with its url being `/warmupUrl` and its body being `{"key":"value"}`.
 
 #### gRPC requests
-gRPC requests are in the form `grpc:service/method:message` where `service` and `method` are the names of the gRPC service and method respectively, and `message` is a properly escaped JSON-formatted string.
 
-_Note_: For both HTTP and gRPC requests you can use {today} and {today+n} to obtain the date for today or today +/- n days in YYYY-MM-DD format. For HTTP requests the date templating works for both URLs and body.
+gRPC requests are in the form `service/method:message`. Host and port are taken from `--target-grpc-host` and
+`--target-grpc-port` flags.
 
 ## How to build and run
 Mittens is written in Go and the simplest way to run it is as a cmd application. It receives a number of command line arguments (also see "Required arguments") including the requests that will be sent to warm up the main service. Depending on the format of the requests this will invoke REST or/and gRPC calls.
@@ -58,7 +72,7 @@ We provide a [Makefile](Makefile) which can be used to generate an executable bi
 #### Build binary executable
 
 To build the project run the following:
-    
+
     make build
 
 This will generate a binary executable.
@@ -68,12 +82,12 @@ This will generate a binary executable.
 To run the tests:
 
     make test
-    
+   
 #### Run the executable
 
 To run the binary:
         
-    ./mittens -readinessPath=/ready -durationSeconds=60 -httpTimeoutSeconds=15 -concurrency=3 -warmupRequest=http:get:/hotel/potatoes -warmupRequest=http:get:/hotel/tomatoes -warmupRequest="http:post:/hotel/aubergines:{\"foo\":\"bar\"}" -warmupRequest="grpc:service/method:{\"foo\":\"bar\"}" -requestDelayMilliseconds=10
+    ./mittens --target-readiness-path=/health --target-insecure=true --target-grpc-port=6565 --timeout-seconds=60 --concurrency=3 --http-requests=get:/hotel/potatoes --grpc-requests=service/method:"{\"foo\":\"bar\", \"bar\":\"foo\"}"
 
 ### Docker
 #### Build image
@@ -86,7 +100,7 @@ To build a Docker image named `mittens`:
 
 To run the container:
 
-    docker run mittens:latest -readinessPath=/ready -durationSeconds=60 -httpTimeoutSeconds=15 -concurrency=3 -warmupRequest=http:get:/hotel/potatoes -warmupRequest=http:get:/hotel/tomatoes -warmupRequest="http:post:/hotel/aubergines:{\"foo\":\"bar\"}" -warmupRequest="grpc:service/method:{\"foo\": \"bar\"}"
+    docker run mittens:latest --target-readiness-path=/health --target-insecure=true --target-grpc-port=6565 --timeout-seconds=60 --concurrency=3 --http-requests=get:/hotel/potatoes --grpc-requests=service/method:"{\"foo\":\"bar\", \"bar\":\"foo\"}"
 
 _Note_: If you use Docker for Mac you might need to set `targetHost` to `docker.for.mac.localhost`, or `docker.for.mac.host.internal`, or `host.docker.internal` (depending on your version of Docker) so that your container can resolve localhost.
 
