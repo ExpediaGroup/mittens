@@ -25,10 +25,10 @@ This can also run as a linked container, or even as a sidecar in Kubernetes.
 | --concurrency                      | int     | 2                | Number of concurrent requests for warm up                                                                       |
 | --exit-after-warmup                | bool    | false            | If warm up process should finish after completion. This is useful to prevent container restarts.                |
 | --grpc-headers                     | strings | N/A              | gRPC headers to be sent with warm up requests.                                                                  |
-| --grpc-requests                    | strings | N/A              | gRPC request to be sent. Request is in '<service>/<method>[:message]' format. E.g. health/ping:{"key": "value"} |
+| --grpc-requests                    | strings | N/A              | gRPC request to be sent. Request is in '\<service\>/\<method\>\[:message\]' format. E.g. health/ping:{"key": "value"} |
 | --help, -h                         |         |                  | N/A Help for warmup-sidecar                                                                                     |
 | --http-headers                     | strings | N/A              | Http headers to be sent with warm up requests.                                                                  |
-| --http-requests                    | strings | N/A              | Http request to be sent. Request is in '<http-method>:<path>[:body]' format. E.g. post:/ping:{"key": "value"}   |
+| --http-requests                    | strings | N/A              | Http request to be sent. Request is in '\<http-method\>:\<path\>\[:body\]' format. E.g. post:/ping:{"key": "value"}   |
 | --probe-liveness-path              | strings | /alive           | Warm up sidecar liveness probe path                                                                             |
 | --probe-port                       | int     | /8000            | Warm up sidecar port for liveness and readiness probe                                                           |
 | --probe-readiness-path             | string  | /ready           | Warm up sidecar readiness probe path                                                                            |
@@ -69,6 +69,9 @@ The project uses [Go Modules](https://github.com/golang/go/wiki/Modules).
 We provide a [Makefile](Makefile) which can be used to generate an executable binary and a Dockerfile if you prefer to run using Docker.
 
 ### Binary
+
+To build the binary make sure you've installed [Go 1.13](https://golang.org/dl/).
+
 #### Build binary executable
 
 To build the project run the following:
