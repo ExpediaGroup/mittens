@@ -163,8 +163,6 @@ spec:
         - "http:post:/hotel/aubergines:{\"foo\":\"bar\"}
         - "-warmupRequest"
         - "grpc:service/method:{\"foo\":\"bar\"}
-        - "-httpHeader"
-        - "X-Forwarded-Proto=https"
 ```
 
 ### Notes about warmup duration
