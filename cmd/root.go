@@ -32,7 +32,7 @@ import (
 var (
 	RootCmd = &cobra.Command{
 		Use:   "mittens",
-		Short: "Warm-up routine against an http application over HTTP (REST) or/and gRPC",
+		Short: "Warm-up routine for http applications",
 		Long:  "",
 		Run:   runCmdRoot,
 	}

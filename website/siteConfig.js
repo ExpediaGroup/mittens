@@ -23,7 +23,7 @@ const users = [
 
 const siteConfig = {
   title: 'Mittens', // Title for your website.
-  tagline: 'Warm-up routine against an http application',
+  tagline: 'Warm-up routine for http applications',
 
   url: 'https://expediagroup.github.io', // Your website URL
   baseUrl: '/mittens/', // Base URL for your project */

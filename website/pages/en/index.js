@@ -99,7 +99,7 @@ class Index extends React.Component {
                         <li>Supports REST and gRPC</li>
                         <li>Supports HTTP and gRPC headers</li>
                         <li>Supports concurrent requests</li>
-                        <li>Generates files to be used for readiness/liveness probes</li>
+                        <li>Exposes endpoints that can be used as liveness/readiness probes in Kubernetes</li>
                     </ul>
                 </div>
             </div>

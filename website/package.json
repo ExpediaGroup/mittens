@@ -1,7 +1,6 @@
 {
   "name": "mittensn-docs",
   "license": "Apache-2.0",
-
   "scripts": {
     "examples": "docusaurus-examples",
     "start": "docusaurus-start",
