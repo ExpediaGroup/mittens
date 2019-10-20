@@ -26,4 +26,4 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v1
     - name: Integration Tests
-      run: make integration-test
+      run: make integration-tests
