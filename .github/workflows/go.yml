@@ -3,20 +3,27 @@ on: [push]
 jobs:
 
   build:
-    name: Build and Test
+    name: Build and Unit Tests
     runs-on: ubuntu-latest
     steps:
-
     - name: Set up Go 1.13
       uses: actions/setup-go@v1
       with:
         go-version: 1.13
-
     - name: Check out code
       uses: actions/checkout@v1
-
     - name: Build
       run: make build
       
-    - name: Test
-      run: make test
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Go 1.13
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+    - name: Check out code
+      uses: actions/checkout@v1
+    - name: Integration Tests
+      run: make integration-test

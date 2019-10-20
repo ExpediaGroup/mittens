@@ -29,7 +29,8 @@ type Root struct {
 	Concurrency              int
 	RequestDelayMilliseconds int
 	ExitAfterWarmup          bool
-	Probe                    *Probe
+	FileProbe                *FileProbe
+	ServerProbe              *ServerProbe
 	Target                   *Target
 	Http                     *Http
 	Grpc                     *Grpc
@@ -39,11 +40,12 @@ type Root struct {
 func NewRoot() *Root {
 
 	return &Root{
-		Probe:   new(Probe),
-		Target:  new(Target),
-		Http:    new(Http),
-		Grpc:    new(Grpc),
-		Profile: new(Profile),
+		FileProbe:   new(FileProbe),
+		ServerProbe: new(ServerProbe),
+		Target:      new(Target),
+		Http:        new(Http),
+		Grpc:        new(Grpc),
+		Profile:     new(Profile),
 	}
 }
 
@@ -78,7 +80,8 @@ func (r *Root) InitFlags(cmd *cobra.Command) {
 		"If warm up process should finish after completion. This is useful to prevent container restarts.",
 	)
 
-	r.Probe.InitFlags(cmd)
+	r.FileProbe.InitFlags(cmd)
+	r.ServerProbe.InitFlags(cmd)
 	r.Target.InitFlags(cmd)
 	r.Http.InitFlags(cmd)
 	r.Grpc.InitFlags(cmd)

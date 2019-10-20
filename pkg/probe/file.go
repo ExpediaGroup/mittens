@@ -12,34 +12,24 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-package flags
+// Utils for probe files.
+
+package probe
 
 import (
-	"fmt"
-	"github.com/spf13/cobra"
+	"io/ioutil"
+	"log"
 )
 
-type Profile struct {
-	CPU    string
-	Memory string
-}
+// Writes dummy content to a file. This file can be used as a liveness/readiness check in Kubernetes.
+func WriteFile(file string) {
+	log.Printf("writing to file: %s", file)
 
-func (p *Profile) String() string {
-	return fmt.Sprintf("%+v", *p)
-}
+	fileBytes := []byte("foo bar")
 
-func (p *Profile) InitFlags(cmd *cobra.Command) {
-
-	cmd.Flags().StringVar(
-		&p.CPU,
-		"profile-cpu",
-		"",
-		"Name of the file where to write CPU profile data",
-	)
-	cmd.Flags().StringVar(
-		&p.Memory,
-		"profile-memory",
-		"",
-		"Name of the file where to write memory profile data",
-	)
+	if err := ioutil.WriteFile(file, fileBytes, 0644); err != nil {
+		log.Printf("writing to file failed with error: %v", err)
+		return
+	}
+	log.Printf("wrote file: %s", file)
 }

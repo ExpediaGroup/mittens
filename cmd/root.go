@@ -63,12 +63,22 @@ func runCmdRoot(_ *cobra.Command, _ []string) {
 	}
 
 	stop := make(chan struct{})
-	probeServer, done := start(
-		rootCmdFlags.Probe.Port,
-		rootCmdFlags.Probe.LivenessPath,
-		rootCmdFlags.Probe.ReadinessPath,
-		stop,
-	)
+	done := make(chan struct{})
+	var probeServer *probe.Server
+
+	if rootCmdFlags.ServerProbe.Enabled {
+		probeServer = start(
+			rootCmdFlags.ServerProbe.Port,
+			rootCmdFlags.ServerProbe.LivenessPath,
+			rootCmdFlags.ServerProbe.ReadinessPath,
+			stop,
+			done,
+		)
+	}
+
+	if rootCmdFlags.FileProbe.Enabled {
+		probe.WriteFile(rootCmdFlags.FileProbe.LivenessPath)
+	}
 
 	wp, err := warmup.NewWarmup(
 		rootCmdFlags.GetHttpClient(),
@@ -105,11 +115,23 @@ func runCmdRoot(_ *cobra.Command, _ []string) {
 		log.Printf("%s response %d milliseconds: OK", r.Type, r.Duration/time.Millisecond)
 	}
 
-	probeServer.IsReady(true)
+	if rootCmdFlags.ServerProbe.Enabled {
+		probeServer.IsReady(true)
+	}
+	if rootCmdFlags.FileProbe.Enabled {
+		probe.WriteFile(rootCmdFlags.FileProbe.ReadinessPath)
+	}
 	log.Print("warm up finished")
 	if rootCmdFlags.ExitAfterWarmup {
-		// exit after warmup, we initiate stop/done
-		close(stop)
+		// exit after warmup, we close the stop/done channels
+		// in case probe server is used the done channel is closed by the server to ensure graceful termination
+		if rootCmdFlags.ServerProbe.Enabled {
+			close(stop)
+		} else {
+			close(done)
+		}
+	} else {
+		select {}
 	}
 	<-done
 
@@ -130,9 +152,8 @@ func runCmdRoot(_ *cobra.Command, _ []string) {
 	}
 }
 
-func start(port int, livenessPath, readinessPath string, stop <-chan struct{}) (*probe.Server, <-chan struct{}) {
+func start(port int, livenessPath, readinessPath string, stop <-chan struct{}, done chan struct{}) *probe.Server {
 
-	done := make(chan struct{})
 	serverErr := make(chan struct{})
 	probeServer := probe.NewServer(port, livenessPath, readinessPath)
 	go func() {
@@ -161,7 +182,7 @@ func start(port int, livenessPath, readinessPath string, stop <-chan struct{}) (
 			close(done)
 		}
 	}()
-	return probeServer, done
+	return probeServer
 }
 
 // 'fan in' see: https://blog.golang.org/pipelines
