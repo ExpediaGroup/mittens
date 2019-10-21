@@ -19,34 +19,34 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type Probe struct {
-	Port          int
+type FileProbe struct {
+	Enabled       bool
 	LivenessPath  string
 	ReadinessPath string
 }
 
-func (p *Probe) String() string {
+func (p *FileProbe) String() string {
 	return fmt.Sprintf("%+v", *p)
 }
 
-func (p *Probe) InitFlags(cmd *cobra.Command) {
+func (p *FileProbe) InitFlags(cmd *cobra.Command) {
 
-	cmd.Flags().IntVar(
-		&p.Port,
-		"probe-port",
-		8000,
-		"Warm up sidecar port for liveness and readiness probe",
+	cmd.Flags().BoolVar(
+		&p.Enabled,
+		"probe-file-enabled",
+		true,
+		"If set to true writes files to be used as readiness/liveness probes",
 	)
 	cmd.Flags().StringVar(
 		&p.LivenessPath,
-		"probe-liveness-path",
-		"/alive",
-		"Warm up sidecar liveness probe path",
+		"probe-file-liveness-path",
+		"alive",
+		"File to be used for liveness probe",
 	)
 	cmd.Flags().StringVar(
 		&p.ReadinessPath,
-		"probe-readiness-path",
-		"/ready",
-		"Warm up sidecar readiness probe path",
+		"probe-file-readiness-path",
+		"ready",
+		"File to be used for readiness probe",
 	)
 }

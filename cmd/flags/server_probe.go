@@ -19,27 +19,41 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type Profile struct {
-	CPU    string
-	Memory string
+type ServerProbe struct {
+	Enabled       bool
+	Port          int
+	LivenessPath  string
+	ReadinessPath string
 }
 
-func (p *Profile) String() string {
+func (p *ServerProbe) String() string {
 	return fmt.Sprintf("%+v", *p)
 }
 
-func (p *Profile) InitFlags(cmd *cobra.Command) {
+func (p *ServerProbe) InitFlags(cmd *cobra.Command) {
 
-	cmd.Flags().StringVar(
-		&p.CPU,
-		"profile-cpu",
-		"",
-		"Name of the file where to write CPU profile data",
+	cmd.Flags().BoolVar(
+		&p.Enabled,
+		"probe-server-enabled",
+		false,
+		"If set to true runs a web server that exposes endpoints to be used as readiness/liveness probes",
+	)
+	cmd.Flags().IntVar(
+		&p.Port,
+		"probe-server-port",
+		8000,
+		"Port on which probe server is running",
 	)
 	cmd.Flags().StringVar(
-		&p.Memory,
-		"profile-memory",
-		"",
-		"Name of the file where to write memory profile data",
+		&p.LivenessPath,
+		"probe-server-liveness-path",
+		"/alive",
+		"Probe server endpoint used as liveness probe",
+	)
+	cmd.Flags().StringVar(
+		&p.ReadinessPath,
+		"probe-server-readiness-path",
+		"/ready",
+		"Probe server endpoint used as readiness probe",
 	)
 }

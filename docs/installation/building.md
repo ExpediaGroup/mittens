@@ -18,11 +18,17 @@ To build the project run the following:
 
 This will generate a binary executable.
 
-#### Run tests
+#### Run unit tests
 
 To run the tests:
 
-    make test
+    make tests
+    
+#### Run integration tests
+
+To run the integration tests:
+
+    make integration-tests
  
 ### Docker
 #### Build image

@@ -3,7 +3,7 @@ FROM golang:1.13
 RUN mkdir -p /mittens
 COPY ./ /mittens/
 WORKDIR /mittens
-# Run tests & build app
+# Run unit tests & build app
 RUN make build
 
 FROM alpine:3.7

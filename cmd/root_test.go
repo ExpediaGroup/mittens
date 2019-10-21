@@ -22,17 +22,41 @@ import (
 	"github.com/stretchr/testify/require"
 	"log"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 )
 
-func TestWarmupSidecar(t *testing.T) {
-
+// this is a hack since Go doesn't support setup/tearDown
+// we use sub-tests so that target server only starts once
+func TestAll(t *testing.T) {
 	shutdown := StartTargetTestServer(t)
 	defer shutdown()
+	result := t.Run("TestWarmupSidecarWithFileProbe", TestWarmupSidecarWithFileProbe)
+	result = result && t.Run("TestWarmupSidecarWithServerProbe", TestWarmupSidecarWithServerProbe)
+	os.Exit(bool2int(!result))
+}
 
+func TestWarmupSidecarWithFileProbe(t *testing.T) {
 	RootCmd.SetArgs([]string{
-		"--probe-port", "8090",
+		"--probe-file-enabled", "true",
+		"--probe-server-enabled", "false",
+		"--http-requests", "get:/delay",
+		"--concurrency", "4",
+		"--exit-after-warmup", "true",
+		"--target-readiness-path", "/",
+		"--timeout-seconds", "5",
+	})
+
+	err := RootCmd.Execute()
+	require.NoError(t, err)
+}
+
+func TestWarmupSidecarWithServerProbe(t *testing.T) {
+	RootCmd.SetArgs([]string{
+		"--probe-file-enabled", "false",
+		"--probe-server-enabled", "true",
+		"--probe-server-port", "8090",
 		"--http-requests", "get:/delay",
 		"--concurrency", "4",
 		"--exit-after-warmup", "true",
@@ -72,4 +96,11 @@ func StartTargetTestServer(t *testing.T) (shutdown func()) {
 	time.Sleep(100 * time.Millisecond)
 	require.NoError(t, serverErr)
 	return shutdown
+}
+
+func bool2int(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
 }
