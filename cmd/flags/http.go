@@ -45,15 +45,15 @@ func (h *Http) String() string {
 func (h *Http) InitFlags(cmd *cobra.Command) {
 	cmd.Flags().StringArrayVar(
 		&h.Headers,
-		"http-headers",
+		"http-header",
 		nil,
-		"Http headers to be sent with warm up requests.",
+		"Http header to be sent with warm up requests.",
 	)
 	cmd.Flags().StringArrayVar(
 		&h.Requests,
-		"http-requests",
+		"http-request",
 		nil,
-		`Http request to be sent. Request is in '<http-method>:<path>[:body]' format. E.g. post:/ping:{"key": "value"}`,
+		`Http request to be sent. Request is in '<http-method>:<path>[:body]' format. E.g. post:/ping:{"key":"value"}`,
 	)
 }
 

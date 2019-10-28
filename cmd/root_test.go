@@ -41,7 +41,7 @@ func TestWarmupSidecarWithFileProbe(t *testing.T) {
 	RootCmd.SetArgs([]string{
 		"--probe-file-enabled", "true",
 		"--probe-server-enabled", "false",
-		"--http-requests", "get:/delay",
+		"--http-request", "get:/delay",
 		"--concurrency", "4",
 		"--exit-after-warmup", "true",
 		"--target-readiness-path", "/",
@@ -57,7 +57,7 @@ func TestWarmupSidecarWithServerProbe(t *testing.T) {
 		"--probe-file-enabled", "false",
 		"--probe-server-enabled", "true",
 		"--probe-server-port", "8090",
-		"--http-requests", "get:/delay",
+		"--http-request", "get:/delay",
 		"--concurrency", "4",
 		"--exit-after-warmup", "true",
 		"--target-readiness-path", "/",

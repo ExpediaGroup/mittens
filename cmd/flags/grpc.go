@@ -35,15 +35,15 @@ func (g *Grpc) InitFlags(cmd *cobra.Command) {
 
 	cmd.Flags().StringArrayVar(
 		&g.Headers,
-		"grpc-headers",
+		"grpc-header",
 		nil,
-		"Grpc headers to be sent with warm up requests.",
+		"gRPC header to be sent with warm up requests.",
 	)
 	cmd.Flags().StringArrayVar(
 		&g.Requests,
-		"grpc-requests",
+		"grpc-request",
 		nil,
-		`Grpc request to be sent. Request is in '<service>/<method>[:message]' format. E.g. health/ping:{"key": "value"}`,
+		`gRPC request to be sent. Request is in '<service>/<method>[:message]' format. E.g. health/ping:{"key": "value"}`,
 	)
 }
 

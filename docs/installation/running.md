@@ -10,7 +10,7 @@ You can also run it as a linked Docker container or even as a sidecar in Kuberne
 
 You can run the binary executable as follows:
         
-    ./mittens --target-readiness-path=/health --target-grpc-port=6565 --timeout-seconds=60 --concurrency=3 --http-requests=get:/hotel/potatoes --grpc-requests=service/method:"{\"foo\":\"bar\", \"bar\":\"foo\"}"
+    ./mittens --target-readiness-path=/health --target-grpc-port=6565 --timeout-seconds=60 --concurrency=3 --http-request=get:/hotel/potatoes --grpc-request=service/method:"{\"foo\":\"bar\", \"bar\":\"foo\"}"
 
 ## Run as a linked Docker container
 
@@ -27,7 +27,7 @@ You can run the binary executable as follows:
         image: expediagroup/mittens:latest
         links:
           - app
-        command: "--target-readiness-path=/health --target-grpc-port=6565 --timeout-seconds=60 --concurrency=3 --http-requests=get:/hotel/potatoes --grpc-requests=service/method:'{\"foo\":\"bar\", \"bar\":\"foo\"}'"
+        command: "--target-readiness-path=/health --target-grpc-port=6565 --timeout-seconds=60 --concurrency=3 --http-request=get:/hotel/potatoes --grpc-request=service/method:{\"foo\":\"bar\", \"bar\":\"foo\"}"
 
 _Note_: If you use Docker for Mac you might need to set `targetHost` to `docker.for.mac.localhost`, or `docker.for.mac.host.internal`, or `host.docker.internal` (depending on your version of Docker) so that your container can resolve localhost.
 
@@ -83,8 +83,9 @@ spec:
         - "--timeout-seconds=60"
         - "--target-readiness-path=/health"
         - "--target-grpc-port=6565"
-        - "--http-requests=get:/health,post:/hotel/aubergines:'{\"foo\":\"bar\"}'"
-        - "--grpc-requests=service/method:'{\"foo\":\"bar\", \"bar\":\"foo\"}'"
+        - "--http-request=get:/health"
+        - "--http-request=post:/hotel/aubergines:{\"foo\":\"bar\"}"
+        - "--grpc-request=service/method:{\"foo\":\"bar\",\"bar\":\"foo\"}"
 ```
 
 ## Notes about warm-up duration
@@ -96,7 +97,8 @@ Be aware that setting **target-readiness-timeout-seconds** will change how long 
 ```
 "--probe-readiness-path": /ready
 "--timeout-seconds": 90
-"--http-requests": someRequest,anotherRequest
+"--http-request": someRequest
+"--http-request": anotherRequest
 ```
 
 With these configs the mittens container will start to call _/ready_.
@@ -112,7 +114,8 @@ If the application is not ready after 90 seconds, we skip the warmup routine.
 "--probe-readiness-path": /ready
 "--timeout-seconds": 90
 "--target-readiness-timeout-seconds": 60
-"--http-requests": someRequest,anotherRequest
+"--http-request": someRequest
+"--http-request": anotherRequest
 ```
 
 With these configs the mittens container will start to call _/ready_.
