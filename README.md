@@ -41,7 +41,7 @@ This will generate a binary executable.
 
 To run the tests:
 
-    make tests
+    make unit-tests
     
 #### Run integration tests
 
