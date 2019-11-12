@@ -15,7 +15,8 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
+	"encoding/json"
+	"flag"
 	"log"
 	"mittens/cmd/flags"
 	"mittens/pkg/probe"
@@ -29,28 +30,40 @@ import (
 	"time"
 )
 
-var (
-	RootCmd = &cobra.Command{
-		Use:   "mittens",
-		Short: "Warm-up routine for http applications",
-		Long:  "",
-		Run:   runCmdRoot,
-	}
-	rootCmdFlags = flags.NewRoot()
-)
+var opts *flags.Root
 
 func init() {
-	rootCmdFlags.InitFlags(RootCmd)
+	var cfgFile string
+
+	flag.StringVar(&cfgFile,"config", "","Config file to be used. If empty configs will be read from cmd.")
+	opts = flags.NewRoot()
+	opts.InitFlags()
+	flag.Parse()
+
+	if cfgFile != "" {
+		log.Printf("reading configs from file: %v", cfgFile)
+		file, err := os.Open(cfgFile)
+		if err != nil {
+			log.Fatal("can't open config file: ", err)
+		}
+		defer file.Close()
+		decoder := json.NewDecoder(file)
+		err = decoder.Decode(&opts)
+		if err != nil {
+			log.Fatal("can't decode config JSON: ", err)
+		}
+	}
+	flag.Parse()
 }
 
-func runCmdRoot(_ *cobra.Command, _ []string) {
+func RunCmdRoot() {
 
 	// CPU profile
-	if rootCmdFlags.Profile.CPU != "" {
+	if opts.Profile.CPU != "" {
 
-		log.Printf("CPU profile will be written to %s file", rootCmdFlags.Profile.CPU)
+		log.Printf("CPU profile will be written to %s file", opts.Profile.CPU)
 		// CPU profile
-		f, err := os.Create(rootCmdFlags.Profile.CPU)
+		f, err := os.Create(opts.Profile.CPU)
 		if err != nil {
 			log.Fatalf("could not create CPU profile: %v", err)
 		}
@@ -66,25 +79,25 @@ func runCmdRoot(_ *cobra.Command, _ []string) {
 	done := make(chan struct{})
 	var probeServer *probe.Server
 
-	if rootCmdFlags.ServerProbe.Enabled {
+	if opts.ServerProbe.Enabled {
 		probeServer = start(
-			rootCmdFlags.ServerProbe.Port,
-			rootCmdFlags.ServerProbe.LivenessPath,
-			rootCmdFlags.ServerProbe.ReadinessPath,
+			opts.ServerProbe.Port,
+			opts.ServerProbe.LivenessPath,
+			opts.ServerProbe.ReadinessPath,
 			stop,
 			done,
 		)
 	}
 
-	if rootCmdFlags.FileProbe.Enabled {
-		probe.WriteFile(rootCmdFlags.FileProbe.LivenessPath)
+	if opts.FileProbe.Enabled {
+		probe.WriteFile(opts.FileProbe.LivenessPath)
 	}
 
 	wp, err := warmup.NewWarmup(
-		rootCmdFlags.GetHttpClient(),
-		rootCmdFlags.GetGrpcClient(),
-		rootCmdFlags.GetWarmupOptions(),
-		rootCmdFlags.GetWarmupTargetOptions(),
+		opts.GetHttpClient(),
+		opts.GetGrpcClient(),
+		opts.GetWarmupOptions(),
+		opts.GetWarmupTargetOptions(),
 		done,
 	)
 
@@ -92,14 +105,14 @@ func runCmdRoot(_ *cobra.Command, _ []string) {
 		log.Fatalf("new warmup: %v", err)
 	}
 
-	httpOptions := rootCmdFlags.GetWarmupHttpHeaders()
-	httpRequests, err := rootCmdFlags.GetWarmupHttpRequests(done)
+	httpOptions := opts.GetWarmupHttpHeaders()
+	httpRequests, err := opts.GetWarmupHttpRequests(done)
 	if err != nil {
 		log.Fatalf("http options: %v", err)
 	}
 
-	grpcOptions := rootCmdFlags.GetWarmupGrpcHeaders()
-	grpcRequests, err := rootCmdFlags.GetWarmupGrpcRequests(done)
+	grpcOptions := opts.GetWarmupGrpcHeaders()
+	grpcRequests, err := opts.GetWarmupGrpcRequests(done)
 	if err != nil {
 		log.Fatalf("grpc options: %v", err)
 	}
@@ -115,17 +128,17 @@ func runCmdRoot(_ *cobra.Command, _ []string) {
 		log.Printf("%s response %d milliseconds: OK", r.Type, r.Duration/time.Millisecond)
 	}
 
-	if rootCmdFlags.ServerProbe.Enabled {
+	if opts.ServerProbe.Enabled {
 		probeServer.IsReady(true)
 	}
-	if rootCmdFlags.FileProbe.Enabled {
-		probe.WriteFile(rootCmdFlags.FileProbe.ReadinessPath)
+	if opts.FileProbe.Enabled {
+		probe.WriteFile(opts.FileProbe.ReadinessPath)
 	}
 	log.Print("warm up finished")
-	if rootCmdFlags.ExitAfterWarmup {
+	if opts.ExitAfterWarmup {
 		// exit after warmup, we close the stop/done channels
 		// in case probe server is used the done channel is closed by the server to ensure graceful termination
-		if rootCmdFlags.ServerProbe.Enabled {
+		if opts.ServerProbe.Enabled {
 			close(stop)
 		} else {
 			close(done)
@@ -136,10 +149,10 @@ func runCmdRoot(_ *cobra.Command, _ []string) {
 	<-done
 
 	// Memory profile
-	if rootCmdFlags.Profile.Memory != "" {
+	if opts.Profile.Memory != "" {
 
-		log.Printf("memory profile will be written to %s file", rootCmdFlags.Profile.Memory)
-		f, err := os.Create(rootCmdFlags.Profile.Memory)
+		log.Printf("memory profile will be written to %s file", opts.Profile.Memory)
+		f, err := os.Create(opts.Profile.Memory)
 		if err != nil {
 			log.Fatalf("could not create memory profile: %v", err)
 		}

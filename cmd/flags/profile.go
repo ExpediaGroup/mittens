@@ -15,31 +15,20 @@
 package flags
 
 import (
+	"flag"
 	"fmt"
-	"github.com/spf13/cobra"
 )
 
 type Profile struct {
-	CPU    string
-	Memory string
+	CPU    string `json:"cpu"`
+	Memory string `json:"memory"`
 }
 
 func (p *Profile) String() string {
 	return fmt.Sprintf("%+v", *p)
 }
 
-func (p *Profile) InitFlags(cmd *cobra.Command) {
-
-	cmd.Flags().StringVar(
-		&p.CPU,
-		"profile-cpu",
-		"",
-		"Name of the file where to write CPU profile data",
-	)
-	cmd.Flags().StringVar(
-		&p.Memory,
-		"profile-memory",
-		"",
-		"Name of the file where to write memory profile data",
-	)
+func (p *Profile) InitFlags() {
+	flag.StringVar(&p.CPU,"profileCpu","","Name of the file where to write CPU profile data")
+	flag.StringVar(&p.Memory,"profileMemory","","Name of the file where to write memory profile data")
 }

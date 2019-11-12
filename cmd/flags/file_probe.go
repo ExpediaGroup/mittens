@@ -15,38 +15,22 @@
 package flags
 
 import (
+	"flag"
 	"fmt"
-	"github.com/spf13/cobra"
 )
 
 type FileProbe struct {
-	Enabled       bool
-	LivenessPath  string
-	ReadinessPath string
+	Enabled       bool `json:"enabled"`
+	LivenessPath  string `json:"livenessPath"`
+	ReadinessPath string `json:"readinessPath"`
 }
 
 func (p *FileProbe) String() string {
 	return fmt.Sprintf("%+v", *p)
 }
 
-func (p *FileProbe) InitFlags(cmd *cobra.Command) {
-
-	cmd.Flags().BoolVar(
-		&p.Enabled,
-		"probe-file-enabled",
-		true,
-		"If set to true writes files to be used as readiness/liveness probes",
-	)
-	cmd.Flags().StringVar(
-		&p.LivenessPath,
-		"probe-file-liveness-path",
-		"alive",
-		"File to be used for liveness probe",
-	)
-	cmd.Flags().StringVar(
-		&p.ReadinessPath,
-		"probe-file-readiness-path",
-		"ready",
-		"File to be used for readiness probe",
-	)
+func (p *FileProbe) InitFlags() {
+	//flag.BoolVar(&p.Enabled,"probe-file-enabled",true,"If set to true writes files to be used as readiness/liveness probes")
+	flag.StringVar(&p.LivenessPath,"fileProbeLivenessPath","alive","File to be used for liveness probe")
+	flag.StringVar(&p.ReadinessPath,"fileProbeReadinessPath","ready","File to be used for readiness probe")
 }

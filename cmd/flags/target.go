@@ -15,71 +15,35 @@
 package flags
 
 import (
+	"flag"
 	"fmt"
-	"github.com/spf13/cobra"
 	"mittens/pkg/grpc"
 	"mittens/pkg/http"
 	"mittens/pkg/warmup"
 )
 
 type Target struct {
-	HttpHost               string
-	HttpPort               int
-	GrpcHost               string
-	GrpcPort               int
-	ReadinessPath          string
-	ReadinessTimoutSeconds int
-	Insecure               bool
+	HttpHost               string `json:"httpHost"`
+	HttpPort               int `json:"httpPort"`
+	GrpcHost               string `json:"grpcHost"`
+	GrpcPort               int `json:"grpcPort"`
+	ReadinessPath          string `json:"readinessPath"`
+	ReadinessTimoutSeconds int `json:"readinessTimeout"`
+	Insecure               bool `json:"insecure"`
 }
 
 func (t *Target) String() string {
 	return fmt.Sprintf("%+v", *t)
 }
 
-func (t *Target) InitFlags(cmd *cobra.Command) {
-
-	cmd.Flags().StringVar(
-		&t.HttpHost,
-		"target-http-host",
-		"http://localhost",
-		"Http host to warm up",
-	)
-	cmd.Flags().IntVar(
-		&t.HttpPort,
-		"target-http-port",
-		8080,
-		"Http port for warm up requests",
-	)
-	cmd.Flags().StringVar(
-		&t.GrpcHost,
-		"target-grpc-host",
-		"localhost",
-		"Grpc host to warm up",
-	)
-	cmd.Flags().IntVar(
-		&t.GrpcPort,
-		"target-grpc-port",
-		50051,
-		"Grpc port for warm up requests",
-	)
-	cmd.Flags().StringVar(
-		&t.ReadinessPath,
-		"target-readiness-path",
-		"/ready",
-		"The path used for target readiness probe",
-	)
-	cmd.Flags().IntVar(
-		&t.ReadinessTimoutSeconds,
-		"target-readiness-timeout-seconds",
-		-1,
-		"Timeout for target readiness probe",
-	)
-	cmd.Flags().BoolVar(
-		&t.Insecure,
-		"target-insecure",
-		false,
-		"Whether to skip TLS validation",
-	)
+func (t *Target) InitFlags() {
+	flag.StringVar(&t.HttpHost,"targetHttpHost","http://localhost","Http host to warm up")
+	flag.IntVar(&t.HttpPort,"targetHttpPort",8080,"Http port for warm up requests")
+	flag.StringVar(&t.GrpcHost,"targetGrpcHost","localhost","Grpc host to warm up")
+	flag.IntVar(&t.GrpcPort,"targetGrpcPort",50051,"Grpc port for warm up requests")
+	flag.StringVar(&t.ReadinessPath,"targetReadinessPath","/ready","The path used for target readiness probe")
+	flag.IntVar(&t.ReadinessTimoutSeconds,"targetReadinessTimeoutSeconds",-1,"Timeout for target readiness probe")
+	flag.BoolVar(&t.Insecure,"targetInsecure",false,"Whether to skip TLS validation")
 }
 
 func (t *Target) GetWarmupTargetOptions() warmup.TargetOptions {

@@ -15,45 +15,24 @@
 package flags
 
 import (
+	"flag"
 	"fmt"
-	"github.com/spf13/cobra"
 )
 
 type ServerProbe struct {
-	Enabled       bool
-	Port          int
-	LivenessPath  string
-	ReadinessPath string
+	Enabled       bool `json:"enabled"`
+	Port          int `json:"port"`
+	LivenessPath  string `json:"livenessPath"`
+	ReadinessPath string `json:"readinessPath"`
 }
 
 func (p *ServerProbe) String() string {
 	return fmt.Sprintf("%+v", *p)
 }
 
-func (p *ServerProbe) InitFlags(cmd *cobra.Command) {
-
-	cmd.Flags().BoolVar(
-		&p.Enabled,
-		"probe-server-enabled",
-		false,
-		"If set to true runs a web server that exposes endpoints to be used as readiness/liveness probes",
-	)
-	cmd.Flags().IntVar(
-		&p.Port,
-		"probe-server-port",
-		8000,
-		"Port on which probe server is running",
-	)
-	cmd.Flags().StringVar(
-		&p.LivenessPath,
-		"probe-server-liveness-path",
-		"/alive",
-		"Probe server endpoint used as liveness probe",
-	)
-	cmd.Flags().StringVar(
-		&p.ReadinessPath,
-		"probe-server-readiness-path",
-		"/ready",
-		"Probe server endpoint used as readiness probe",
-	)
+func (p *ServerProbe) InitFlags() {
+	flag.BoolVar(&p.Enabled,"serverProbeEnabled",false,"If set to true runs a web server that exposes endpoints to be used as readiness/liveness probes")
+	flag.IntVar(&p.Port,"serverProbePort",8000,"Port on which probe server is running")
+	flag.StringVar(&p.LivenessPath,"serverProbeLivenessPath","/alive","Probe server endpoint used as liveness probe")
+	flag.StringVar(&p.ReadinessPath,"serverProbeReadinessPath","/ready","Probe server endpoint used as readiness probe")
 }

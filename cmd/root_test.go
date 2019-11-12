@@ -29,6 +29,12 @@ import (
 
 // this is a hack since Go doesn't support setup/tearDown
 // we use sub-tests so that target server only starts once
+
+var _ = func() bool {
+	testing.Init()
+	return true
+}()
+
 func TestAll(t *testing.T) {
 	shutdown := StartTargetTestServer(t)
 	defer shutdown()
@@ -38,34 +44,28 @@ func TestAll(t *testing.T) {
 }
 
 func TestWarmupSidecarWithFileProbe(t *testing.T) {
-	RootCmd.SetArgs([]string{
-		"--probe-file-enabled", "true",
-		"--probe-server-enabled", "false",
-		"--http-request", "get:/delay",
-		"--concurrency", "4",
-		"--exit-after-warmup", "true",
-		"--target-readiness-path", "/",
-		"--timeout-seconds", "5",
-	})
+	os.Args = []string{"mittens",
+		"-fileProbeEnabled=true",
+		"-serverProbeEnabled=false",
+		"-httpRequest=get:/delay",
+		"-concurrency=4",
+		"-exitAfterWarmup=true",
+		"-targetReadinessPath=/",
+		"-timeoutSeconds=5"}
 
-	err := RootCmd.Execute()
-	require.NoError(t, err)
+	RunCmdRoot()
 }
 
 func TestWarmupSidecarWithServerProbe(t *testing.T) {
-	RootCmd.SetArgs([]string{
-		"--probe-file-enabled", "false",
-		"--probe-server-enabled", "true",
-		"--probe-server-port", "8090",
-		"--http-request", "get:/delay",
-		"--concurrency", "4",
-		"--exit-after-warmup", "true",
-		"--target-readiness-path", "/",
-		"--timeout-seconds", "5",
-	})
-
-	err := RootCmd.Execute()
-	require.NoError(t, err)
+	os.Args = []string{"mittens",
+		"-fileProbeEnabled=true",
+		"-serverProbeEnabled=true",
+		"-httpRequest=get:/delay",
+		"-concurrency=4",
+		"-exitAfterWarmup=true",
+		"-targetReadinessPath=/",
+		"-timeoutSeconds=5"}
+	RunCmdRoot()
 }
 
 func StartTargetTestServer(t *testing.T) (shutdown func()) {
