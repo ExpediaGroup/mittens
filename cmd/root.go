@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
 	"log"
 	"mittens/cmd/flags"
 	"mittens/pkg/probe"
@@ -27,6 +26,8 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -81,6 +82,7 @@ func runCmdRoot(_ *cobra.Command, _ []string) {
 	}
 
 	wp, err := warmup.NewWarmup(
+		rootCmdFlags.GetReadinessHttpClient(),
 		rootCmdFlags.GetHttpClient(),
 		rootCmdFlags.GetGrpcClient(),
 		rootCmdFlags.GetWarmupOptions(),

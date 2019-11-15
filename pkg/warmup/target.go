@@ -28,25 +28,28 @@ import (
 type TargetOptions struct {
 	URL                       string
 	ReadinessPath             string
+	ReadinessPort             int
 	ReadinessTimeoutInSeconds int
 }
 
 type Target struct {
-	httpClient whttp.Client
-	grpcClient grpc.Client
-	options    TargetOptions
+	readinessHttpClient whttp.Client
+	httpClient          whttp.Client
+	grpcClient          grpc.Client
+	options             TargetOptions
 }
 
-func NewTarget(httpClient whttp.Client, grpcClient grpc.Client, options TargetOptions, done <-chan struct{}) (Target, error) {
+func NewTarget(readinessHttpClient whttp.Client, httpClient whttp.Client, grpcClient grpc.Client, options TargetOptions, done <-chan struct{}) (Target, error) {
 
 	if _, err := url.Parse(options.URL); err != nil {
 		return Target{}, fmt.Errorf("invalid target host: %v", err)
 	}
 
 	t := Target{
-		httpClient: httpClient,
-		grpcClient: grpcClient,
-		options:    options,
+		readinessHttpClient: readinessHttpClient,
+		httpClient:          httpClient,
+		grpcClient:          grpcClient,
+		options:             options,
 	}
 
 	if err := t.waitForReadinessProbe(done); err != nil {
@@ -57,7 +60,7 @@ func NewTarget(httpClient whttp.Client, grpcClient grpc.Client, options TargetOp
 
 func (t Target) waitForReadinessProbe(done <-chan struct{}) error {
 
-	log.Printf("waiting for %s target readiness probe", t.options.ReadinessPath)
+	log.Printf("waiting for %d:%s target readiness probe", t.options.ReadinessPort, t.options.ReadinessPath)
 	for {
 		select {
 		case <-time.After(time.Duration(t.options.ReadinessTimeoutInSeconds) * time.Second):
@@ -65,7 +68,8 @@ func (t Target) waitForReadinessProbe(done <-chan struct{}) error {
 		case <-done:
 			return errors.New("target readiness probe: received done signal")
 		default:
-			if err := t.httpClient.Request(http.MethodGet, t.options.ReadinessPath, nil, nil); err != nil {
+			// FIXME: just http here? no grpc?
+			if err := t.readinessHttpClient.Request(http.MethodGet, t.options.ReadinessPath, nil, nil); err != nil {
 				continue
 				log.Printf("target readiness probe: %v", err)
 			}

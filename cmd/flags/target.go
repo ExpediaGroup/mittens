@@ -16,10 +16,11 @@ package flags
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"mittens/pkg/grpc"
 	"mittens/pkg/http"
 	"mittens/pkg/warmup"
+
+	"github.com/spf13/cobra"
 )
 
 type Target struct {
@@ -28,6 +29,7 @@ type Target struct {
 	GrpcHost               string
 	GrpcPort               int
 	ReadinessPath          string
+	ReadinessPort          int
 	ReadinessTimoutSeconds int
 	Insecure               bool
 }
@@ -69,6 +71,12 @@ func (t *Target) InitFlags(cmd *cobra.Command) {
 		"The path used for target readiness probe",
 	)
 	cmd.Flags().IntVar(
+		&t.ReadinessPort,
+		"target-readiness-port",
+		8080,
+		"The port used for target readiness probe",
+	)
+	cmd.Flags().IntVar(
 		&t.ReadinessTimoutSeconds,
 		"target-readiness-timeout-seconds",
 		-1,
@@ -86,8 +94,13 @@ func (t *Target) GetWarmupTargetOptions() warmup.TargetOptions {
 
 	return warmup.TargetOptions{
 		ReadinessPath:             t.ReadinessPath,
+		ReadinessPort:             t.ReadinessPort,
 		ReadinessTimeoutInSeconds: t.ReadinessTimoutSeconds,
 	}
+}
+
+func (t *Target) GetReadinessHttpClient() http.Client {
+	return http.NewClient(fmt.Sprintf("%s:%d", t.HttpHost, t.ReadinessPort), t.Insecure)
 }
 
 func (t *Target) GetHttpClient() http.Client {
