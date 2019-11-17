@@ -32,11 +32,12 @@ import (
 
 var opts *flags.Root
 
-func setup() {
+func CreateConfig() {
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	var cfgFile string
 
-	flag.StringVar(&cfgFile,"config", "","Config file to be used. If empty configs will be read from cmd.")
-	opts = flags.NewRoot()
+	flag.StringVar(&cfgFile, "config", "", "Config file to be used. If empty configs will be read from cmd.")
+	opts = &flags.Root{}
 	opts.InitFlags()
 	flag.Parse()
 
@@ -58,7 +59,6 @@ func setup() {
 
 func RunCmdRoot() {
 
-	setup()
 	// CPU profile
 	if opts.Profile.CPU != "" {
 

@@ -34,8 +34,8 @@ var allowedHttpMethods = map[string]interface{}{
 }
 
 type Http struct {
-	Headers  stringArray `json:"headers"`
-	Requests stringArray `json:"requests"`
+	Headers  stringArray `json:"http-headers"`
+	Requests stringArray `json:"http-requests"`
 }
 
 func (h *Http) String() string {
@@ -43,8 +43,8 @@ func (h *Http) String() string {
 }
 
 func (h *Http) InitFlags() {
-	flag.Var(&h.Headers,"httpHeader","Http header to be sent with warm up requests.")
-	flag.Var(&h.Requests,"httpRequest", `Http request to be sent. Request is in '<http-method>:<path>[:body]' format. E.g. post:/ping:{"key":"value"}`)
+	flag.Var(&h.Headers, "http-headers", "Http header to be sent with warm up requests.")
+	flag.Var(&h.Requests, "http-requests", `Http request to be sent. Request is in '<http-method>:<path>[:body]' format. E.g. post:/ping:{"key":"value"}`)
 }
 
 func (h *Http) GetWarmupHttpHeaders() map[string]string {

@@ -29,43 +29,73 @@ import (
 
 // this is a hack since Go doesn't support setup/tearDown
 // we use sub-tests so that target server only starts once
-
-var _ = func() bool {
-	testing.Init()
-	return true
-}()
-
 func TestAll(t *testing.T) {
 	shutdown := StartTargetTestServer(t)
 	defer shutdown()
 	result := t.Run("TestWarmupSidecarWithFileProbe", TestWarmupSidecarWithFileProbe)
 	result = result && t.Run("TestWarmupSidecarWithServerProbe", TestWarmupSidecarWithServerProbe)
+	result = result && t.Run("TestConfigsFromFile", TestConfigsFromFile)
 	os.Exit(bool2int(!result))
 }
 
 func TestWarmupSidecarWithFileProbe(t *testing.T) {
 	os.Args = []string{"mittens",
-		"-fileProbeEnabled=true",
-		"-serverProbeEnabled=false",
-		"-httpRequest=get:/delay",
+		"-file-probe-enabled=true",
+		"-server-probe-enabled=false",
+		"-http-requests=get:/delay",
 		"-concurrency=4",
-		"-exitAfterWarmup=true",
-		"-targetReadinessPath=/",
-		"-timeoutSeconds=5"}
+		"-exit-after-warmup=true",
+		"-target-readiness-path=/",
+		"-timeout-seconds=5"}
 
+	CreateConfig()
 	RunCmdRoot()
+
+	assert.Equal(t, true, opts.FileProbe.Enabled)
+	assert.Equal(t, false, opts.ServerProbe.Enabled)
+	assert.Contains(t, opts.Http.Requests, "get:/delay")
+	assert.Equal(t, 4, opts.Concurrency)
+	assert.Equal(t, true, opts.ExitAfterWarmup)
+	assert.Equal(t, "/", opts.Target.ReadinessPath)
+	assert.Equal(t, 5, opts.TimeoutSeconds)
 }
 
 func TestWarmupSidecarWithServerProbe(t *testing.T) {
 	os.Args = []string{"mittens",
-		"-fileProbeEnabled=true",
-		"-serverProbeEnabled=true",
-		"-httpRequest=get:/delay",
+		"-file-probe-enabled=true",
+		"-server-probe-enabled=true",
+		"-http-requests=get:/delay",
 		"-concurrency=4",
-		"-exitAfterWarmup=true",
-		"-targetReadinessPath=/",
-		"-timeoutSeconds=5"}
+		"-exit-after-warmup=true",
+		"-target-readiness-path=/",
+		"-timeout-seconds=5"}
+
+	CreateConfig()
 	RunCmdRoot()
+
+	assert.Equal(t, true, opts.FileProbe.Enabled)
+	assert.Equal(t, true, opts.ServerProbe.Enabled)
+	assert.Contains(t, opts.Http.Requests, "get:/delay")
+	assert.Equal(t, 4, opts.Concurrency)
+	assert.Equal(t, true, opts.ExitAfterWarmup)
+	assert.Equal(t, "/", opts.Target.ReadinessPath)
+	assert.Equal(t, 5, opts.TimeoutSeconds)
+}
+
+func TestConfigsFromFile(t *testing.T) {
+	os.Args = []string{"mittens",
+		"-config=sample_configs.json"}
+
+	CreateConfig()
+	RunCmdRoot()
+
+	assert.Equal(t, true, opts.FileProbe.Enabled)
+	assert.Equal(t, true, opts.ServerProbe.Enabled)
+	assert.Contains(t, opts.Http.Requests, "get:/delay")
+	assert.Equal(t, 4, opts.Concurrency)
+	assert.Equal(t, true, opts.ExitAfterWarmup)
+	assert.Equal(t, "/", opts.Target.ReadinessPath)
+	assert.Equal(t, 5, opts.TimeoutSeconds)
 }
 
 func StartTargetTestServer(t *testing.T) (shutdown func()) {

@@ -19,5 +19,6 @@ import (
 )
 
 func main() {
+	cmd.CreateConfig()
 	cmd.RunCmdRoot()
 }

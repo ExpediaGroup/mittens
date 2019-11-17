@@ -23,13 +23,13 @@ import (
 )
 
 type Target struct {
-	HttpHost               string `json:"httpHost"`
-	HttpPort               int `json:"httpPort"`
-	GrpcHost               string `json:"grpcHost"`
-	GrpcPort               int `json:"grpcPort"`
-	ReadinessPath          string `json:"readinessPath"`
-	ReadinessTimoutSeconds int `json:"readinessTimeout"`
-	Insecure               bool `json:"insecure"`
+	HttpHost               string `json:"target-http-host"`
+	HttpPort               int    `json:"target-http-port"`
+	GrpcHost               string `json:"target-grpc-host"`
+	GrpcPort               int    `json:"target-grpc-port"`
+	ReadinessPath          string `json:"target-readiness-path"`
+	ReadinessTimoutSeconds int    `json:"target-readiness-timeout-seconds"`
+	Insecure               bool   `json:"target-insecure"`
 }
 
 func (t *Target) String() string {
@@ -37,13 +37,13 @@ func (t *Target) String() string {
 }
 
 func (t *Target) InitFlags() {
-	flag.StringVar(&t.HttpHost,"targetHttpHost","http://localhost","Http host to warm up")
-	flag.IntVar(&t.HttpPort,"targetHttpPort",8080,"Http port for warm up requests")
-	flag.StringVar(&t.GrpcHost,"targetGrpcHost","localhost","Grpc host to warm up")
-	flag.IntVar(&t.GrpcPort,"targetGrpcPort",50051,"Grpc port for warm up requests")
-	flag.StringVar(&t.ReadinessPath,"targetReadinessPath","/ready","The path used for target readiness probe")
-	flag.IntVar(&t.ReadinessTimoutSeconds,"targetReadinessTimeoutSeconds",-1,"Timeout for target readiness probe")
-	flag.BoolVar(&t.Insecure,"targetInsecure",false,"Whether to skip TLS validation")
+	flag.StringVar(&t.HttpHost, "target-http-host", "http://localhost", "Http host to warm up")
+	flag.IntVar(&t.HttpPort, "target-http-port", 8080, "Http port for warm up requests")
+	flag.StringVar(&t.GrpcHost, "target-grpc-host", "localhost", "Grpc host to warm up")
+	flag.IntVar(&t.GrpcPort, "target-grpc-port", 50051, "Grpc port for warm up requests")
+	flag.StringVar(&t.ReadinessPath, "target-readiness-path", "/ready", "The path used for target readiness probe")
+	flag.IntVar(&t.ReadinessTimoutSeconds, "target-readiness-timeout-seconds", -1, "Timeout for target readiness probe")
+	flag.BoolVar(&t.Insecure, "target-insecure", false, "Whether to skip TLS validation")
 }
 
 func (t *Target) GetWarmupTargetOptions() warmup.TargetOptions {

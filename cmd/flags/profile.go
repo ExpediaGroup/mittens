@@ -20,8 +20,8 @@ import (
 )
 
 type Profile struct {
-	CPU    string `json:"cpu"`
-	Memory string `json:"memory"`
+	CPU    string `json:"profile-cpu"`
+	Memory string `json:"profile-memory"`
 }
 
 func (p *Profile) String() string {
@@ -29,6 +29,6 @@ func (p *Profile) String() string {
 }
 
 func (p *Profile) InitFlags() {
-	flag.StringVar(&p.CPU,"profileCpu","","Name of the file where to write CPU profile data")
-	flag.StringVar(&p.Memory,"profileMemory","","Name of the file where to write memory profile data")
+	flag.StringVar(&p.CPU, "profile-cpu", "", "Name of the file where to write CPU profile data")
+	flag.StringVar(&p.Memory, "profile-memory", "", "Name of the file where to write memory profile data")
 }

@@ -20,10 +20,10 @@ import (
 )
 
 type ServerProbe struct {
-	Enabled       bool `json:"enabled"`
-	Port          int `json:"port"`
-	LivenessPath  string `json:"livenessPath"`
-	ReadinessPath string `json:"readinessPath"`
+	Enabled       bool   `json:"server-probe-enabled"`
+	Port          int    `json:"server-probe-port"`
+	LivenessPath  string `json:"server-probe-liveness-path"`
+	ReadinessPath string `json:"server-probe-readiness-path"`
 }
 
 func (p *ServerProbe) String() string {
@@ -31,8 +31,8 @@ func (p *ServerProbe) String() string {
 }
 
 func (p *ServerProbe) InitFlags() {
-	flag.BoolVar(&p.Enabled,"serverProbeEnabled",false,"If set to true runs a web server that exposes endpoints to be used as readiness/liveness probes")
-	flag.IntVar(&p.Port,"serverProbePort",8000,"Port on which probe server is running")
-	flag.StringVar(&p.LivenessPath,"serverProbeLivenessPath","/alive","Probe server endpoint used as liveness probe")
-	flag.StringVar(&p.ReadinessPath,"serverProbeReadinessPath","/ready","Probe server endpoint used as readiness probe")
+	flag.BoolVar(&p.Enabled, "server-probe-enabled", false, "If set to true runs a web server that exposes endpoints to be used as readiness/liveness probes")
+	flag.IntVar(&p.Port, "server-probe-port", 8000, "Port on which probe server is running")
+	flag.StringVar(&p.LivenessPath, "server-probe-liveness-path", "/alive", "Probe server endpoint used as liveness probe")
+	flag.StringVar(&p.ReadinessPath, "server-probe-readiness-path", "/ready", "Probe server endpoint used as readiness probe")
 }

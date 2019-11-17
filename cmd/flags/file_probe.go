@@ -20,9 +20,9 @@ import (
 )
 
 type FileProbe struct {
-	Enabled       bool `json:"enabled"`
-	LivenessPath  string `json:"livenessPath"`
-	ReadinessPath string `json:"readinessPath"`
+	Enabled       bool   `json:"file-probe-enabled"`
+	LivenessPath  string `json:"file-probe-liveness-path"`
+	ReadinessPath string `json:"file-probe-readiness-path"`
 }
 
 func (p *FileProbe) String() string {
@@ -30,7 +30,7 @@ func (p *FileProbe) String() string {
 }
 
 func (p *FileProbe) InitFlags() {
-	//flag.BoolVar(&p.Enabled,"probe-file-enabled",true,"If set to true writes files to be used as readiness/liveness probes")
-	flag.StringVar(&p.LivenessPath,"fileProbeLivenessPath","alive","File to be used for liveness probe")
-	flag.StringVar(&p.ReadinessPath,"fileProbeReadinessPath","ready","File to be used for readiness probe")
+	flag.BoolVar(&p.Enabled, "file-probe-enabled", true, "If set to true writes files to be used as readiness/liveness probes")
+	flag.StringVar(&p.LivenessPath, "file-probe-liveness-path", "alive", "File to be used for liveness probe")
+	flag.StringVar(&p.ReadinessPath, "file-probe-readiness-path", "ready", "File to be used for readiness probe")
 }

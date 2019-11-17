@@ -25,28 +25,16 @@ import (
 )
 
 type Root struct {
-	TimeoutSeconds           int `json:"timeoutSeconds"`
-	Concurrency              int `json:"concurrency"`
-	RequestDelayMilliseconds int `json:"requestDelayMilliseconds"`
-	ExitAfterWarmup          bool `json:"exitAfterWarmup"`
-	FileProbe                *FileProbe `json:"fileProbe"`
-	ServerProbe              *ServerProbe `json:"serverProbe"`
-	Target                   *Target `json:"target"`
-	Http                     *Http `json:"http"`
-	Grpc                     *Grpc `json:"grpc"`
-	Profile                  *Profile `json:"profile"`
-}
-
-func NewRoot() *Root {
-
-	return &Root{
-		FileProbe:   new(FileProbe),
-		ServerProbe: new(ServerProbe),
-		Target:      new(Target),
-		Http:        new(Http),
-		Grpc:        new(Grpc),
-		Profile:     new(Profile),
-	}
+	TimeoutSeconds           int  `json:"timeout-seconds"`
+	Concurrency              int  `json:"concurrency"`
+	RequestDelayMilliseconds int  `json:"request-delay-milliseconds"`
+	ExitAfterWarmup          bool `json:"exit-after-warmup"`
+	FileProbe
+	ServerProbe
+	Target
+	Http
+	Grpc
+	Profile
 }
 
 func (r *Root) String() string {
@@ -54,10 +42,10 @@ func (r *Root) String() string {
 }
 
 func (r *Root) InitFlags() {
-	flag.IntVar(&r.TimeoutSeconds, "timeoutSeconds", 60, "Time after which warm up will stop making requests")
+	flag.IntVar(&r.TimeoutSeconds, "timeout-seconds", 60, "Time after which warm up will stop making requests")
 	flag.IntVar(&r.Concurrency, "concurrency", 2, "Number of concurrent requests for warm up")
-	flag.BoolVar(&r.ExitAfterWarmup, "exitAfterWarmup", false, "If warm up process should finish after completion. This is useful to prevent container restarts.")
-	flag.BoolVar(&r.FileProbe.Enabled,"fileProbeEnabled",true,"If set to true writes files to be used as readiness/liveness probes")
+	flag.IntVar(&r.RequestDelayMilliseconds, "request-delay-milliseconds", 50, "Delay in milliseconds between requests")
+	flag.BoolVar(&r.ExitAfterWarmup, "exit-after-warmup", false, "If warm up process should finish after completion. This is useful to prevent container restarts.")
 
 	r.FileProbe.InitFlags()
 	r.ServerProbe.InitFlags()

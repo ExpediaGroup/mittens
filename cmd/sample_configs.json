@@ -1,0 +1,9 @@
+{
+  "exit-after-warmup": true,
+  "timeout-seconds": 5,
+  "concurrency": 4,
+  "target-readiness-path": "/",
+  "file-probe-enabled": true,
+  "server-probe-enabled": true,
+  "http-requests": ["get:/delay"]
+}

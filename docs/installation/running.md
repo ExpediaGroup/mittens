@@ -10,7 +10,24 @@ You can also run it as a linked Docker container or even as a sidecar in Kuberne
 
 You can run the binary executable as follows:
         
-    ./mittens --target-readiness-path=/health --target-grpc-port=6565 --timeout-seconds=60 --concurrency=3 --http-request=get:/hotel/potatoes --grpc-request=service/method:"{\"foo\":\"bar\", \"bar\":\"foo\"}"
+    ./mittens -target-readiness-path=/health -target-grpc-port=6565 -timeout-seconds=60 -concurrency=3 -http-request=get:/hotel/potatoes -grpc-requests=service/method:"{\"foo\":\"bar\", \"bar\":\"foo\"}"
+
+To read the above configs from file:
+
+    ./mittens -config=configs.json
+
+where `configs.json`:
+
+```json
+{
+  "target-readiness-path": "/health",
+  "target-grpc-port": 6565,
+  "timeout-seconds": 60,
+  "concurrency": 3,
+  "http-requests": ["get:/hotel/potatoes"],
+  "grpc-requests": ["service/method:'{\"foo\":\"bar\", \"bar\":\"foo\"}'"]
+}
+```
 
 ## Run as a linked Docker container
 
@@ -27,9 +44,9 @@ You can run the binary executable as follows:
         image: expediagroup/mittens:latest
         links:
           - app
-        command: "--target-readiness-path=/health --target-grpc-port=6565 --timeout-seconds=60 --concurrency=3 --http-request=get:/hotel/potatoes --grpc-request=service/method:{\"foo\":\"bar\", \"bar\":\"foo\"}"
+        command: "-target-readiness-path=/health -target-grpc-port=6565 -timeout-seconds=60 -concurrency=3 -http-requests=get:/hotel/potatoes -grpc-requests=service/method:{\"foo\":\"bar\", \"bar\":\"foo\"}"
 
-_Note_: If you use Docker for Mac you might need to set `targetHost` to `docker.for.mac.localhost`, or `docker.for.mac.host.internal`, or `host.docker.internal` (depending on your version of Docker) so that your container can resolve localhost.
+_Note_: If you use Docker for Mac you might need to set the target host (`target-http-host`, `target-grpc-host`) to `docker.for.mac.localhost`, or `docker.for.mac.host.internal`, or `host.docker.internal` (depending on your version of Docker) so that your container can resolve localhost.
 
 ## Run as a sidecar on Kubernetes
 
@@ -79,26 +96,26 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 30
         args:
-        - "--concurrency=3"
-        - "--timeout-seconds=60"
-        - "--target-readiness-path=/health"
-        - "--target-grpc-port=6565"
-        - "--http-request=get:/health"
-        - "--http-request=post:/hotel/aubergines:{\"foo\":\"bar\"}"
-        - "--grpc-request=service/method:{\"foo\":\"bar\",\"bar\":\"foo\"}"
+        - "-concurrency=3"
+        - "-timeout-seconds=60"
+        - "-target-readiness-path=/health"
+        - "-target-grpc-port=6565"
+        - "-http-requests=get:/health"
+        - "-http-requests=post:/hotel/aubergines:{\"foo\":\"bar\"}"
+        - "-grpc-requests=service/method:{\"foo\":\"bar\",\"bar\":\"foo\"}"
 ```
 
 ## Notes about warm-up duration
 
 Be aware that setting **target-readiness-timeout-seconds** will change how long the warmup routine will run for.
 
-### Option 1: setting just --timeout-seconds
+### Option 1: setting just -timeout-seconds
 
 ```
-"--probe-readiness-path": /ready
-"--timeout-seconds": 90
-"--http-request": someRequest
-"--http-request": anotherRequest
+"-server-probe-readiness-path": /ready
+"-timeout-seconds": 90
+"-http-requests": someRequest
+"-http-requests": anotherRequest
 ```
 
 With these configs the mittens container will start to call _/ready_.
@@ -108,14 +125,14 @@ Note that during the warmup _someRequest_ and _anotherRequest_ will be called ra
 
 If the application is not ready after 90 seconds, we skip the warmup routine.
 
-### Option 2: setting --timeout-seconds and --target-readiness-timeout-seconds
+### Option 2: setting -timeout-seconds and -target-readiness-timeout-seconds
 
 ```
-"--probe-readiness-path": /ready
-"--timeout-seconds": 90
-"--target-readiness-timeout-seconds": 60
-"--http-request": someRequest
-"--http-request": anotherRequest
+"-server-probe-readiness-path": /ready
+"-timeout-seconds": 90
+"-target-readiness-timeout-seconds": 60
+"-http-requests": someRequest
+"-http-requests": anotherRequest
 ```
 
 With these configs the mittens container will start to call _/ready_.

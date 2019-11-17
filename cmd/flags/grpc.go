@@ -23,8 +23,8 @@ import (
 )
 
 type Grpc struct {
-	Headers  stringArray `json:"headers"`
-	Requests stringArray `json:"requests"`
+	Headers  stringArray `json:"grpc-headers"`
+	Requests stringArray `json:"grpc-requests"`
 }
 
 func (g *Grpc) String() string {
@@ -32,8 +32,8 @@ func (g *Grpc) String() string {
 }
 
 func (g *Grpc) InitFlags() {
-	flag.Var(&g.Headers,"grpcHeader","gRPC header to be sent with warm up requests.")
-	flag.Var(&g.Requests,"grpcRequest",`gRPC request to be sent. Request is in '<service>/<method>[:message]' format. E.g. health/ping:{"key": "value"}`)
+	flag.Var(&g.Headers, "grpc-headers", "gRPC header to be sent with warm up requests.")
+	flag.Var(&g.Requests, "grpc-requests", `gRPC request to be sent. Request is in '<service>/<method>[:message]' format. E.g. health/ping:{"key": "value"}`)
 }
 
 func (g *Grpc) GetWarmupGrpcHeaders() []string {
