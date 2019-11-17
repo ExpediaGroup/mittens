@@ -15,8 +15,8 @@
 package flags
 
 import (
+	"flag"
 	"fmt"
-	"github.com/spf13/cobra"
 	"log"
 	"mittens/pkg/grpc"
 	"mittens/pkg/http"
@@ -25,67 +25,34 @@ import (
 )
 
 type Root struct {
-	TimeoutSeconds           int
-	Concurrency              int
-	RequestDelayMilliseconds int
-	ExitAfterWarmup          bool
-	FileProbe                *FileProbe
-	ServerProbe              *ServerProbe
-	Target                   *Target
-	Http                     *Http
-	Grpc                     *Grpc
-	Profile                  *Profile
-}
-
-func NewRoot() *Root {
-
-	return &Root{
-		FileProbe:   new(FileProbe),
-		ServerProbe: new(ServerProbe),
-		Target:      new(Target),
-		Http:        new(Http),
-		Grpc:        new(Grpc),
-		Profile:     new(Profile),
-	}
+	TimeoutSeconds           int  `json:"timeout-seconds"`
+	Concurrency              int  `json:"concurrency"`
+	RequestDelayMilliseconds int  `json:"request-delay-milliseconds"`
+	ExitAfterWarmup          bool `json:"exit-after-warmup"`
+	FileProbe
+	ServerProbe
+	Target
+	Http
+	Grpc
+	Profile
 }
 
 func (r *Root) String() string {
 	return fmt.Sprintf("%+v", *r)
 }
 
-func (r *Root) InitFlags(cmd *cobra.Command) {
+func (r *Root) InitFlags() {
+	flag.IntVar(&r.TimeoutSeconds, "timeout-seconds", 60, "Time after which warm up will stop making requests")
+	flag.IntVar(&r.Concurrency, "concurrency", 2, "Number of concurrent requests for warm up")
+	flag.IntVar(&r.RequestDelayMilliseconds, "request-delay-milliseconds", 50, "Delay in milliseconds between requests")
+	flag.BoolVar(&r.ExitAfterWarmup, "exit-after-warmup", false, "If warm up process should finish after completion. This is useful to prevent container restarts.")
 
-	cmd.Flags().IntVar(
-		&r.TimeoutSeconds,
-		"timeout-seconds",
-		60,
-		"Time after which warm up will stop making requests",
-	)
-	cmd.Flags().IntVar(
-		&r.Concurrency,
-		"concurrency",
-		2,
-		"Number of concurrent requests for warm up",
-	)
-	cmd.Flags().IntVar(
-		&r.RequestDelayMilliseconds,
-		"request-delay-milliseconds",
-		50,
-		"Delay in milliseconds between requests",
-	)
-	cmd.Flags().BoolVar(
-		&r.ExitAfterWarmup,
-		"exit-after-warmup",
-		false,
-		"If warm up process should finish after completion. This is useful to prevent container restarts.",
-	)
-
-	r.FileProbe.InitFlags(cmd)
-	r.ServerProbe.InitFlags(cmd)
-	r.Target.InitFlags(cmd)
-	r.Http.InitFlags(cmd)
-	r.Grpc.InitFlags(cmd)
-	r.Profile.InitFlags(cmd)
+	r.FileProbe.InitFlags()
+	r.ServerProbe.InitFlags()
+	r.Target.InitFlags()
+	r.Http.InitFlags()
+	r.Grpc.InitFlags()
+	r.Profile.InitFlags()
 }
 
 func (r *Root) GetWarmupOptions() warmup.Options {

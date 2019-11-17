@@ -17,7 +17,7 @@ Its main features are summarised below:
 - Provides files or/and endpoints that can be used as liveness/readiness probes in Kubernetes
 
 ## Usage
-The application receives a number of command-line flags. Read the [documentation](https://expediagroup.github.io/mittens/docs/about/getting-started) for more context.
+The application receives a number of command-line flags. It also supports reading configs from a JSON file. Read the [documentation](https://expediagroup.github.io/mittens/docs/about/getting-started) for more context.
 
 ## How to build and run
 Mittens is written in Go and the simplest way to run it is as a cmd application. It receives a number of command line arguments (see [Flags](https://github.com/ExpediaGroup/mittens#flags)).
@@ -53,7 +53,7 @@ To run the integration tests:
 
 To run the binary:
         
-    ./mittens --target-readiness-path=/health --target-grpc-port=6565 --timeout-seconds=60 --concurrency=3 --http-request=get:/hotel/potatoes --grpc-request=service/method:"{\"foo\":\"bar\",\"bar\":\"foo\"}"
+    ./mittens -target-readiness-path=/health -target-grpc-port=6565 -timeout-seconds=60 -concurrency=3 -http-requests=get:/hotel/potatoes -grpc-requests=service/method:"{\"foo\":\"bar\",\"bar\":\"foo\"}"
 
 ### Docker
 #### Build image
@@ -66,9 +66,9 @@ To build a Docker image named `mittens`:
 
 To run the container:
 
-    docker run mittens:latest --target-readiness-path=/health --target-grpc-port=6565 --timeout-seconds=60 --concurrency=3 --http-request=get:/hotel/potatoes --grpc-request=service/method:"{\"foo\":\"bar\",\"bar\":\"foo\"}"
+    docker run mittens:latest -target-readiness-path=/health -target-grpc-port=6565 -timeout-seconds=60 -concurrency=3 -http-requests=get:/hotel/potatoes -grpc-requests=service/method:"{\"foo\":\"bar\",\"bar\":\"foo\"}"
 
-_Note_: If you use Docker for Mac you might need to set `targetHost` to `docker.for.mac.localhost`, or `docker.for.mac.host.internal`, or `host.docker.internal` (depending on your version of Docker) so that your container can resolve localhost.
+_Note_: If you use Docker for Mac you might need to set the target host (`target-http-host`, `target-grpc-host`) to `docker.for.mac.localhost`, or `docker.for.mac.host.internal`, or `host.docker.internal` (depending on your version of Docker) so that your container can resolve localhost.
 
 ## Contributing
 
