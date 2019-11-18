@@ -70,12 +70,11 @@ func (t Target) waitForReadinessProbe(done <-chan struct{}) error {
 		default:
 			// FIXME: just http here? no grpc?
 			if err := t.readinessHttpClient.Request(http.MethodGet, t.options.ReadinessPath, nil, nil); err != nil {
-				continue
 				log.Printf("target readiness probe: %v", err)
+				continue
 			}
 			log.Print("target is ready")
 			return nil
 		}
 	}
-	return nil
 }

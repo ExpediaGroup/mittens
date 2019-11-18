@@ -43,9 +43,17 @@ func (t *Target) InitFlags() {
 	flag.StringVar(&t.GrpcHost, "target-grpc-host", "localhost", "Grpc host to warm up")
 	flag.IntVar(&t.GrpcPort, "target-grpc-port", 50051, "Grpc port for warm up requests")
 	flag.StringVar(&t.ReadinessPath, "target-readiness-path", "/ready", "The path used for target readiness probe")
-	flag.IntVar(&t.ReadinessPath, "target-readiness-port", "8080", "The port used for target readiness probe")
+	flag.IntVar(&t.ReadinessPort, "target-readiness-port", toIntOrDefaultIfNull(&t.HttpPort, 8080), "The port used for target readiness probe")
 	flag.IntVar(&t.ReadinessTimoutSeconds, "target-readiness-timeout-seconds", -1, "Timeout for target readiness probe")
 	flag.BoolVar(&t.Insecure, "target-insecure", false, "Whether to skip TLS validation")
+}
+
+func toIntOrDefaultIfNull(value *int, defaultValue int) int {
+	if value == nil {
+		return defaultValue
+	} else {
+		return *value
+	}
 }
 
 func (t *Target) GetWarmupTargetOptions() warmup.TargetOptions {

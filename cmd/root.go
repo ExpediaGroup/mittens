@@ -28,8 +28,6 @@ import (
 	"sync"
 	"syscall"
 	"time"
-
-	"github.com/spf13/cobra"
 )
 
 var opts *flags.Root
