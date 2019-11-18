@@ -15,36 +15,25 @@
 package flags
 
 import (
+	"flag"
 	"fmt"
-	"github.com/spf13/cobra"
 	"log"
 	"mittens/pkg/warmup"
 	"strings"
 )
 
 type Grpc struct {
-	Headers  []string
-	Requests []string
+	Headers  stringArray `json:"grpc-headers"`
+	Requests stringArray `json:"grpc-requests"`
 }
 
 func (g *Grpc) String() string {
 	return fmt.Sprintf("%+v", *g)
 }
 
-func (g *Grpc) InitFlags(cmd *cobra.Command) {
-
-	cmd.Flags().StringArrayVar(
-		&g.Headers,
-		"grpc-header",
-		nil,
-		"gRPC header to be sent with warm up requests.",
-	)
-	cmd.Flags().StringArrayVar(
-		&g.Requests,
-		"grpc-request",
-		nil,
-		`gRPC request to be sent. Request is in '<service>/<method>[:message]' format. E.g. health/ping:{"key": "value"}`,
-	)
+func (g *Grpc) InitFlags() {
+	flag.Var(&g.Headers, "grpc-headers", "gRPC header to be sent with warm up requests.")
+	flag.Var(&g.Requests, "grpc-requests", `gRPC request to be sent. Request is in '<service>/<method>[:message]' format. E.g. health/ping:{"key": "value"}`)
 }
 
 func (g *Grpc) GetWarmupGrpcHeaders() []string {

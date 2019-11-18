@@ -15,8 +15,8 @@
 package flags
 
 import (
+	"flag"
 	"fmt"
-	"github.com/spf13/cobra"
 	"mittens/pkg/warmup"
 	"strings"
 )
@@ -34,27 +34,17 @@ var allowedHttpMethods = map[string]interface{}{
 }
 
 type Http struct {
-	Headers  []string
-	Requests []string
+	Headers  stringArray `json:"http-headers"`
+	Requests stringArray `json:"http-requests"`
 }
 
 func (h *Http) String() string {
 	return fmt.Sprintf("%+v", *h)
 }
 
-func (h *Http) InitFlags(cmd *cobra.Command) {
-	cmd.Flags().StringArrayVar(
-		&h.Headers,
-		"http-header",
-		nil,
-		"Http header to be sent with warm up requests.",
-	)
-	cmd.Flags().StringArrayVar(
-		&h.Requests,
-		"http-request",
-		nil,
-		`Http request to be sent. Request is in '<http-method>:<path>[:body]' format. E.g. post:/ping:{"key":"value"}`,
-	)
+func (h *Http) InitFlags() {
+	flag.Var(&h.Headers, "http-headers", "Http header to be sent with warm up requests.")
+	flag.Var(&h.Requests, "http-requests", `Http request to be sent. Request is in '<http-method>:<path>[:body]' format. E.g. post:/ping:{"key":"value"}`)
 }
 
 func (h *Http) GetWarmupHttpHeaders() map[string]string {
