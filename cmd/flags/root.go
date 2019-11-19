@@ -63,6 +63,10 @@ func (r *Root) GetWarmupOptions() warmup.Options {
 	}
 }
 
+func (r *Root) GetReadinessHttpClient() http.Client {
+	return r.Target.GetReadinessHttpClient()
+}
+
 func (r *Root) GetHttpClient() http.Client {
 	return r.Target.GetHttpClient()
 }

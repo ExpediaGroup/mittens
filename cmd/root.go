@@ -95,6 +95,7 @@ func RunCmdRoot() {
 	}
 
 	wp, err := warmup.NewWarmup(
+		opts.GetReadinessHttpClient(),
 		opts.GetHttpClient(),
 		opts.GetGrpcClient(),
 		opts.GetWarmupOptions(),

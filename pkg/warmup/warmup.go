@@ -50,9 +50,9 @@ type Response struct {
 	Duration time.Duration
 }
 
-func NewWarmup(httpClient http.Client, grpcClient grpc.Client, options Options, targetOptions TargetOptions, done <-chan struct{}) (Warmup, error) {
+func NewWarmup(readinessHttpClient http.Client, httpClient http.Client, grpcClient grpc.Client, options Options, targetOptions TargetOptions, done <-chan struct{}) (Warmup, error) {
 
-	target, err := NewTarget(httpClient, grpcClient, targetOptions, done)
+	target, err := NewTarget(readinessHttpClient, httpClient, grpcClient, targetOptions, done)
 	if err != nil {
 		return Warmup{}, fmt.Errorf("new target: %v", err)
 	}

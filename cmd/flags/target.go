@@ -28,6 +28,7 @@ type Target struct {
 	GrpcHost               string `json:"target-grpc-host"`
 	GrpcPort               int    `json:"target-grpc-port"`
 	ReadinessPath          string `json:"target-readiness-path"`
+	ReadinessPort          int    `json:"target-readiness-port"`
 	ReadinessTimoutSeconds int    `json:"target-readiness-timeout-seconds"`
 	Insecure               bool   `json:"target-insecure"`
 }
@@ -42,16 +43,30 @@ func (t *Target) InitFlags() {
 	flag.StringVar(&t.GrpcHost, "target-grpc-host", "localhost", "Grpc host to warm up")
 	flag.IntVar(&t.GrpcPort, "target-grpc-port", 50051, "Grpc port for warm up requests")
 	flag.StringVar(&t.ReadinessPath, "target-readiness-path", "/ready", "The path used for target readiness probe")
+	flag.IntVar(&t.ReadinessPort, "target-readiness-port", toIntOrDefaultIfNull(&t.HttpPort, 8080), "The port used for target readiness probe")
 	flag.IntVar(&t.ReadinessTimoutSeconds, "target-readiness-timeout-seconds", -1, "Timeout for target readiness probe")
 	flag.BoolVar(&t.Insecure, "target-insecure", false, "Whether to skip TLS validation")
+}
+
+func toIntOrDefaultIfNull(value *int, defaultValue int) int {
+	if value == nil {
+		return defaultValue
+	} else {
+		return *value
+	}
 }
 
 func (t *Target) GetWarmupTargetOptions() warmup.TargetOptions {
 
 	return warmup.TargetOptions{
 		ReadinessPath:             t.ReadinessPath,
+		ReadinessPort:             t.ReadinessPort,
 		ReadinessTimeoutInSeconds: t.ReadinessTimoutSeconds,
 	}
+}
+
+func (t *Target) GetReadinessHttpClient() http.Client {
+	return http.NewClient(fmt.Sprintf("%s:%d", t.HttpHost, t.ReadinessPort), t.Insecure)
 }
 
 func (t *Target) GetHttpClient() http.Client {
