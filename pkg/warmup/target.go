@@ -60,10 +60,12 @@ func NewTarget(readinessHttpClient whttp.Client, httpClient whttp.Client, grpcCl
 
 func (t Target) waitForReadinessProbe(done <-chan struct{}) error {
 
-	log.Printf("waiting for %d:%s target readiness probe", t.options.ReadinessPort, t.options.ReadinessPath)
+	log.Printf("waiting for %d:%s target readiness probe for %ds", t.options.ReadinessPort, t.options.ReadinessPath, t.options.ReadinessTimeoutInSeconds)
+
+	timeout := time.After(time.Duration(t.options.ReadinessTimeoutInSeconds) * time.Second)
 	for {
 		select {
-		case <-time.After(time.Duration(t.options.ReadinessTimeoutInSeconds) * time.Second):
+		case <-timeout:
 			return fmt.Errorf("target readiness proble: timeout %d seconds exceeded", t.options.ReadinessTimeoutInSeconds)
 		case <-done:
 			return errors.New("target readiness probe: received done signal")

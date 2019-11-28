@@ -23,14 +23,14 @@ import (
 )
 
 type Target struct {
-	HttpHost               string `json:"target-http-host"`
-	HttpPort               int    `json:"target-http-port"`
-	GrpcHost               string `json:"target-grpc-host"`
-	GrpcPort               int    `json:"target-grpc-port"`
-	ReadinessPath          string `json:"target-readiness-path"`
-	ReadinessPort          int    `json:"target-readiness-port"`
-	ReadinessTimoutSeconds int    `json:"target-readiness-timeout-seconds"`
-	Insecure               bool   `json:"target-insecure"`
+	HttpHost                string `json:"target-http-host"`
+	HttpPort                int    `json:"target-http-port"`
+	GrpcHost                string `json:"target-grpc-host"`
+	GrpcPort                int    `json:"target-grpc-port"`
+	ReadinessPath           string `json:"target-readiness-path"`
+	ReadinessPort           int    `json:"target-readiness-port"`
+	ReadinessTimeoutSeconds int    `json:"target-readiness-timeout-seconds"`
+	Insecure                bool   `json:"target-insecure"`
 }
 
 func (t *Target) String() string {
@@ -44,7 +44,7 @@ func (t *Target) InitFlags() {
 	flag.IntVar(&t.GrpcPort, "target-grpc-port", 50051, "Grpc port for warm up requests")
 	flag.StringVar(&t.ReadinessPath, "target-readiness-path", "/ready", "The path used for target readiness probe")
 	flag.IntVar(&t.ReadinessPort, "target-readiness-port", toIntOrDefaultIfNull(&t.HttpPort, 8080), "The port used for target readiness probe")
-	flag.IntVar(&t.ReadinessTimoutSeconds, "target-readiness-timeout-seconds", -1, "Timeout for target readiness probe")
+	flag.IntVar(&t.ReadinessTimeoutSeconds, "target-readiness-timeout-seconds", -1, "Timeout for target readiness probe")
 	flag.BoolVar(&t.Insecure, "target-insecure", false, "Whether to skip TLS validation")
 }
 
@@ -61,7 +61,7 @@ func (t *Target) GetWarmupTargetOptions() warmup.TargetOptions {
 	return warmup.TargetOptions{
 		ReadinessPath:             t.ReadinessPath,
 		ReadinessPort:             t.ReadinessPort,
-		ReadinessTimeoutInSeconds: t.ReadinessTimoutSeconds,
+		ReadinessTimeoutInSeconds: t.ReadinessTimeoutSeconds,
 	}
 }
 
