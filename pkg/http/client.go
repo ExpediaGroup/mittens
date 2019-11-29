@@ -47,11 +47,11 @@ func NewClient(host string, insecure bool) Client {
 }
 
 // Send http request and returns error also if response code is NOT 2XX
-func (c Client) Request(method, path string, headers map[string]string, requestBody []byte) error {
+func (c Client) Request(method, path string, headers map[string]string, requestBody *string) error {
 
 	var body io.Reader
-	if len(requestBody) != 0 {
-		body = bytes.NewBuffer(requestBody)
+	if requestBody != nil {
+		body = bytes.NewBuffer([]byte(*requestBody))
 	}
 
 	url := fmt.Sprintf("%s/%s", strings.TrimRight(c.host, "/"), strings.TrimLeft(path, "/"))

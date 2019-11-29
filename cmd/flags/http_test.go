@@ -15,10 +15,12 @@
 package flags
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"testing"
+	"time"
 )
 
 func TestHttp_ToHttpRequests(t *testing.T) {
@@ -44,7 +46,7 @@ func TestHttp_FlagToHttpRequest(t *testing.T) {
 
 	assert.Equal(t, http.MethodPost, request.Method)
 	assert.Equal(t, "/db", request.Path)
-	assert.Equal(t, `{"db": "true"}`, string(request.Body))
+	assert.Equal(t, `{"db": "true"}`, *request.Body)
 }
 
 func TestHttp_FlagWithoutBodyToHttpRequest(t *testing.T) {
@@ -58,7 +60,31 @@ func TestHttp_FlagWithoutBodyToHttpRequest(t *testing.T) {
 	assert.Nil(t, request.Body)
 }
 
-func TestHttp_FlagWithInvlidMethodToHttpRequest(t *testing.T) {
+func TestHttp_TodayInterpolation(t *testing.T) {
+
+	requestFlag := `post:/db_{today+5}:{"db": "{today+5}"}`
+	request, err := toHttpRequest(requestFlag)
+	require.NoError(t, err)
+
+	assert.Equal(t, http.MethodPost, request.Method)
+	date := time.Now().Add(time.Duration(5) * 24 * time.Hour).Format("2006-01-02") // today + 5
+	assert.Equal(t, "/db_"+date, request.Path)
+	assert.Equal(t, fmt.Sprintf(`{"db": "%s"}`, date), *request.Body)
+}
+
+func TestHttp_TomorrowInterpolation(t *testing.T) {
+
+	requestFlag := `post:/db_{tomorrow}:{"db": "{tomorrow}"}`
+	request, err := toHttpRequest(requestFlag)
+	require.NoError(t, err)
+
+	assert.Equal(t, http.MethodPost, request.Method)
+	date := time.Now().Add(time.Duration(1) * 24 * time.Hour).Format("2006-01-02") // today + 1
+	assert.Equal(t, "/db_"+date, request.Path)
+	assert.Equal(t, fmt.Sprintf(`{"db": "%s"}`, date), *request.Body)
+}
+
+func TestHttp_FlagWithInvalidMethodToHttpRequest(t *testing.T) {
 
 	requestFlag := `hmm:/ping:all=true`
 	_, err := toGrpcRequest(requestFlag)

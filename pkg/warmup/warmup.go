@@ -36,7 +36,7 @@ type GrpcRequest struct {
 type HttpRequest struct {
 	Method string
 	Path   string
-	Body   []byte
+	Body   *string
 }
 
 type Warmup struct {

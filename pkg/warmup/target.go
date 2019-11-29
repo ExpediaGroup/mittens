@@ -53,7 +53,7 @@ func NewTarget(readinessHttpClient whttp.Client, httpClient whttp.Client, grpcCl
 	}
 
 	if err := t.waitForReadinessProbe(done); err != nil {
-		return Target{}, fmt.Errorf("wait for rediness probe: %v", err)
+		return Target{}, fmt.Errorf("wait for readiness probe: %v", err)
 	}
 	return t, nil
 }

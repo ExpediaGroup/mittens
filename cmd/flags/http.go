@@ -18,7 +18,10 @@ import (
 	"flag"
 	"fmt"
 	"mittens/pkg/warmup"
+	"regexp"
+	"strconv"
 	"strings"
+	"time"
 )
 
 var allowedHttpMethods = map[string]interface{}{
@@ -32,6 +35,9 @@ var allowedHttpMethods = map[string]interface{}{
 	"OPTIONS": nil,
 	"TRACE":   nil,
 }
+
+var todayTemplateRegex = regexp.MustCompile("{(today([+-]\\d+)?|tomorrow)}")
+var todayTemplatePlusMinusRegex = regexp.MustCompile("[+-]\\d+")
 
 type Http struct {
 	Headers  stringArray `json:"http-headers"`
@@ -83,16 +89,36 @@ func toHttpRequest(requestFlag string) (warmup.HttpRequest, error) {
 
 	// <method>:<path>
 	if len(parts) == 2 {
+		path := interpolateDates(parts[1])
+
 		return warmup.HttpRequest{
 			Method: method,
-			Path:   parts[1],
+			Path:   path,
 			Body:   nil,
 		}, nil
 	}
 
+	path := interpolateDates(parts[1])
+	var body = interpolateDates(parts[2])
+
 	return warmup.HttpRequest{
 		Method: method,
-		Path:   parts[1],
-		Body:   []byte(parts[2]),
+		Path:   path,
+		Body:   &body,
 	}, nil
+}
+
+func interpolateDates(source string) string {
+	return todayTemplateRegex.ReplaceAllStringFunc(source, func(templateString string) string {
+		offsetDays := 0
+
+		if templateString == "{tomorrow}" {
+			offsetDays = 1
+		} else if extractedOffset := todayTemplatePlusMinusRegex.FindString(templateString); len(extractedOffset) > 0 {
+			offsetDays, _ = strconv.Atoi(extractedOffset)
+		}
+
+		// the date below is how the golang date formatter works. it's used for the formatting. it's not what is actually going to be displayed
+		return time.Now().Add(time.Duration(offsetDays) * 24 * time.Hour).Format("2006-01-02")
+	})
 }
