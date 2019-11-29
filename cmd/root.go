@@ -45,13 +45,13 @@ func CreateConfig() {
 		log.Printf("reading configs from file: %v", cfgFile)
 		file, err := os.Open(cfgFile)
 		if err != nil {
-			log.Fatal("can't open config file: ", err)
+			log.Print("can't open config file: ", err)
 		}
 		defer file.Close()
 		decoder := json.NewDecoder(file)
 		err = decoder.Decode(&opts)
 		if err != nil {
-			log.Fatal("can't decode config JSON: ", err)
+			log.Print("can't decode config JSON: ", err)
 		}
 	}
 	flag.Parse()
@@ -66,12 +66,12 @@ func RunCmdRoot() {
 		// CPU profile
 		f, err := os.Create(opts.Profile.CPU)
 		if err != nil {
-			log.Fatalf("could not create CPU profile: %v", err)
+			log.Printf("could not create CPU profile: %v", err)
 		}
 		defer f.Close()
 
 		if err := pprof.StartCPUProfile(f); err != nil {
-			log.Fatalf("could not start CPU profile: %v", err)
+			log.Printf("could not start CPU profile: %v", err)
 		}
 		defer pprof.StopCPUProfile()
 	}
@@ -103,31 +103,31 @@ func RunCmdRoot() {
 		done,
 	)
 
-	if err != nil {
-		log.Fatalf("new warmup: %v", err)
-	}
+	if err == nil {
+		log.Printf("new warmup: %v", err)
 
-	httpOptions := opts.GetWarmupHttpHeaders()
-	httpRequests, err := opts.GetWarmupHttpRequests(done)
-	if err != nil {
-		log.Fatalf("http options: %v", err)
-	}
-
-	grpcOptions := opts.GetWarmupGrpcHeaders()
-	grpcRequests, err := opts.GetWarmupGrpcRequests(done)
-	if err != nil {
-		log.Fatalf("grpc options: %v", err)
-	}
-
-	httpResponse := wp.HttpWarmup(httpOptions, httpRequests)
-	grpcResponse := wp.GrpcWarmup(grpcOptions, grpcRequests)
-
-	response := merge(httpResponse, grpcResponse)
-	for r := range response {
-		if r.Error != nil {
-			log.Printf("%s response %d milliseconds: error: %v", r.Type, r.Duration/time.Millisecond, r.Error)
+		httpOptions := opts.GetWarmupHttpHeaders()
+		httpRequests, err := opts.GetWarmupHttpRequests(done)
+		if err != nil {
+			log.Printf("http options: %v", err)
 		}
-		log.Printf("%s response %d milliseconds: OK", r.Type, r.Duration/time.Millisecond)
+
+		grpcOptions := opts.GetWarmupGrpcHeaders()
+		grpcRequests, err := opts.GetWarmupGrpcRequests(done)
+		if err != nil {
+			log.Printf("grpc options: %v", err)
+		}
+
+		httpResponse := wp.HttpWarmup(httpOptions, httpRequests)
+		grpcResponse := wp.GrpcWarmup(grpcOptions, grpcRequests)
+
+		response := merge(httpResponse, grpcResponse)
+		for r := range response {
+			if r.Error != nil {
+				log.Printf("%s response %d milliseconds: error: %v", r.Type, r.Duration/time.Millisecond, r.Error)
+			}
+			log.Printf("%s response %d milliseconds: OK", r.Type, r.Duration/time.Millisecond)
+		}
 	}
 
 	if opts.ServerProbe.Enabled {
@@ -156,13 +156,13 @@ func RunCmdRoot() {
 		log.Printf("memory profile will be written to %s file", opts.Profile.Memory)
 		f, err := os.Create(opts.Profile.Memory)
 		if err != nil {
-			log.Fatalf("could not create memory profile: %v", err)
+			log.Printf("could not create memory profile: %v", err)
 		}
 		defer f.Close()
 
 		runtime.GC() // get up-to-date statistics
 		if err := pprof.WriteHeapProfile(f); err != nil {
-			log.Fatalf("could not write memory profile: %v", err)
+			log.Printf("could not write memory profile: %v", err)
 		}
 	}
 }

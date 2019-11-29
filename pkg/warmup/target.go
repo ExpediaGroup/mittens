@@ -52,10 +52,11 @@ func NewTarget(readinessHttpClient whttp.Client, httpClient whttp.Client, grpcCl
 		options:             options,
 	}
 
-	if err := t.waitForReadinessProbe(done); err != nil {
+	err := t.waitForReadinessProbe(done)
+	if err != nil {
 		return Target{}, fmt.Errorf("wait for readiness probe: %v", err)
 	}
-	return t, nil
+	return t, err
 }
 
 func (t Target) waitForReadinessProbe(done <-chan struct{}) error {
@@ -66,7 +67,7 @@ func (t Target) waitForReadinessProbe(done <-chan struct{}) error {
 	for {
 		select {
 		case <-timeout:
-			return fmt.Errorf("target readiness proble: timeout %d seconds exceeded", t.options.ReadinessTimeoutInSeconds)
+			return fmt.Errorf("target readiness probe: timeout %d seconds exceeded", t.options.ReadinessTimeoutInSeconds)
 		case <-done:
 			return errors.New("target readiness probe: received done signal")
 		default:
