@@ -56,7 +56,7 @@ func NewWarmup(readinessHttpClient http.Client, httpClient http.Client, grpcClie
 	if err != nil {
 		return Warmup{}, fmt.Errorf("new target: %v", err)
 	}
-	return Warmup{target: target, options: options}, nil
+	return Warmup{target: target, options: options}, err
 }
 
 func (w Warmup) HttpWarmup(headers map[string]string, requests <-chan HttpRequest) <-chan Response {
