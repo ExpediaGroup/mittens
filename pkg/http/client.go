@@ -26,13 +26,15 @@ import (
 	"time"
 )
 
+// Client is a wrapper for the httpClient which includes a host
 type Client struct {
 	httpClient *http.Client
 	host       string
 }
 
+// NewClient creates a new client for a given host. if insecure is true,
+// client won't verify the server's certificate chain and host name
 func NewClient(host string, insecure bool) Client {
-
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
@@ -43,18 +45,17 @@ func NewClient(host string, insecure bool) Client {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
 	}
-	return Client{httpClient: client, host: host}
+	return Client{httpClient: client, host: strings.TrimRight(host, "/")}
 }
 
-// Send http request and returns error also if response code is NOT 2XX
+// Request sends an http request and returns error also if response code is NOT 2XX
 func (c Client) Request(method, path string, headers map[string]string, requestBody *string) error {
-
 	var body io.Reader
 	if requestBody != nil {
-		body = bytes.NewBuffer([]byte(*requestBody))
+		body = bytes.NewBufferString(*requestBody)
 	}
 
-	url := fmt.Sprintf("%s/%s", strings.TrimRight(c.host, "/"), strings.TrimLeft(path, "/"))
+	url := fmt.Sprintf("%s/%s", c.host, strings.TrimLeft(path, "/"))
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return fmt.Errorf("new http request: %s %s: %v", method, url, err)
@@ -71,9 +72,9 @@ func (c Client) Request(method, path string, headers map[string]string, requestB
 	if err != nil {
 		return fmt.Errorf("http request: %v", err)
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		defer resp.Body.Close()
 		b, _ := ioutil.ReadAll(resp.Body) // try to read response body as well to give user more info why request failed
 		return fmt.Errorf("%s %s returned %d %s, expected 2xx",
 			method, url, resp.StatusCode, strings.TrimSuffix(string(b), "\n"))
