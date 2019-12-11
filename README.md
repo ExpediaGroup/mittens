@@ -24,7 +24,7 @@ Its main features are summarised below:
 The application receives a number of command-line flags. It also supports reading configs from a JSON file. Read the [documentation](https://expediagroup.github.io/mittens/docs/about/getting-started) for more context.
 
 ## How to build and run
-Mittens is written in Go and the simplest way to run it is as a cmd application. It receives a number of command line arguments (see [Flags](https://github.com/ExpediaGroup/mittens#flags)).
+Mittens is written in Go and the simplest way to run it is as a cmd application. It receives a number of command line arguments (see [Flags](https://expediagroup.github.io/mittens/docs/about/getting-started#flags)).
 
 The project uses [Go Modules](https://github.com/golang/go/wiki/Modules).
 We provide a [Makefile](Makefile) which can be used to generate an executable binary and a Dockerfile if you prefer to run using Docker.
