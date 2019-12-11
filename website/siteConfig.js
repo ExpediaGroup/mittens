@@ -60,6 +60,11 @@ const siteConfig = {
     theme: 'github',
   },
 
+  algolia: {
+    apiKey: 'b384c10816b317ab3062e38860f2e98b',
+    indexName: 'expediagroup_mittens',
+  },
+
   // Add custom scripts here that would be placed in <script> tags.
   scripts: ['https://buttons.github.io/buttons.js'],
 
