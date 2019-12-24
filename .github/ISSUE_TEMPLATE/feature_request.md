@@ -1,6 +1,7 @@
 ---
 name: Feature Request 
-about: Please check if there's an open issue for the same or a similar feature.
+about: Suggest an idea for this project
+labels: enhancement
 
 ---
 
