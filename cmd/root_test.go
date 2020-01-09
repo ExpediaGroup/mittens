@@ -45,7 +45,7 @@ func TestWarmupSidecarWithFileProbe(t *testing.T) {
 		"-http-requests=get:/delay",
 		"-concurrency=4",
 		"-exit-after-warmup=true",
-		"-target-readiness-path=/",
+		"-target-readiness-http-path=/",
 		"-timeout-seconds=5"}
 
 	CreateConfig()
@@ -67,7 +67,7 @@ func TestWarmupSidecarWithServerProbe(t *testing.T) {
 		"-http-requests=get:/delay",
 		"-concurrency=4",
 		"-exit-after-warmup=true",
-		"-target-readiness-path=/",
+		"-target-readiness-http-path=/",
 		"-timeout-seconds=5"}
 
 	CreateConfig()
