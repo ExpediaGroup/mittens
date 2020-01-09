@@ -12,25 +12,31 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-package flags
+package grpc
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"testing"
+	"fmt"
+	"strings"
 )
 
-func TestHttp_ToHttpRequests(t *testing.T) {
+type Request struct {
+	ServiceMethod string
+	Message       string
+}
 
-	requestFlags := []string{
-		"get:/health",
-		"get:/ping",
+func ToGrpcRequest(requestFlag string) (Request, error) {
+
+	// service/method[:message]
+	parts := strings.SplitN(requestFlag, ":", 2)
+	if len(strings.Split(parts[0], "/")) != 2 {
+		return Request{}, fmt.Errorf("invalid request flag: %s, expected format <service>/<method>[:body]", requestFlag)
 	}
 
-	requests, err := toHttpRequests(requestFlags)
-	require.NoError(t, err)
-
-	require.Equal(t, 2, len(requests))
-	assert.Equal(t, "/health", requests[0].Path)
-	assert.Equal(t, "/ping", requests[1].Path)
+	request := Request{ServiceMethod: parts[0]}
+	if len(parts) == 2 {
+		request.Message = parts[1]
+	} else {
+		request.Message = ""
+	}
+	return request, nil
 }

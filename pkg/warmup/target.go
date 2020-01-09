@@ -27,19 +27,24 @@ import (
 
 type TargetOptions struct {
 	URL                       string
-	ReadinessPath             string
+	ReadinessProtocol         string
+	ReadinessHttpPath         string
+	ReadinessGrpcMethod       string
 	ReadinessPort             int
 	ReadinessTimeoutInSeconds int
 }
 
 type Target struct {
 	readinessHttpClient whttp.Client
+	readinessGrpcClient	grpc.Client
 	httpClient          whttp.Client
 	grpcClient          grpc.Client
 	options             TargetOptions
 }
 
-func NewTarget(readinessHttpClient whttp.Client, httpClient whttp.Client, grpcClient grpc.Client, options TargetOptions, done <-chan struct{}) (Target, error) {
+func NewTarget(readinessHttpClient whttp.Client, readinessGrpcClient grpc.Client, httpClient whttp.Client, grpcClient grpc.Client, options TargetOptions,
+	done <-chan struct{}) (Target,
+	error) {
 
 	if _, err := url.Parse(options.URL); err != nil {
 		return Target{}, fmt.Errorf("invalid target host: %v", err)
@@ -47,6 +52,7 @@ func NewTarget(readinessHttpClient whttp.Client, httpClient whttp.Client, grpcCl
 
 	t := Target{
 		readinessHttpClient: readinessHttpClient,
+		readinessGrpcClient: readinessGrpcClient,
 		httpClient:          httpClient,
 		grpcClient:          grpcClient,
 		options:             options,
@@ -61,7 +67,7 @@ func NewTarget(readinessHttpClient whttp.Client, httpClient whttp.Client, grpcCl
 
 func (t Target) waitForReadinessProbe(done <-chan struct{}) error {
 
-	log.Printf("waiting for %d:%s target readiness probe for %ds", t.options.ReadinessPort, t.options.ReadinessPath, t.options.ReadinessTimeoutInSeconds)
+	log.Printf("waiting for target readiness probe for %ds", t.options.ReadinessTimeoutInSeconds)
 
 	timeout := time.After(time.Duration(t.options.ReadinessTimeoutInSeconds) * time.Second)
 	for {
@@ -71,10 +77,20 @@ func (t Target) waitForReadinessProbe(done <-chan struct{}) error {
 		case <-done:
 			return errors.New("target readiness probe: received done signal")
 		default:
-			// FIXME: just http here? no grpc?
-			if err := t.readinessHttpClient.Request(http.MethodGet, t.options.ReadinessPath, nil, nil); err != nil {
-				log.Printf("target readiness probe: %v", err)
-				continue
+			if t.options.ReadinessProtocol == "http" {
+				if err := t.readinessHttpClient.Request(http.MethodGet, t.options.ReadinessHttpPath, nil, nil); err != nil {
+					log.Printf("target readiness probe: %v", err)
+					continue
+				}
+			} else {
+				request, err := grpc.ToGrpcRequest(t.options.ReadinessGrpcMethod)
+				if err == nil {
+					err1 := t.readinessGrpcClient.Request(request.ServiceMethod, "", nil)
+					if err1 != nil {
+						log.Printf("target readiness probe: %v", err1)
+						continue
+					}
+				}
 			}
 			log.Print("target is ready")
 			return nil

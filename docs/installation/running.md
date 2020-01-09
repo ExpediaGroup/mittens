@@ -10,7 +10,7 @@ You can also run it as a linked Docker container or even as a sidecar in Kuberne
 
 You can run the binary executable as follows:
         
-    ./mittens -target-readiness-path=/health -target-grpc-port=6565 -timeout-seconds=60 -concurrency=3 -http-request=get:/hotel/potatoes -grpc-requests=service/method:"{\"foo\":\"bar\", \"bar\":\"foo\"}"
+    ./mittens -target-readiness-http-path=/health -target-grpc-port=6565 -timeout-seconds=60 -concurrency=3 -http-request=get:/hotel/potatoes -grpc-requests=service/method:"{\"foo\":\"bar\", \"bar\":\"foo\"}"
 
 To read the above configs from file:
 
@@ -20,7 +20,7 @@ where `configs.json`:
 
 ```json
 {
-  "target-readiness-path": "/health",
+  "target-readiness-http-path": "/health",
   "target-grpc-port": 6565,
   "timeout-seconds": 60,
   "concurrency": 3,
@@ -44,7 +44,7 @@ where `configs.json`:
         image: expediagroup/mittens:latest
         links:
           - app
-        command: "-target-readiness-path=/health -target-grpc-port=6565 -timeout-seconds=60 -concurrency=3 -http-requests=get:/hotel/potatoes -grpc-requests=service/method:{\"foo\":\"bar\", \"bar\":\"foo\"}"
+        command: "-target-readiness-http-path=/health -target-grpc-port=6565 -timeout-seconds=60 -concurrency=3 -http-requests=get:/hotel/potatoes -grpc-requests=service/method:{\"foo\":\"bar\", \"bar\":\"foo\"}"
 
 _Note_: If you use Docker for Mac you might need to set the target host (`target-http-host`, `target-grpc-host`) to `docker.for.mac.localhost`, or `docker.for.mac.host.internal`, or `host.docker.internal` (depending on your version of Docker) so that your container can resolve localhost.
 
@@ -98,12 +98,18 @@ spec:
         args:
         - "-concurrency=3"
         - "-timeout-seconds=60"
-        - "-target-readiness-path=/health"
+        - "-target-readiness-http-path=/health"
         - "-target-grpc-port=6565"
         - "-http-requests=get:/health"
         - "-http-requests=post:/hotel/aubergines:{\"foo\":\"bar\"}"
         - "-grpc-requests=service/method:{\"foo\":\"bar\",\"bar\":\"foo\"}"
 ```
+
+### gRPC health checks on Kubernetes
+
+Kubernetes does not natively support gRPC health checks.
+
+This leaves you with a couple of options which are documented [here](https://kubernetes.io/blog/2018/10/01/health-checking-grpc-servers-on-kubernetes/).
 
 ## Notes about warm-up duration
 

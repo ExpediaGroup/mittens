@@ -94,39 +94,12 @@ func RunCmdRoot() {
 		probe.WriteFile(opts.FileProbe.LivenessPath)
 	}
 
-	wp, err := warmup.NewWarmup(
-		opts.GetReadinessHttpClient(),
-		opts.GetHttpClient(),
-		opts.GetGrpcClient(),
-		opts.GetWarmupOptions(),
-		opts.GetWarmupTargetOptions(),
-		done,
-	)
+	targetOptions, err := opts.GetWarmupTargetOptions()
 
 	if err == nil {
-		log.Printf("new warmup: %v", err)
-
-		httpOptions := opts.GetWarmupHttpHeaders()
-		httpRequests, err := opts.GetWarmupHttpRequests(done)
-		if err != nil {
-			log.Printf("http options: %v", err)
-		}
-
-		grpcOptions := opts.GetWarmupGrpcHeaders()
-		grpcRequests, err := opts.GetWarmupGrpcRequests(done)
-		if err != nil {
-			log.Printf("grpc options: %v", err)
-		}
-
-		httpResponse := wp.HttpWarmup(httpOptions, httpRequests)
-		grpcResponse := wp.GrpcWarmup(grpcOptions, grpcRequests)
-
-		response := merge(httpResponse, grpcResponse)
-		for r := range response {
-			if r.Error != nil {
-				log.Printf("%s response %d milliseconds: error: %v", r.Type, r.Duration/time.Millisecond, r.Error)
-			}
-			log.Printf("%s response %d milliseconds: OK", r.Type, r.Duration/time.Millisecond)
+		wp, err1:= createWarmup(targetOptions, done)
+		if err1 == nil {
+			runWarmup(wp, done)
 		}
 	}
 
@@ -165,6 +138,42 @@ func RunCmdRoot() {
 			log.Printf("could not write memory profile: %v", err)
 		}
 	}
+}
+
+func runWarmup(wp warmup.Warmup, done chan struct{}) {
+	httpHeaders := opts.GetWarmupHttpHeaders()
+	httpRequests, err := opts.GetWarmupHttpRequests(done)
+	if err != nil {
+		log.Printf("http options: %v", err)
+	}
+	grpcHeaders := opts.GetWarmupGrpcHeaders()
+	grpcRequests, err := opts.GetWarmupGrpcRequests(done)
+	if err != nil {
+		log.Printf("grpc options: %v", err)
+	}
+	httpResponse := wp.HttpWarmup(httpHeaders, httpRequests)
+	grpcResponse := wp.GrpcWarmup(grpcHeaders, grpcRequests)
+	response := merge(httpResponse, grpcResponse)
+	for r := range response {
+		if r.Error != nil {
+			log.Printf("%s response %d milliseconds: error: %v", r.Type, r.Duration/time.Millisecond, r.Error)
+		} else {
+			log.Printf("%s response %d milliseconds: OK", r.Type, r.Duration/time.Millisecond)
+		}
+	}
+}
+
+func createWarmup(targetOptions warmup.TargetOptions, done chan struct{}) (warmup.Warmup, error){
+	wp, err := warmup.NewWarmup(
+		opts.GetReadinessHttpClient(),
+		opts.GetReadinessGrpcClient(),
+		opts.GetHttpClient(),
+		opts.GetGrpcClient(),
+		opts.GetWarmupOptions(),
+		targetOptions,
+		done,
+	)
+	return wp, err
 }
 
 func start(port int, livenessPath, readinessPath string, stop <-chan struct{}, done chan struct{}) *probe.Server {
