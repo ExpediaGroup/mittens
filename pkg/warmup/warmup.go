@@ -28,17 +28,6 @@ type Options struct {
 	Concurrency    int
 }
 
-type GrpcRequest struct {
-	ServiceMethod string
-	Message       []byte
-}
-
-type HttpRequest struct {
-	Method string
-	Path   string
-	Body   *string
-}
-
 type Warmup struct {
 	target  Target
 	options Options
@@ -50,22 +39,23 @@ type Response struct {
 	Duration time.Duration
 }
 
-func NewWarmup(readinessHttpClient http.Client, httpClient http.Client, grpcClient grpc.Client, options Options, targetOptions TargetOptions, done <-chan struct{}) (Warmup, error) {
+func NewWarmup(readinessHttpClient http.Client, readinessGrpcClient grpc.Client, httpClient http.Client, grpcClient grpc.Client, options Options, targetOptions TargetOptions,
+	done <-chan struct{}) (Warmup, error) {
 
-	target, err := NewTarget(readinessHttpClient, httpClient, grpcClient, targetOptions, done)
+	target, err := NewTarget(readinessHttpClient, readinessGrpcClient, httpClient, grpcClient, targetOptions, done)
 	if err != nil {
 		return Warmup{}, fmt.Errorf("new target: %v", err)
 	}
 	return Warmup{target: target, options: options}, err
 }
 
-func (w Warmup) HttpWarmup(headers map[string]string, requests <-chan HttpRequest) <-chan Response {
+func (w Warmup) HttpWarmup(headers map[string]string, requests <-chan http.Request) <-chan Response {
 
 	response := make(chan Response)
 	go func() {
 		var wg sync.WaitGroup
 		for request := range requests {
-			go func(r HttpRequest) {
+			go func(r http.Request) {
 				wg.Add(1)
 				defer wg.Done()
 				startTime := time.Now()
@@ -79,17 +69,17 @@ func (w Warmup) HttpWarmup(headers map[string]string, requests <-chan HttpReques
 	return response
 }
 
-func (w Warmup) GrpcWarmup(headers []string, requests <-chan GrpcRequest) <-chan Response {
+func (w Warmup) GrpcWarmup(headers []string, requests <-chan grpc.Request) <-chan Response {
 
 	response := make(chan Response)
 	go func() {
 		var wg sync.WaitGroup
 		for request := range requests {
-			go func(r GrpcRequest) {
+			go func(r grpc.Request) {
 				wg.Add(1)
 				defer wg.Done()
 				startTime := time.Now()
-				err := w.target.grpcClient.Request(r.ServiceMethod, headers, r.Message)
+				err := w.target.grpcClient.Request(r.ServiceMethod, r.Message, headers)
 				response <- Response{Type: "grpc", Error: err, Duration: time.Now().Sub(startTime)}
 			}(request)
 		}

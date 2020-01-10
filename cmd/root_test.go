@@ -45,7 +45,7 @@ func TestWarmupSidecarWithFileProbe(t *testing.T) {
 		"-http-requests=get:/delay",
 		"-concurrency=4",
 		"-exit-after-warmup=true",
-		"-target-readiness-path=/",
+		"-target-readiness-http-path=/",
 		"-timeout-seconds=5"}
 
 	CreateConfig()
@@ -56,7 +56,7 @@ func TestWarmupSidecarWithFileProbe(t *testing.T) {
 	assert.Contains(t, opts.Http.Requests, "get:/delay")
 	assert.Equal(t, 4, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
-	assert.Equal(t, "/", opts.Target.ReadinessPath)
+	assert.Equal(t, "/", opts.Target.ReadinessHttpPath)
 	assert.Equal(t, 5, opts.TimeoutSeconds)
 }
 
@@ -67,7 +67,7 @@ func TestWarmupSidecarWithServerProbe(t *testing.T) {
 		"-http-requests=get:/delay",
 		"-concurrency=4",
 		"-exit-after-warmup=true",
-		"-target-readiness-path=/",
+		"-target-readiness-http-path=/",
 		"-timeout-seconds=5"}
 
 	CreateConfig()
@@ -78,7 +78,7 @@ func TestWarmupSidecarWithServerProbe(t *testing.T) {
 	assert.Contains(t, opts.Http.Requests, "get:/delay")
 	assert.Equal(t, 4, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
-	assert.Equal(t, "/", opts.Target.ReadinessPath)
+	assert.Equal(t, "/", opts.Target.ReadinessHttpPath)
 	assert.Equal(t, 5, opts.TimeoutSeconds)
 }
 
@@ -94,7 +94,7 @@ func TestConfigsFromFile(t *testing.T) {
 	assert.Contains(t, opts.Http.Requests, "get:/delay")
 	assert.Equal(t, 4, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
-	assert.Equal(t, "/", opts.Target.ReadinessPath)
+	assert.Equal(t, "/", opts.Target.ReadinessHttpPath)
 	assert.Equal(t, 5, opts.TimeoutSeconds)
 }
 

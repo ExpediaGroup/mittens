@@ -67,6 +67,10 @@ func (r *Root) GetReadinessHttpClient() http.Client {
 	return r.Target.GetReadinessHttpClient()
 }
 
+func (r *Root) GetReadinessGrpcClient() grpc.Client {
+	return r.Target.GetReadinessGrpcClient()
+}
+
 func (r *Root) GetHttpClient() http.Client {
 	return r.Target.GetHttpClient()
 }
@@ -75,28 +79,32 @@ func (r *Root) GetGrpcClient() grpc.Client {
 	return r.Target.GetGrpcClient(r.TimeoutSeconds)
 }
 
-func (r *Root) GetWarmupTargetOptions() warmup.TargetOptions {
+func (r *Root) GetWarmupTargetOptions() (warmup.TargetOptions, error) {
 
 	options := r.Target.GetWarmupTargetOptions()
 	if options.ReadinessTimeoutInSeconds <= 0 {
 		log.Printf("readiness timeout in seconds not set, defaulting to timeout in seconds: %ds", r.TimeoutSeconds)
 		options.ReadinessTimeoutInSeconds = r.TimeoutSeconds
 	}
-	return options
+	if options.ReadinessProtocol != "http" && options.ReadinessProtocol != "grpc" {
+		err := fmt.Errorf("readiness protocol %s not supported, please use http or grpc", r.ReadinessProtocol)
+		return options, err
+	}
+	return options, nil
 }
 
 func (r *Root) GetWarmupHttpHeaders() map[string]string {
 	return r.Http.GetWarmupHttpHeaders()
 }
 
-func (r *Root) GetWarmupHttpRequests(done <-chan struct{}) (chan warmup.HttpRequest, error) {
+func (r *Root) GetWarmupHttpRequests(done <-chan struct{}) (chan http.Request, error) {
 
 	requests, err := r.Http.GetWarmupHttpRequests()
 	if err != nil {
 		return nil, err
 	}
 
-	requestsChan := make(chan warmup.HttpRequest, r.Concurrency)
+	requestsChan := make(chan http.Request, r.Concurrency)
 	go func() {
 		if len(requests) == 0 {
 			log.Print("no http warm up requests specified")
@@ -129,14 +137,14 @@ func (r *Root) GetWarmupGrpcHeaders() []string {
 	return r.Grpc.GetWarmupGrpcHeaders()
 }
 
-func (r *Root) GetWarmupGrpcRequests(done <-chan struct{}) (chan warmup.GrpcRequest, error) {
+func (r *Root) GetWarmupGrpcRequests(done <-chan struct{}) (chan grpc.Request, error) {
 
 	requests, err := r.Grpc.GetWarmupGrpcRequests()
 	if err != nil {
 		return nil, err
 	}
 
-	requestsChan := make(chan warmup.GrpcRequest, r.Concurrency)
+	requestsChan := make(chan grpc.Request, r.Concurrency)
 	go func() {
 		if len(requests) == 0 {
 			log.Print("no grpc warm up requests specified")

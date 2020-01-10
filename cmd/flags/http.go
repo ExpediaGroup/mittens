@@ -17,11 +17,8 @@ package flags
 import (
 	"flag"
 	"fmt"
-	"mittens/pkg/warmup"
+	"mittens/pkg/http"
 	"regexp"
-	"strconv"
-	"strings"
-	"time"
 )
 
 var allowedHttpMethods = map[string]interface{}{
@@ -57,68 +54,19 @@ func (h *Http) GetWarmupHttpHeaders() map[string]string {
 	return toHeaders(h.Headers)
 }
 
-func (h *Http) GetWarmupHttpRequests() ([]warmup.HttpRequest, error) {
+func (h *Http) GetWarmupHttpRequests() ([]http.Request, error) {
 	return toHttpRequests(h.Requests)
 }
 
-func toHttpRequests(requestsFlag []string) ([]warmup.HttpRequest, error) {
+func toHttpRequests(requestsFlag []string) ([]http.Request, error) {
 
-	var requests []warmup.HttpRequest
+	var requests []http.Request
 	for _, requestFlag := range requestsFlag {
-		request, err := toHttpRequest(requestFlag)
+		request, err := http.ToHttpRequest(requestFlag)
 		if err != nil {
 			return nil, err
 		}
 		requests = append(requests, request)
 	}
 	return requests, nil
-}
-
-func toHttpRequest(requestFlag string) (warmup.HttpRequest, error) {
-
-	parts := strings.SplitN(requestFlag, ":", 3)
-	if len(parts) < 2 {
-		return warmup.HttpRequest{}, fmt.Errorf("invalid request flag: %s, expected format <http-method>:<path>[:body]", requestFlag)
-	}
-
-	method := strings.ToUpper(parts[0])
-	_, ok := allowedHttpMethods[method]
-	if !ok {
-		return warmup.HttpRequest{}, fmt.Errorf("invalid request flag: %s, method %s is not supported", requestFlag, method)
-	}
-
-	// <method>:<path>
-	if len(parts) == 2 {
-		path := interpolateDates(parts[1])
-
-		return warmup.HttpRequest{
-			Method: method,
-			Path:   path,
-			Body:   nil,
-		}, nil
-	}
-
-	path := interpolateDates(parts[1])
-	var body = interpolateDates(parts[2])
-
-	return warmup.HttpRequest{
-		Method: method,
-		Path:   path,
-		Body:   &body,
-	}, nil
-}
-
-func interpolateDates(source string) string {
-	return todayTemplateRegex.ReplaceAllStringFunc(source, func(templateString string) string {
-		offsetDays := 0
-
-		if templateString == "{tomorrow}" {
-			offsetDays = 1
-		} else if extractedOffset := todayTemplatePlusMinusRegex.FindString(templateString); len(extractedOffset) > 0 {
-			offsetDays, _ = strconv.Atoi(extractedOffset)
-		}
-
-		// the date below is how the golang date formatter works. it's used for the formatting. it's not what is actually going to be displayed
-		return time.Now().Add(time.Duration(offsetDays) * 24 * time.Hour).Format("2006-01-02")
-	})
 }

@@ -23,7 +23,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	reflectpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
-	"io"
 	"log"
 	"os"
 	"sync"
@@ -46,7 +45,11 @@ func NewClient(host string, insecure bool, timeoutSeconds int) Client {
 
 func (c *Client) connect(headers []string) error {
 
+	dialTime := 10 * time.Second
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.timeoutSeconds)*time.Second)
+	connCtx, _ := context.WithTimeout(context.Background(), dialTime)
+
 	headersMetadata := grpcurl.MetadataFromHeaders(headers)
 	contextWithMetadata := metadata.NewOutgoingContext(ctx, headersMetadata)
 
@@ -57,7 +60,7 @@ func (c *Client) connect(headers []string) error {
 	}
 
 	log.Printf("grpc client connecting to %s", c.host)
-	conn, err := grpc.Dial(c.host, dialOptions...)
+	conn, err := grpc.DialContext(connCtx, c.host, dialOptions...)
 	if err != nil {
 		return fmt.Errorf("grpc dial: %v", err)
 	}
@@ -72,7 +75,8 @@ func (c *Client) connect(headers []string) error {
 	return nil
 }
 
-func (c *Client) Request(serviceMethod string, headers []string, body []byte) error {
+// note that the message cannot be null. Even if there's no message to be sent you need to set it to an empty string.
+func (c *Client) Request(serviceMethod string, message string, headers []string) error {
 
 	var connErr error
 	c.grpcConnectOnce.Do(func() {
@@ -83,10 +87,7 @@ func (c *Client) Request(serviceMethod string, headers []string, body []byte) er
 		return fmt.Errorf("grpc client connect: %v", connErr)
 	}
 
-	var in io.Reader
-	if len(body) != 0 {
-		in = bytes.NewReader(body)
-	}
+	in := bytes.NewBufferString(message)
 
 	// TODO - create generic parser and formatter for any request, can we use text parser/formatter?
 	requestParser, formatter, err := grpcurl.RequestParserAndFormatterFor(grpcurl.Format("json"), c.descriptorSource, false, false, in)

@@ -34,30 +34,3 @@ func TestGrpc_ToGrpcRequests(t *testing.T) {
 	assert.Equal(t, "svc1/ping", requests[0].ServiceMethod)
 	assert.Equal(t, "svc2/ping", requests[1].ServiceMethod)
 }
-
-func TestGrpc_FlagToGrpcRequest(t *testing.T) {
-
-	requestFlag := `health/ping:{"db": "true"}`
-	request, err := toGrpcRequest(requestFlag)
-	require.NoError(t, err)
-
-	assert.Equal(t, "health/ping", request.ServiceMethod)
-	assert.Equal(t, `{"db": "true"}`, string(request.Message))
-}
-
-func TestGrpc_FlagWithoutBodyToGrpcRequest(t *testing.T) {
-
-	requestFlag := `health/ping`
-	request, err := toGrpcRequest(requestFlag)
-	require.NoError(t, err)
-
-	assert.Equal(t, "health/ping", request.ServiceMethod)
-	assert.Nil(t, request.Message)
-}
-
-func TestGrpc_InvalidFlagToGrpcRequest(t *testing.T) {
-
-	requestFlag := `health:ping`
-	_, err := toGrpcRequest(requestFlag)
-	require.Error(t, err)
-}

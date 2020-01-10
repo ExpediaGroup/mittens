@@ -12,7 +12,7 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-package flags
+package grpc
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -20,17 +20,29 @@ import (
 	"testing"
 )
 
-func TestHttp_ToHttpRequests(t *testing.T) {
+func TestGrpc_FlagToGrpcRequest(t *testing.T) {
 
-	requestFlags := []string{
-		"get:/health",
-		"get:/ping",
-	}
-
-	requests, err := toHttpRequests(requestFlags)
+	requestFlag := `health/ping:{"db": "true"}`
+	request, err := ToGrpcRequest(requestFlag)
 	require.NoError(t, err)
 
-	require.Equal(t, 2, len(requests))
-	assert.Equal(t, "/health", requests[0].Path)
-	assert.Equal(t, "/ping", requests[1].Path)
+	assert.Equal(t, "health/ping", request.ServiceMethod)
+	assert.Equal(t, `{"db": "true"}`, string(request.Message))
+}
+
+func TestGrpc_FlagWithoutBodyToGrpcRequest(t *testing.T) {
+
+	requestFlag := `health/ping`
+	request, err := ToGrpcRequest(requestFlag)
+	require.NoError(t, err)
+
+	assert.Equal(t, "health/ping", request.ServiceMethod)
+	assert.Equal(t, "", string(request.Message))
+}
+
+func TestGrpc_InvalidFlagToGrpcRequest(t *testing.T) {
+
+	requestFlag := `health:ping`
+	_, err := ToGrpcRequest(requestFlag)
+	require.Error(t, err)
 }

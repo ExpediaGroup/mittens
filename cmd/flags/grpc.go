@@ -18,8 +18,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"mittens/pkg/warmup"
-	"strings"
+	"mittens/pkg/grpc"
 )
 
 type Grpc struct {
@@ -40,37 +39,20 @@ func (g *Grpc) GetWarmupGrpcHeaders() []string {
 	return g.Headers
 }
 
-func (g *Grpc) GetWarmupGrpcRequests() ([]warmup.GrpcRequest, error) {
+func (g *Grpc) GetWarmupGrpcRequests() ([]grpc.Request, error) {
 	log.Print(g.Requests)
 	return toGrpcRequests(g.Requests)
 }
 
-func toGrpcRequests(requestsFlag []string) ([]warmup.GrpcRequest, error) {
+func toGrpcRequests(requestsFlag []string) ([]grpc.Request, error) {
 
-	var requests []warmup.GrpcRequest
+	var requests []grpc.Request
 	for _, requestFlag := range requestsFlag {
-		log.Print(requestsFlag)
-		request, err := toGrpcRequest(requestFlag)
+		request, err := grpc.ToGrpcRequest(requestFlag)
 		if err != nil {
 			return nil, err
 		}
 		requests = append(requests, request)
 	}
 	return requests, nil
-}
-
-func toGrpcRequest(requestFlag string) (warmup.GrpcRequest, error) {
-
-	// service/method[:message]
-	parts := strings.SplitN(requestFlag, ":", 2)
-	log.Print(parts)
-	if len(strings.Split(parts[0], "/")) != 2 {
-		return warmup.GrpcRequest{}, fmt.Errorf("invalid request flag: %s, expected format <service>/<method>[:body]", requestFlag)
-	}
-
-	request := warmup.GrpcRequest{ServiceMethod: parts[0]}
-	if len(parts) == 2 {
-		request.Message = []byte(parts[1])
-	}
-	return request, nil
 }
