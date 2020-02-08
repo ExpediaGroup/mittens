@@ -16,11 +16,15 @@ package http
 
 import (
 	"fmt"
+	"math/rand"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
+
+const lettersAndNumbers = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const numbers = "0123456789"
 
 type Request struct {
 	Method string
@@ -40,8 +44,9 @@ var allowedHttpMethods = map[string]interface{}{
 	"TRACE":   nil,
 }
 
-var todayTemplateRegex = regexp.MustCompile("{(today([+-]\\d+)?|tomorrow)}")
-var todayTemplatePlusMinusRegex = regexp.MustCompile("[+-]\\d+")
+var templateRegex = regexp.MustCompile("{(chars([-]\\d+)?|numbers([-]\\d+)?|today([+-]\\d+)?|tomorrow)}")
+var templatePlusMinusRegex = regexp.MustCompile("[+-]\\d+")
+var templateOffsetRegex = regexp.MustCompile("\\d+")
 
 func ToHttpRequest(requestFlag string) (Request, error) {
 
@@ -58,7 +63,7 @@ func ToHttpRequest(requestFlag string) (Request, error) {
 
 	// <method>:<path>
 	if len(parts) == 2 {
-		path := interpolateDates(parts[1])
+		path := interpolatePlaceholders(parts[1])
 
 		return Request{
 			Method: method,
@@ -67,8 +72,8 @@ func ToHttpRequest(requestFlag string) (Request, error) {
 		}, nil
 	}
 
-	path := interpolateDates(parts[1])
-	var body = interpolateDates(parts[2])
+	path := interpolatePlaceholders(parts[1])
+	var body = interpolatePlaceholders(parts[2])
 
 	return Request{
 		Method: method,
@@ -77,17 +82,55 @@ func ToHttpRequest(requestFlag string) (Request, error) {
 	}, nil
 }
 
-func interpolateDates(source string) string {
-	return todayTemplateRegex.ReplaceAllStringFunc(source, func(templateString string) string {
-		offsetDays := 0
+func interpolatePlaceholders(source string) string {
+	return templateRegex.ReplaceAllStringFunc(source, func(templateString string) string {
 
-		if templateString == "{tomorrow}" {
-			offsetDays = 1
-		} else if extractedOffset := todayTemplatePlusMinusRegex.FindString(templateString); len(extractedOffset) > 0 {
-			offsetDays, _ = strconv.Atoi(extractedOffset)
+		if strings.Contains(templateString, "today") || strings.Contains(templateString, "tomorrow") {
+			return dateElements(templateString)
+		} else {
+			return randomElements(templateString)
 		}
-
-		// the date below is how the golang date formatter works. it's used for the formatting. it's not what is actually going to be displayed
-		return time.Now().Add(time.Duration(offsetDays) * 24 * time.Hour).Format("2006-01-02")
 	})
+}
+
+func randomElements(source string) string {
+
+	if strings.Contains(source, "numbers") {
+		length, _ := strconv.Atoi(templateOffsetRegex.FindString(source))
+		return randomNumbers(length)
+	} else {
+		length, _ := strconv.Atoi(templateOffsetRegex.FindString(source))
+		return randomLetters(length)
+	}
+}
+
+func randomNumbers(n int) string {
+	output := make([]byte, n)
+	for i := range output {
+		output[i] = numbers[rand.Intn(len(numbers))]
+	}
+	return string(output)
+}
+
+func randomLetters(n int) string {
+	output := make([]byte, n)
+	for i := range output {
+		output[i] = lettersAndNumbers[rand.Intn(len(lettersAndNumbers))]
+	}
+	return string(output)
+}
+
+func dateElements(source string) string {
+	offsetDays := 0
+
+	if source == "{today}" {
+		offsetDays = 0
+	} else if source == "{tomorrow}" {
+		offsetDays = 1
+	} else if extractedOffset := templatePlusMinusRegex.FindString(source); len(extractedOffset) > 0 {
+		offsetDays, _ = strconv.Atoi(extractedOffset)
+	}
+
+	// the date below is how the golang date formatter works. it's used for the formatting. it's not what is actually going to be displayed
+	return time.Now().Add(time.Duration(offsetDays) * 24 * time.Hour).Format("2006-01-02")
 }

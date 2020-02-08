@@ -60,14 +60,16 @@ gRPC requests are in the form `service/method[:message]` (`message` is
 optional). Host and port are taken from `target-grpc-host` and
 `target-grpc-port` flags.
 
-#### Placeholders for dates
+#### Placeholders for dates and randomized elements
 
 Mittens allows you to use the keywords `{today}` and `{tomorrow}` when you need to use valid dates in your requests in the following format: YYYY-MM-DD.
 These placeholders can be used in both the urls and the body.
 You can also use modifiers with `{today}` to adjust to a specific offset, for example `{today+2}` to represent 2 days from now.
 
+If you need to generate random numbers of characters you can do the same with `{numbers-X}` or `{chars-X}` where X represents the lenght of the generated element.
+
 E.g.:
- - `post:/foo:{"date": "{today}"}`
+ - `post:/foo:{"id": "{numbers-5}", "date": "{today}"}`
 
 ### Liveness/readiness probes
 

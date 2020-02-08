@@ -18,7 +18,6 @@ import (
 	"flag"
 	"fmt"
 	"mittens/pkg/http"
-	"regexp"
 )
 
 var allowedHttpMethods = map[string]interface{}{
@@ -32,9 +31,6 @@ var allowedHttpMethods = map[string]interface{}{
 	"OPTIONS": nil,
 	"TRACE":   nil,
 }
-
-var todayTemplateRegex = regexp.MustCompile("{(today([+-]\\d+)?|tomorrow)}")
-var todayTemplatePlusMinusRegex = regexp.MustCompile("[+-]\\d+")
 
 type Http struct {
 	Headers  stringArray `json:"http-headers"`

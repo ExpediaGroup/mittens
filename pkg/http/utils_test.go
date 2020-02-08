@@ -16,11 +16,13 @@ package http
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"net/http"
+	"regexp"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHttp_FlagToHttpRequest(t *testing.T) {
@@ -43,6 +45,42 @@ func TestHttp_FlagWithoutBodyToHttpRequest(t *testing.T) {
 	assert.Equal(t, http.MethodGet, request.Method)
 	assert.Equal(t, "ping", request.Path)
 	assert.Nil(t, request.Body)
+}
+
+func TestHttp_RandomNumbersInterpolation(t *testing.T) {
+
+	requestFlag := `post:/path_{numbers-5}:{"body": "{numbers-10}"}`
+	request, err := ToHttpRequest(requestFlag)
+	require.NoError(t, err)
+
+	assert.Equal(t, http.MethodPost, request.Method)
+
+	var numbersRegex = regexp.MustCompile("\\d+")
+	matchPath := numbersRegex.MatchString(request.Path)
+	matchBody := numbersRegex.MatchString(*request.Body)
+
+	assert.True(t, matchPath)
+	assert.True(t, matchBody)
+	assert.Equal(t, len(request.Path), 11)  //  "path_ + 5 numbers"
+	assert.Equal(t, len(*request.Body), 22) // { "body": 10 numbers }
+}
+
+func TestHttp_RandomLetersInterpolation(t *testing.T) {
+
+	requestFlag := `post:/path_{chars-5}:{"body": "{chars-10}"}`
+	request, err := ToHttpRequest(requestFlag)
+	require.NoError(t, err)
+
+	assert.Equal(t, http.MethodPost, request.Method)
+
+	var numbersRegex = regexp.MustCompile("[a-zA-Z0-9]+")
+	matchPath := numbersRegex.MatchString(request.Path)
+	matchBody := numbersRegex.MatchString(*request.Body)
+
+	assert.True(t, matchPath)
+	assert.True(t, matchBody)
+	assert.Equal(t, len(request.Path), 11)  //  "path_ + 5 chars"
+	assert.Equal(t, len(*request.Body), 22) // { "body": 10 chars }
 }
 
 func TestHttp_TodayInterpolation(t *testing.T) {
@@ -75,4 +113,3 @@ func TestHttp_FlagWithInvalidMethodToHttpRequest(t *testing.T) {
 	_, err := ToHttpRequest(requestFlag)
 	require.Error(t, err)
 }
-
