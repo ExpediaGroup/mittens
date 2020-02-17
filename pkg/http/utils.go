@@ -23,9 +23,6 @@ import (
 	"time"
 )
 
-const lettersAndNumbers = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-const numbers = "0123456789"
-
 type Request struct {
 	Method string
 	Path   string
