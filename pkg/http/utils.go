@@ -101,6 +101,10 @@ func legacyDateElements(source string) string {
 
 func dateElements(source string) string {
 	r := templateDatesRegex.FindStringSubmatch(source)
+
+	if r == nil {
+		return source
+	}
 	days := r[1]
 	months := r[2]
 	years := r[3]
@@ -121,8 +125,12 @@ func timestampElements() string {
 
 func randomElements(source string) string {
 	r := templateElementsRegex.FindStringSubmatch(source)
-	s := strings.Split(r[1], ",")
 
+	if r == nil {
+		return source
+	}
+
+	s := strings.Split(r[1], ",")
 	number := rand.Intn(len(s))
 
 	return s[number]
@@ -130,7 +138,11 @@ func randomElements(source string) string {
 
 func rangeElements(source string) string {
 	r := templateRangeRegex.FindStringSubmatch(source)
-	min, _ := strconv.Atoi(r[1]) // FIXME replace _ with error or better yet when these inner fail just return original string
+	if r == nil {
+		return source
+	}
+
+	min, _ := strconv.Atoi(r[1])
 	max, _ := strconv.Atoi(r[2])
 
 	number := rand.Intn(max-min+1) + min
