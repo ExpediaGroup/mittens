@@ -44,12 +44,17 @@ var allowedHttpMethods = map[string]interface{}{
 	"TRACE":   nil,
 }
 
-var templateRegex = regexp.MustCompile("{(chars([-]\\d+)?|numbers([-]\\d+)?|today([+-]\\d+)?|tomorrow)}")
+var templatePlaceholderRegex = regexp.MustCompile("{(\\w+([\\|+][\\w+-=,]+)?|(\\w+))}")
+var templateRangeRegex = regexp.MustCompile("{range\\|min=(?P<Min>\\d+),max=(?P<Max>\\d+)}")
+var templateElementsRegex = regexp.MustCompile("{random\\|(?P<Elements>[,\\w]+)}")
+var templateDatesRegex = regexp.MustCompile("{currentDate(?:\\|(?:days(?P<Days>[+-]\\d+))*(?:[,]*months(?P<Months>[+-]\\d+))*(?:[,]*years(?P<Years>[+-]\\d+))*)*}") // we did it \o/ 100+ chars regex
+
+// The following regex expressions are deprecated
+var templateRegex = regexp.MustCompile("{(today([+-]\\d+)?|tomorrow)}")
 var templatePlusMinusRegex = regexp.MustCompile("[+-]\\d+")
 var templateOffsetRegex = regexp.MustCompile("\\d+")
 
 func ToHttpRequest(requestFlag string) (Request, error) {
-
 	parts := strings.SplitN(requestFlag, ":", 3)
 	if len(parts) < 2 {
 		return Request{}, fmt.Errorf("invalid request flag: %s, expected format <http-method>:<path>[:body]", requestFlag)
@@ -82,45 +87,7 @@ func ToHttpRequest(requestFlag string) (Request, error) {
 	}, nil
 }
 
-func interpolatePlaceholders(source string) string {
-	return templateRegex.ReplaceAllStringFunc(source, func(templateString string) string {
-
-		if strings.Contains(templateString, "today") || strings.Contains(templateString, "tomorrow") {
-			return dateElements(templateString)
-		} else {
-			return randomElements(templateString)
-		}
-	})
-}
-
-func randomElements(source string) string {
-
-	if strings.Contains(source, "numbers") {
-		length, _ := strconv.Atoi(templateOffsetRegex.FindString(source))
-		return randomNumbers(length)
-	} else {
-		length, _ := strconv.Atoi(templateOffsetRegex.FindString(source))
-		return randomLetters(length)
-	}
-}
-
-func randomNumbers(n int) string {
-	output := make([]byte, n)
-	for i := range output {
-		output[i] = numbers[rand.Intn(len(numbers))]
-	}
-	return string(output)
-}
-
-func randomLetters(n int) string {
-	output := make([]byte, n)
-	for i := range output {
-		output[i] = lettersAndNumbers[rand.Intn(len(lettersAndNumbers))]
-	}
-	return string(output)
-}
-
-func dateElements(source string) string {
+func legacyDateElements(source string) string {
 	offsetDays := 0
 
 	if source == "{today}" {
@@ -133,4 +100,63 @@ func dateElements(source string) string {
 
 	// the date below is how the golang date formatter works. it's used for the formatting. it's not what is actually going to be displayed
 	return time.Now().Add(time.Duration(offsetDays) * 24 * time.Hour).Format("2006-01-02")
+}
+
+func dateElements(source string) string {
+	r := templateDatesRegex.FindStringSubmatch(source)
+	days := r[1]
+	months := r[2]
+	years := r[3]
+
+	offsetDays, _ := strconv.Atoi(days)
+	offsetMonths, _ := strconv.Atoi(months)
+	offsetYears, _ := strconv.Atoi(years)
+
+	// the date below is how the golang date formatter works. it's used for the formatting. it's not what is actually going to be displayed
+	return time.Now().AddDate(offsetYears, offsetMonths, offsetDays).Format("2006-01-02")
+}
+
+func timestampElements() string {
+	epoch := time.Now().UnixNano() / 1000000
+
+	return strconv.FormatInt(epoch, 10)
+}
+
+func randomElements(source string) string {
+	r := templateElementsRegex.FindStringSubmatch(source)
+	s := strings.Split(r[1], ",")
+
+	number := rand.Intn(len(s))
+
+	return s[number]
+}
+
+func rangeElements(source string) string {
+	r := templateRangeRegex.FindStringSubmatch(source)
+	min, _ := strconv.Atoi(r[1]) // FIXME replace _ with error or better yet when these inner fail just return original string
+	max, _ := strconv.Atoi(r[2])
+
+	number := rand.Intn(max-min+1) + min
+
+	return strconv.Itoa(number)
+}
+
+func interpolatePlaceholders(source string) string {
+	return templatePlaceholderRegex.ReplaceAllStringFunc(source, func(templateString string) string {
+		rand.Seed(time.Now().UnixNano())
+
+		if strings.Contains(templateString, "today") || strings.Contains(templateString, "tomorrow") {
+			return legacyDateElements(templateString)
+		} else if strings.Contains(templateString, "currentDate") {
+			return dateElements(templateString)
+		} else if strings.Contains(templateString, "currentTimestamp") {
+			return timestampElements()
+		} else if strings.Contains(templateString, "random") {
+			return randomElements(templateString)
+		} else if strings.Contains(templateString, "range") {
+			return rangeElements(templateString)
+		} else {
+			return source
+		}
+	})
 }

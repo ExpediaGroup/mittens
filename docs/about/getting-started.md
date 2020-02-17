@@ -60,16 +60,17 @@ gRPC requests are in the form `service/method[:message]` (`message` is
 optional). Host and port are taken from `target-grpc-host` and
 `target-grpc-port` flags.
 
-#### Placeholders for dates and randomized elements
+#### Placeholders for random elements
 
-Mittens allows you to use the keywords `{today}` and `{tomorrow}` when you need to use valid dates in your requests in the following format: YYYY-MM-DD.
-These placeholders can be used in both the urls and the body.
-You can also use modifiers with `{today}` to adjust to a specific offset, for example `{today+2}` to represent 2 days from now.
-
-If you need to generate random numbers of characters you can do the same with `{numbers-X}` or `{chars-X}` where X represents the lenght of the generated element.
+Mittens allows you to use special keywords if you need to generate randomized urls.
+The following are available:
+- {currentDate|days+x,months+y,years+z} - you can adjust the temporal offset by adding or subtracting days, months or years. The offsets are optional and can be removed.
+- {currentTimestamp} - Time from Unix epoch in milliseconds.
+- {random|foo,bar,baz} - Mittens will randomly select an element from the provided list, eg: one of foo, bar or baz.
+- {range|min=x,max=y} - both min and max are required arguments. Range is inclusive.
 
 E.g.:
- - `post:/foo:{"id": "{numbers-5}", "date": "{today}"}`
+ - `post:/some-path:{"id": "{range|min=1,max=5}", "currentDate": "{currentDate|days+2,months+1}"}`
 
 ### Liveness/readiness probes
 

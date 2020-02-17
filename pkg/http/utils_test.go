@@ -26,7 +26,6 @@ import (
 )
 
 func TestHttp_FlagToHttpRequest(t *testing.T) {
-
 	requestFlag := `post:/db:{"db": "true"}`
 	request, err := ToHttpRequest(requestFlag)
 	require.NoError(t, err)
@@ -37,7 +36,6 @@ func TestHttp_FlagToHttpRequest(t *testing.T) {
 }
 
 func TestHttp_FlagWithoutBodyToHttpRequest(t *testing.T) {
-
 	requestFlag := `get:ping`
 	request, err := ToHttpRequest(requestFlag)
 	require.NoError(t, err)
@@ -47,44 +45,19 @@ func TestHttp_FlagWithoutBodyToHttpRequest(t *testing.T) {
 	assert.Nil(t, request.Body)
 }
 
-func TestHttp_RandomNumbersInterpolation(t *testing.T) {
-
-	requestFlag := `post:/path_{numbers-5}:{"body": "{numbers-10}"}`
+func TestHttp_DateInterpolation(t *testing.T) {
+	requestFlag := `post:/db_{currentDate}:{"db": "{currentDate|days+5,months+2,years-1}"}`
 	request, err := ToHttpRequest(requestFlag)
 	require.NoError(t, err)
 
 	assert.Equal(t, http.MethodPost, request.Method)
-
-	var numbersRegex = regexp.MustCompile("\\d+")
-	matchPath := numbersRegex.MatchString(request.Path)
-	matchBody := numbersRegex.MatchString(*request.Body)
-
-	assert.True(t, matchPath)
-	assert.True(t, matchBody)
-	assert.Equal(t, len(request.Path), 11)  //  "path_ + 5 numbers"
-	assert.Equal(t, len(*request.Body), 22) // { "body": 10 numbers }
-}
-
-func TestHttp_RandomLetersInterpolation(t *testing.T) {
-
-	requestFlag := `post:/path_{chars-5}:{"body": "{chars-10}"}`
-	request, err := ToHttpRequest(requestFlag)
-	require.NoError(t, err)
-
-	assert.Equal(t, http.MethodPost, request.Method)
-
-	var numbersRegex = regexp.MustCompile("[a-zA-Z0-9]+")
-	matchPath := numbersRegex.MatchString(request.Path)
-	matchBody := numbersRegex.MatchString(*request.Body)
-
-	assert.True(t, matchPath)
-	assert.True(t, matchBody)
-	assert.Equal(t, len(request.Path), 11)  //  "path_ + 5 chars"
-	assert.Equal(t, len(*request.Body), 22) // { "body": 10 chars }
+	dateToday := time.Now().Format("2006-01-02")                        // today + 5
+	dateWithOffset := time.Now().AddDate(-1, 2, 5).Format("2006-01-02") // today -1 year, +2 months, +5 days
+	assert.Equal(t, "/db_"+dateToday, request.Path)
+	assert.Equal(t, fmt.Sprintf(`{"db": "%s"}`, dateWithOffset), *request.Body)
 }
 
 func TestHttp_TodayInterpolation(t *testing.T) {
-
 	requestFlag := `post:/db_{today+5}:{"db": "{today+5}"}`
 	request, err := ToHttpRequest(requestFlag)
 	require.NoError(t, err)
@@ -96,7 +69,6 @@ func TestHttp_TodayInterpolation(t *testing.T) {
 }
 
 func TestHttp_TomorrowInterpolation(t *testing.T) {
-
 	requestFlag := `post:/db_{tomorrow}:{"db": "{tomorrow}"}`
 	request, err := ToHttpRequest(requestFlag)
 	require.NoError(t, err)
@@ -108,8 +80,56 @@ func TestHttp_TomorrowInterpolation(t *testing.T) {
 }
 
 func TestHttp_FlagWithInvalidMethodToHttpRequest(t *testing.T) {
-
 	requestFlag := `hmm:/ping:all=true`
 	_, err := ToHttpRequest(requestFlag)
 	require.Error(t, err)
+}
+
+func TestHttp_TimestampInterpolation(t *testing.T) {
+	requestFlag := `post:/path_{currentTimestamp}:{"body": "{currentTimestamp}"}`
+	request, err := ToHttpRequest(requestFlag)
+	require.NoError(t, err)
+
+	assert.Equal(t, http.MethodPost, request.Method)
+
+	var numbersRegex = regexp.MustCompile("\\d+")
+	matchPath := numbersRegex.MatchString(request.Path)
+	matchBody := numbersRegex.MatchString(*request.Body)
+
+	assert.True(t, matchPath)
+	assert.True(t, matchBody)
+	assert.Equal(t, len(request.Path), 19)  //  "path_ + 13 numbers for timestamp
+	assert.Equal(t, len(*request.Body), 25) // { "body": 13 numbers for timestamp
+}
+
+func TestHttp_RangeInterpolation(t *testing.T) {
+	requestFlag := `post:/path_{range|min=1,max=2}:{"body": "{range|min=1,max=2}"}`
+	request, err := ToHttpRequest(requestFlag)
+	require.NoError(t, err)
+
+	assert.Equal(t, http.MethodPost, request.Method)
+
+	var pathRegex = regexp.MustCompile("/path_\\d")
+	matchPath := pathRegex.MatchString(request.Path)
+
+	var bodyRegex = regexp.MustCompile("{\"body\": \"\\d\"}")
+	matchBody := bodyRegex.MatchString(*request.Body)
+
+	assert.True(t, matchPath)
+	assert.True(t, matchBody)
+}
+
+func TestHttp_RandomElementInterpolation(t *testing.T) {
+	requestFlag := `post:/path_{random|foo,bar}:{"body": "{random|foo,bar}"}`
+	request, err := ToHttpRequest(requestFlag)
+	require.NoError(t, err)
+
+	assert.Equal(t, http.MethodPost, request.Method)
+
+	var elementsRegex = regexp.MustCompile("[foo|bar]")
+	matchPath := elementsRegex.MatchString(request.Path)
+	matchBody := elementsRegex.MatchString(*request.Body)
+
+	assert.True(t, matchPath)
+	assert.True(t, matchBody)
 }
