@@ -120,13 +120,13 @@ func TestHttp_RangeInterpolation(t *testing.T) {
 }
 
 func TestHttp_RandomElementInterpolation(t *testing.T) {
-	requestFlag := `post:/path_{random|foo,bar}:{"body": "{random|foo,bar}"}`
+	requestFlag := `post:/path_{random|fo-o,b_ar}:{"body": "{random|fo-o,b_ar}"}`
 	request, err := ToHttpRequest(requestFlag)
 	require.NoError(t, err)
 
 	assert.Equal(t, http.MethodPost, request.Method)
 
-	var elementsRegex = regexp.MustCompile("[foo|bar]")
+	var elementsRegex = regexp.MustCompile("[fo-o|b_ar]")
 	matchPath := elementsRegex.MatchString(request.Path)
 	matchBody := elementsRegex.MatchString(*request.Body)
 

@@ -43,7 +43,7 @@ var allowedHttpMethods = map[string]interface{}{
 
 var templatePlaceholderRegex = regexp.MustCompile("{(\\w+([\\|+][\\w+-=,]+)?|(\\w+))}")
 var templateRangeRegex = regexp.MustCompile("{range\\|min=(?P<Min>\\d+),max=(?P<Max>\\d+)}")
-var templateElementsRegex = regexp.MustCompile("{random\\|(?P<Elements>[,\\w]+)}")
+var templateElementsRegex = regexp.MustCompile("{random\\|(?P<Elements>[,\\w-]+)}")
 var templateDatesRegex = regexp.MustCompile("{currentDate(?:\\|(?:days(?P<Days>[+-]\\d+))*(?:[,]*months(?P<Months>[+-]\\d+))*(?:[,]*years(?P<Years>[+-]\\d+))*)*}") // we did it \o/ 100+ chars regex
 
 // The following regex expressions are deprecated
