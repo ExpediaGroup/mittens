@@ -16,6 +16,7 @@ package http
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"regexp"
 	"strconv"
@@ -144,6 +145,11 @@ func rangeElements(source string) string {
 
 	min, _ := strconv.Atoi(r[1])
 	max, _ := strconv.Atoi(r[2])
+
+	if min > max {
+		log.Printf("Invalid range. min > max")
+		return source
+	}
 
 	number := rand.Intn(max-min+1) + min
 

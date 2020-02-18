@@ -119,6 +119,18 @@ func TestHttp_RangeInterpolation(t *testing.T) {
 	assert.True(t, matchBody)
 }
 
+func TestHttp_InvalidRangeInterpolation(t *testing.T) {
+	requestFlag := `post:/path_{range|min=2,max=1}:{"body": "{range|min=2,max=1}"}`
+	request, err := ToHttpRequest(requestFlag)
+	require.NoError(t, err)
+
+	assert.Equal(t, http.MethodPost, request.Method)
+
+	// will not action on invalid ranges
+	assert.Equal(t, request.Path, "/path_{range|min=2,max=1}")
+	assert.Equal(t, *request.Body, "{\"body\": \"{range|min=2,max=1}\"}")
+}
+
 func TestHttp_RandomElementInterpolation(t *testing.T) {
 	requestFlag := `post:/path_{random|fo-o,b_ar}:{"body": "{random|fo-o,b_ar}"}`
 	request, err := ToHttpRequest(requestFlag)
