@@ -46,7 +46,7 @@ func TestHttp_FlagWithoutBodyToHttpRequest(t *testing.T) {
 }
 
 func TestHttp_DateInterpolation(t *testing.T) {
-	requestFlag := `post:/db_{currentDate}:{"db": "{currentDate|days+5,months+2,years-1}"}`
+	requestFlag := `post:/db_{{currentDate}}:{"date": "{{currentDate|days+5,months+2,years-1}}"}`
 	request, err := ToHttpRequest(requestFlag)
 	require.NoError(t, err)
 
@@ -54,29 +54,7 @@ func TestHttp_DateInterpolation(t *testing.T) {
 	dateToday := time.Now().Format("2006-01-02")                        // today + 5
 	dateWithOffset := time.Now().AddDate(-1, 2, 5).Format("2006-01-02") // today -1 year, +2 months, +5 days
 	assert.Equal(t, "/db_"+dateToday, request.Path)
-	assert.Equal(t, fmt.Sprintf(`{"db": "%s"}`, dateWithOffset), *request.Body)
-}
-
-func TestHttp_TodayInterpolation(t *testing.T) {
-	requestFlag := `post:/db_{today+5}:{"db": "{today+5}"}`
-	request, err := ToHttpRequest(requestFlag)
-	require.NoError(t, err)
-
-	assert.Equal(t, http.MethodPost, request.Method)
-	date := time.Now().Add(time.Duration(5) * 24 * time.Hour).Format("2006-01-02") // today + 5
-	assert.Equal(t, "/db_"+date, request.Path)
-	assert.Equal(t, fmt.Sprintf(`{"db": "%s"}`, date), *request.Body)
-}
-
-func TestHttp_TomorrowInterpolation(t *testing.T) {
-	requestFlag := `post:/db_{tomorrow}:{"db": "{tomorrow}"}`
-	request, err := ToHttpRequest(requestFlag)
-	require.NoError(t, err)
-
-	assert.Equal(t, http.MethodPost, request.Method)
-	date := time.Now().Add(time.Duration(1) * 24 * time.Hour).Format("2006-01-02") // today + 1
-	assert.Equal(t, "/db_"+date, request.Path)
-	assert.Equal(t, fmt.Sprintf(`{"db": "%s"}`, date), *request.Body)
+	assert.Equal(t, fmt.Sprintf(`{"date": "%s"}`, dateWithOffset), *request.Body)
 }
 
 func TestHttp_FlagWithInvalidMethodToHttpRequest(t *testing.T) {
@@ -86,7 +64,7 @@ func TestHttp_FlagWithInvalidMethodToHttpRequest(t *testing.T) {
 }
 
 func TestHttp_TimestampInterpolation(t *testing.T) {
-	requestFlag := `post:/path_{currentTimestamp}:{"body": "{currentTimestamp}"}`
+	requestFlag := `post:/path_{{currentTimestamp}}:{"body": "{{currentTimestamp}}"}`
 	request, err := ToHttpRequest(requestFlag)
 	require.NoError(t, err)
 
@@ -103,7 +81,7 @@ func TestHttp_TimestampInterpolation(t *testing.T) {
 }
 
 func TestHttp_RangeInterpolation(t *testing.T) {
-	requestFlag := `post:/path_{range|min=1,max=2}:{"body": "{range|min=1,max=2}"}`
+	requestFlag := `post:/path_{{range|min=1,max=2}}:{"body": "{{range|min=1,max=2}}"}`
 	request, err := ToHttpRequest(requestFlag)
 	require.NoError(t, err)
 
@@ -120,19 +98,19 @@ func TestHttp_RangeInterpolation(t *testing.T) {
 }
 
 func TestHttp_InvalidRangeInterpolation(t *testing.T) {
-	requestFlag := `post:/path_{range|min=2,max=1}:{"body": "{range|min=2,max=1}"}`
+	requestFlag := `post:/path_{{range|min=2,max=1}}:{"body": "{{range|min=2,max=1}}"}`
 	request, err := ToHttpRequest(requestFlag)
 	require.NoError(t, err)
 
 	assert.Equal(t, http.MethodPost, request.Method)
 
 	// will not action on invalid ranges
-	assert.Equal(t, request.Path, "/path_{range|min=2,max=1}")
-	assert.Equal(t, *request.Body, "{\"body\": \"{range|min=2,max=1}\"}")
+	assert.Equal(t, request.Path, "/path_{{range|min=2,max=1}}")
+	assert.Equal(t, *request.Body, "{\"body\": \"{{range|min=2,max=1}}\"}")
 }
 
 func TestHttp_RandomElementInterpolation(t *testing.T) {
-	requestFlag := `post:/path_{random|fo-o,b_ar}:{"body": "{random|fo-o,b_ar}"}`
+	requestFlag := `post:/path_{{random|fo-o,b_ar}}:{"body": "{{random|fo-o,b_ar}}"}`
 	request, err := ToHttpRequest(requestFlag)
 	require.NoError(t, err)
 

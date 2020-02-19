@@ -42,15 +42,10 @@ var allowedHttpMethods = map[string]interface{}{
 	"TRACE":   nil,
 }
 
-var templatePlaceholderRegex = regexp.MustCompile("{(\\w+([\\|+][\\w+-=,]+)?|(\\w+))}")
-var templateRangeRegex = regexp.MustCompile("{range\\|min=(?P<Min>\\d+),max=(?P<Max>\\d+)}")
-var templateElementsRegex = regexp.MustCompile("{random\\|(?P<Elements>[,\\w-]+)}")
-var templateDatesRegex = regexp.MustCompile("{currentDate(?:\\|(?:days(?P<Days>[+-]\\d+))*(?:[,]*months(?P<Months>[+-]\\d+))*(?:[,]*years(?P<Years>[+-]\\d+))*)*}") // we did it \o/ 100+ chars regex
-
-// The following regex expressions are deprecated
-var templateRegex = regexp.MustCompile("{(today([+-]\\d+)?|tomorrow)}")
-var templatePlusMinusRegex = regexp.MustCompile("[+-]\\d+")
-var templateOffsetRegex = regexp.MustCompile("\\d+")
+var templatePlaceholderRegex = regexp.MustCompile("{{(\\w+([\\|+][\\w+-=,]+)?|(\\w+))}}")
+var templateRangeRegex = regexp.MustCompile("{{range\\|min=(?P<Min>\\d+),max=(?P<Max>\\d+)}}")
+var templateElementsRegex = regexp.MustCompile("{{random\\|(?P<Elements>[,\\w-]+)}}")
+var templateDatesRegex = regexp.MustCompile("{{currentDate(?:\\|(?:days(?P<Days>[+-]\\d+))*(?:[,]*months(?P<Months>[+-]\\d+))*(?:[,]*years(?P<Years>[+-]\\d+))*)*}}") // we did it \o/ 100+ chars regex
 
 func ToHttpRequest(requestFlag string) (Request, error) {
 	parts := strings.SplitN(requestFlag, ":", 3)
@@ -83,21 +78,6 @@ func ToHttpRequest(requestFlag string) (Request, error) {
 		Path:   path,
 		Body:   &body,
 	}, nil
-}
-
-func legacyDateElements(source string) string {
-	offsetDays := 0
-
-	if source == "{today}" {
-		offsetDays = 0
-	} else if source == "{tomorrow}" {
-		offsetDays = 1
-	} else if extractedOffset := templatePlusMinusRegex.FindString(source); len(extractedOffset) > 0 {
-		offsetDays, _ = strconv.Atoi(extractedOffset)
-	}
-
-	// the date below is how the golang date formatter works. it's used for the formatting. it's not what is actually going to be displayed
-	return time.Now().Add(time.Duration(offsetDays) * 24 * time.Hour).Format("2006-01-02")
 }
 
 func dateElements(source string) string {
@@ -160,9 +140,7 @@ func interpolatePlaceholders(source string) string {
 	return templatePlaceholderRegex.ReplaceAllStringFunc(source, func(templateString string) string {
 		rand.Seed(time.Now().UnixNano())
 
-		if strings.Contains(templateString, "today") || strings.Contains(templateString, "tomorrow") {
-			return legacyDateElements(templateString)
-		} else if strings.Contains(templateString, "currentDate") {
+		if strings.Contains(templateString, "currentDate") {
 			return dateElements(templateString)
 		} else if strings.Contains(templateString, "currentTimestamp") {
 			return timestampElements()
