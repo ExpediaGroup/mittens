@@ -81,16 +81,16 @@ func TestHttp_TimestampInterpolation(t *testing.T) {
 }
 
 func TestHttp_MultipleInterpolation(t *testing.T) {
-	requestFlag := `post:/path_{{range|min=1,max=2}}_{{random|foo,bar}}:{"body": "{{random|foo}} {{range|min=1,max=2}}"}`
+	requestFlag := `post:/path_{{range|min=1,max=2}}_{{random|foo,bar}}:{"body": "{{random|foo,bar}} {{range|min=1,max=2}}"}`
 	request, err := ToHttpRequest(requestFlag)
 	require.NoError(t, err)
 
 	assert.Equal(t, http.MethodPost, request.Method)
 
-	var pathRegex = regexp.MustCompile("/path_\\d_[foo|bar]")
+	var pathRegex = regexp.MustCompile("/path_\\d_(foo|bar)")
 	matchPath := pathRegex.MatchString(request.Path)
 
-	var bodyRegex = regexp.MustCompile("{\"body\": \"foo \\d\"}")
+	var bodyRegex = regexp.MustCompile("{\"body\": \"(foo|bar) \\d\"}")
 	matchBody := bodyRegex.MatchString(*request.Body)
 
 	assert.True(t, matchPath)
@@ -133,7 +133,7 @@ func TestHttp_RandomElementInterpolation(t *testing.T) {
 
 	assert.Equal(t, http.MethodPost, request.Method)
 
-	var elementsRegex = regexp.MustCompile("[fo-o|b_ar]")
+	var elementsRegex = regexp.MustCompile("(fo-o|b_ar)")
 	matchPath := elementsRegex.MatchString(request.Path)
 	matchBody := elementsRegex.MatchString(*request.Body)
 
