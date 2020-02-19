@@ -80,6 +80,23 @@ func TestHttp_TimestampInterpolation(t *testing.T) {
 	assert.Equal(t, len(*request.Body), 25) // { "body": 13 numbers for timestamp
 }
 
+func TestHttp_MultipleInterpolation(t *testing.T) {
+	requestFlag := `post:/path_{{range|min=1,max=2}}_{{random|foo,bar}}:{"body": "{{random|foo}} {{range|min=1,max=2}}"}`
+	request, err := ToHttpRequest(requestFlag)
+	require.NoError(t, err)
+
+	assert.Equal(t, http.MethodPost, request.Method)
+
+	var pathRegex = regexp.MustCompile("/path_\\d_[foo|bar]")
+	matchPath := pathRegex.MatchString(request.Path)
+
+	var bodyRegex = regexp.MustCompile("{\"body\": \"foo \\d\"}")
+	matchBody := bodyRegex.MatchString(*request.Body)
+
+	assert.True(t, matchPath)
+	assert.True(t, matchBody)
+}
+
 func TestHttp_RangeInterpolation(t *testing.T) {
 	requestFlag := `post:/path_{{range|min=1,max=2}}:{"body": "{{range|min=1,max=2}}"}`
 	request, err := ToHttpRequest(requestFlag)
