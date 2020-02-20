@@ -5,6 +5,7 @@
 [![Build Status](https://github.com/ExpediaGroup/mittens/workflows/Build/badge.svg)](https://github.com/ExpediaGroup/mittens/actions?query=workflow:"Build")
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![GitHub site](https://img.shields.io/badge/GitHub-site-blue.svg)](https://expediagroup.github.io/mittens/)
+[![Docker](https://img.shields.io/badge/docker-mittens-blue.svg)](https://hub.docker.com/r/expediagroup/mittens/)
 
 # Mittens
 Mittens is a tool that can be used to warm up an http application over REST or gRPC.
