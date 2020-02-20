@@ -138,7 +138,6 @@ func rangeElements(source string) string {
 
 func interpolatePlaceholders(source string) string {
 	return templatePlaceholderRegex.ReplaceAllStringFunc(source, func(templateString string) string {
-		rand.Seed(time.Now().UnixNano())
 
 		if strings.Contains(templateString, "currentDate") {
 			return dateElements(templateString)
