@@ -142,7 +142,7 @@ func RunCmdRoot() {
 }
 
 func runWarmup(wp warmup.Warmup, done chan struct{}) {
-	rand.Seed(time.Now().UnixNano()) // init seed to avoid deterministic/repeated call
+	rand.Seed(time.Now().UnixNano()) // init seed to avoid deterministic/repeated calls every time we run
 
 	httpHeaders := opts.GetWarmupHttpHeaders()
 	httpRequests, err := opts.GetWarmupHttpRequests(done)
