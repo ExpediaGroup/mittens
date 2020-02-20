@@ -70,6 +70,7 @@ The following are available:
 - {{range|min=x,max=y}} - both min and max are required arguments. Range is inclusive.
 
 E.g.:
+ - `get:/some-path?date="{{currentDate|days+1,months+1,years+1}}"` 
  - `post:/some-path:{"id": "{{range|min=1,max=5}}", "currentDate": "{{currentDate|days+2,months+1}}"}`
 
 ### Liveness/readiness probes
