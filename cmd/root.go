@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"flag"
 	"log"
+	"math/rand"
 	"mittens/cmd/flags"
 	"mittens/pkg/probe"
 	"mittens/pkg/warmup"
@@ -97,7 +98,7 @@ func RunCmdRoot() {
 	targetOptions, err := opts.GetWarmupTargetOptions()
 
 	if err == nil {
-		wp, err1:= createWarmup(targetOptions, done)
+		wp, err1 := createWarmup(targetOptions, done)
 		if err1 == nil {
 			runWarmup(wp, done)
 		}
@@ -141,6 +142,8 @@ func RunCmdRoot() {
 }
 
 func runWarmup(wp warmup.Warmup, done chan struct{}) {
+	rand.Seed(time.Now().UnixNano()) // init seed to avoid deterministic/repeated call
+
 	httpHeaders := opts.GetWarmupHttpHeaders()
 	httpRequests, err := opts.GetWarmupHttpRequests(done)
 	if err != nil {
@@ -163,7 +166,7 @@ func runWarmup(wp warmup.Warmup, done chan struct{}) {
 	}
 }
 
-func createWarmup(targetOptions warmup.TargetOptions, done chan struct{}) (warmup.Warmup, error){
+func createWarmup(targetOptions warmup.TargetOptions, done chan struct{}) (warmup.Warmup, error) {
 	wp, err := warmup.NewWarmup(
 		opts.GetReadinessHttpClient(),
 		opts.GetReadinessGrpcClient(),
