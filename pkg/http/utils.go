@@ -42,8 +42,7 @@ var allowedHttpMethods = map[string]interface{}{
 	"TRACE":   nil,
 }
 
-// any thing that starts with { followed by any word character and optinally followed by a modifier identifier | and the modifiers that can contain word chars + - and =
-var templatePlaceholderRegex = regexp.MustCompile("{(\\w+(?:[\\|(?:[\\w+-=,]+)]*)}")
+var templatePlaceholderRegex = regexp.MustCompile("{(\\w+(?:[\\|(?:[\\w+-=,]+)]*)}") // anything that starts with { followed by any word character and optinally followed by a modifier identifier | and the modifiers that can contain word chars + - and =
 var templateRangeRegex = regexp.MustCompile("{range\\|min=(?P<Min>\\d+),max=(?P<Max>\\d+)}")
 var templateElementsRegex = regexp.MustCompile("{random\\|(?P<Elements>[,\\w-]+)}")
 var templateDatesRegex = regexp.MustCompile("{currentDate(?:\\|(?:days(?P<Days>[+-]\\d+))*(?:[,]*months(?P<Months>[+-]\\d+))*(?:[,]*years(?P<Years>[+-]\\d+))*)*}") // we did it \o/ 100+ chars regex
