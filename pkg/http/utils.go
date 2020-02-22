@@ -42,10 +42,11 @@ var allowedHttpMethods = map[string]interface{}{
 	"TRACE":   nil,
 }
 
-var templatePlaceholderRegex = regexp.MustCompile("{{(\\w+([\\|+][\\w+-=,]+)?|(\\w+))}}")
-var templateRangeRegex = regexp.MustCompile("{{range\\|min=(?P<Min>\\d+),max=(?P<Max>\\d+)}}")
-var templateElementsRegex = regexp.MustCompile("{{random\\|(?P<Elements>[,\\w-]+)}}")
-var templateDatesRegex = regexp.MustCompile("{{currentDate(?:\\|(?:days(?P<Days>[+-]\\d+))*(?:[,]*months(?P<Months>[+-]\\d+))*(?:[,]*years(?P<Years>[+-]\\d+))*)*}}") // we did it \o/ 100+ chars regex
+// any thing that starts with { followed by any word character and optinally followed by modifiers in the format |word=word,word=word,...
+var templatePlaceholderRegex = regexp.MustCompile("{(\\w+(?:[\\|(?:[\\w+-=,]+)]*)}")
+var templateRangeRegex = regexp.MustCompile("{range\\|min=(?P<Min>\\d+),max=(?P<Max>\\d+)}")
+var templateElementsRegex = regexp.MustCompile("{random\\|(?P<Elements>[,\\w-]+)}")
+var templateDatesRegex = regexp.MustCompile("{currentDate(?:\\|(?:days(?P<Days>[+-]\\d+))*(?:[,]*months(?P<Months>[+-]\\d+))*(?:[,]*years(?P<Years>[+-]\\d+))*)*}") // we did it \o/ 100+ chars regex
 
 func ToHttpRequest(requestFlag string) (Request, error) {
 	parts := strings.SplitN(requestFlag, ":", 3)
