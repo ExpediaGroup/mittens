@@ -46,7 +46,7 @@ func TestHttp_FlagWithoutBodyToHttpRequest(t *testing.T) {
 }
 
 func TestHttp_DateInterpolation(t *testing.T) {
-	requestFlag := `post:/db_{{currentDate}}:{"date": "{{currentDate|days+5,months+2,years-1}}"}`
+	requestFlag := `post:/db_{$currentDate}:{"date": "{$currentDate|days+5,months+2,years-1}"}`
 	request, err := ToHttpRequest(requestFlag)
 	require.NoError(t, err)
 
@@ -64,7 +64,7 @@ func TestHttp_FlagWithInvalidMethodToHttpRequest(t *testing.T) {
 }
 
 func TestHttp_TimestampInterpolation(t *testing.T) {
-	requestFlag := `post:/path_{{currentTimestamp}}:{"body": "{{currentTimestamp}}"}`
+	requestFlag := `post:/path_{$currentTimestamp}:{"body": "{$currentTimestamp}"}`
 	request, err := ToHttpRequest(requestFlag)
 	require.NoError(t, err)
 
@@ -81,7 +81,7 @@ func TestHttp_TimestampInterpolation(t *testing.T) {
 }
 
 func TestHttp_MultipleInterpolation(t *testing.T) {
-	requestFlag := `post:/path_{{range|min=1,max=2}}_{{random|foo,bar}}:{"body": "{{random|foo,bar}} {{range|min=1,max=2}}"}`
+	requestFlag := `post:/path_{$range|min=1,max=2}_{$random|foo,bar}:{"body": "{$random|foo,bar} {$range|min=1,max=2}"}`
 	request, err := ToHttpRequest(requestFlag)
 	require.NoError(t, err)
 
@@ -98,7 +98,7 @@ func TestHttp_MultipleInterpolation(t *testing.T) {
 }
 
 func TestHttp_RangeInterpolation(t *testing.T) {
-	requestFlag := `post:/path_{{range|min=1,max=2}}:{"body": "{{range|min=1,max=2}}"}`
+	requestFlag := `post:/path_{$range|min=1,max=2}:{"body": "{$range|min=1,max=2}"}`
 	request, err := ToHttpRequest(requestFlag)
 	require.NoError(t, err)
 
@@ -115,19 +115,19 @@ func TestHttp_RangeInterpolation(t *testing.T) {
 }
 
 func TestHttp_InvalidRangeInterpolation(t *testing.T) {
-	requestFlag := `post:/path_{{range|min=2,max=1}}:{"body": "{{range|min=2,max=1}}"}`
+	requestFlag := `post:/path_{$range|min=2,max=1}:{"body": "{$range|min=2,max=1}"}`
 	request, err := ToHttpRequest(requestFlag)
 	require.NoError(t, err)
 
 	assert.Equal(t, http.MethodPost, request.Method)
 
 	// will not action on invalid ranges
-	assert.Equal(t, request.Path, "/path_{{range|min=2,max=1}}")
-	assert.Equal(t, *request.Body, "{\"body\": \"{{range|min=2,max=1}}\"}")
+	assert.Equal(t, request.Path, "/path_{$range|min=2,max=1}")
+	assert.Equal(t, *request.Body, "{\"body\": \"{$range|min=2,max=1}\"}")
 }
 
 func TestHttp_RandomElementInterpolation(t *testing.T) {
-	requestFlag := `post:/path_{{random|fo-o,b_ar}}:{"body": "{{random|fo-o,b_ar}}"}`
+	requestFlag := `post:/path_{$random|fo-o,b_ar}:{"body": "{$random|fo-o,b_ar}"}`
 	request, err := ToHttpRequest(requestFlag)
 	require.NoError(t, err)
 

@@ -15,4 +15,4 @@ build: unit-tests
 	@CGO_ENABLED=0 go build
 
 docker:
-	@docker build -t mittens .
+	@docker build -t expediagroup/mittens:latest .
