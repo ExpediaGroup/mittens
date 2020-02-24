@@ -112,15 +112,15 @@ optional). Host and port are taken from <code>target-grpc-host</code> and
 <p>Mittens allows you to use special keywords if you need to generate randomized urls.
 The following are available:</p>
 <ul>
-<li><code>{{currentDate|days+x,months+y,years+z}}</code>: you can adjust the temporal offset by adding or subtracting days, months or years. The offsets are optional and can be removed.</li>
-<li><code>{{currentTimestamp}}</code>: Time from Unix epoch in milliseconds.</li>
-<li><code>{{random|foo,bar,baz}}</code>: Mittens will randomly select an element from the provided list, eg: one of foo, bar or baz. Special chars are not supported. Valid: [0-9A-Za-z_]</li>
-<li><code>{{range|min=x,max=y}}</code>: both min and max are required arguments. Range is inclusive.</li>
+<li><code>{$currentDate|days+x,months+y,years+z}</code>: you can adjust the temporal offset by adding or subtracting days, months or years. The offsets are optional and can be removed.</li>
+<li><code>{$currentTimestamp}</code>: Time from Unix epoch in milliseconds.</li>
+<li><code>{$random|foo,bar,baz}</code>: Mittens will randomly select an element from the provided list, eg: one of foo, bar or baz. Special chars are not supported. Valid: [0-9A-Za-z_]</li>
+<li><code>{$range|min=x,max=y}</code>: both min and max are required arguments. Range is inclusive.</li>
 </ul>
 <p>E.g.:</p>
 <ul>
-<li><code>get:/some-path?date=&quot;{{currentDate|days+1,months+1,years+1}}&quot;</code></li>
-<li><code>post:/some-path:{&quot;id&quot;: &quot;{{range|min=1,max=5}}&quot;, &quot;currentDate&quot;: &quot;{{currentDate|days+2,months+1}}&quot;}</code></li>
+<li><code>get:/some-path?date=&quot;{$currentDate|days+1,months+1,years+1}&quot;</code></li>
+<li><code>post:/some-path:{&quot;id&quot;: &quot;{$range|min=1,max=5}&quot;, &quot;currentDate&quot;: &quot;{$currentDate|days+2,months+1}&quot;}</code></li>
 </ul>
 <h3><a class="anchor" aria-hidden="true" id="liveness-readiness-probes"></a><a href="#liveness-readiness-probes" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Liveness/readiness probes</h3>
 <h4><a class="anchor" aria-hidden="true" id="file-probes"></a><a href="#file-probes" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>File probes</h4>
