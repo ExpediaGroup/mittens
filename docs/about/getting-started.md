@@ -64,14 +64,14 @@ optional). Host and port are taken from `target-grpc-host` and
 
 Mittens allows you to use special keywords if you need to generate randomized urls.
 The following are available:
-- `{currentDate|days+x,months+y,years+z}`: you can adjust the temporal offset by adding or subtracting days, months or years. The offsets are optional and can be removed.
-- `{currentTimestamp}`: Time from Unix epoch in milliseconds.
-- `{random|foo,bar,baz}`: Mittens will randomly select an element from the provided list, eg: one of foo, bar or baz. Special chars are not supported. Valid: [0-9A-Za-z_]
-- `{range|min=x,max=y}`: both min and max are required arguments. Range is inclusive.
+- `{$currentDate|days+x,months+y,years+z}`: you can adjust the temporal offset by adding or subtracting days, months or years. The offsets are optional and can be removed.
+- `{$currentTimestamp}`: Time from Unix epoch in milliseconds.
+- `{$random|foo,bar,baz}`: Mittens will randomly select an element from the provided list, eg: one of foo, bar or baz. Special chars are not supported. Valid: [0-9A-Za-z_]
+- `{$range|min=x,max=y}`: both min and max are required arguments. Range is inclusive.
 
 E.g.:
- - `get:/some-path?date="{currentDate|days+1,months+1,years+1}"` 
- - `post:/some-path:{"id": "{range|min=1,max=5}", "currentDate": "{currentDate|days+2,months+1}"}`
+ - `get:/some-path?date="{$currentDate|days+1,months+1,years+1}"` 
+ - `post:/some-path:{"id": "{$range|min=1,max=5}", "currentDate": "{$currentDate|days+2,months+1}"}`
 
 ### Liveness/readiness probes
 
