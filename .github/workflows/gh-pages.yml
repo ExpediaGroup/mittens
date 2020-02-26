@@ -1,0 +1,37 @@
+name: Publish Docs
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'docs/**'
+      - 'website/**'
+
+jobs:
+  publish-docs:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js 12
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+
+      - name: Build
+        run: |
+          cd website
+          npm install
+          npm run build
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./website/build/mittens
+          publish_branch: gh-pages
+          user_name: eg-oss-ci
+          user_email: oss@expediagroup.com
