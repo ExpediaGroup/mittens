@@ -28,6 +28,7 @@ Its main features are summarised below:
 - Sends requests continuously for X seconds
 - Supports REST and gRPC
 - Supports HTTP and gRPC headers
+- Supports placeholders for random elements in requests
 - Supports concurrent requests
 - Provides files or/and endpoints that can be used as liveness/readiness probes in Kubernetes
 
