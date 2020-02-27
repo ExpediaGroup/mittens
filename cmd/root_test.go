@@ -46,7 +46,7 @@ func TestWarmupSidecarWithFileProbe(t *testing.T) {
 		"-concurrency=4",
 		"-exit-after-warmup=true",
 		"-target-readiness-http-path=/",
-		"-timeout-seconds=5"}
+		"-max-duration-seconds=5"}
 
 	CreateConfig()
 	RunCmdRoot()
@@ -68,7 +68,7 @@ func TestWarmupSidecarWithServerProbe(t *testing.T) {
 		"-concurrency=4",
 		"-exit-after-warmup=true",
 		"-target-readiness-http-path=/",
-		"-timeout-seconds=5"}
+		"-max-duration-seconds=5"}
 
 	CreateConfig()
 	RunCmdRoot()
