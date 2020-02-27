@@ -58,8 +58,8 @@ func (r *Root) InitFlags() {
 func (r *Root) GetWarmupOptions() warmup.Options {
 
 	return warmup.Options{
-		TimeoutSeconds: r.MaxDurationSeconds,
-		Concurrency:    r.Concurrency,
+		MaxDurationSeconds: r.MaxDurationSeconds,
+		Concurrency:        r.Concurrency,
 	}
 }
 
