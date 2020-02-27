@@ -57,7 +57,7 @@ func TestWarmupSidecarWithFileProbe(t *testing.T) {
 	assert.Equal(t, 4, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
 	assert.Equal(t, "/", opts.Target.ReadinessHttpPath)
-	assert.Equal(t, 5, opts.TimeoutSeconds)
+	assert.Equal(t, 5, opts.MaxDurationSeconds)
 }
 
 func TestWarmupSidecarWithServerProbe(t *testing.T) {
@@ -79,7 +79,7 @@ func TestWarmupSidecarWithServerProbe(t *testing.T) {
 	assert.Equal(t, 4, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
 	assert.Equal(t, "/", opts.Target.ReadinessHttpPath)
-	assert.Equal(t, 5, opts.TimeoutSeconds)
+	assert.Equal(t, 5, opts.MaxDurationSeconds)
 }
 
 func TestConfigsFromFile(t *testing.T) {
@@ -95,7 +95,7 @@ func TestConfigsFromFile(t *testing.T) {
 	assert.Equal(t, 4, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
 	assert.Equal(t, "/", opts.Target.ReadinessHttpPath)
-	assert.Equal(t, 5, opts.TimeoutSeconds)
+	assert.Equal(t, 5, opts.MaxDurationSeconds)
 }
 
 func StartTargetTestServer(t *testing.T) (shutdown func()) {

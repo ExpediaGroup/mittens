@@ -22,7 +22,7 @@ where `configs.json`:
 {
   "target-readiness-http-path": "/health",
   "target-grpc-port": 6565,
-  "timeout-seconds": 60,
+  "max-duration-seconds": 60,
   "concurrency": 3,
   "http-requests": ["get:/hotel/potatoes"],
   "grpc-requests": ["service/method:'{\"foo\":\"bar\", \"bar\":\"foo\"}'"]
