@@ -34,20 +34,14 @@ We provide a [Makefile](Makefile) which can be used to generate an executable bi
 
 To build the binary make sure you've installed [Go 1.13](https://golang.org/dl/).
 
-#### Build binary executable
+#### Build binary executable & run unit tests
 
 To build the project run the following:
 
-    make build
-
-This will generate a binary executable.
-
-#### Run unit tests
-
-To run the tests:
-
     make unit-tests
-    
+
+This will run the unit tests and generate a binary executable.
+
 #### Run integration tests
 
 To run the integration tests:
@@ -58,7 +52,7 @@ To run the integration tests:
 
 To run the binary:
         
-    ./mittens -target-readiness-path=/health -target-grpc-port=6565 -timeout-seconds=60 -concurrency=3 -http-requests=get:/hotel/potatoes -grpc-requests=service/method:"{\"foo\":\"bar\",\"bar\":\"foo\"}"
+    ./mittens -target-readiness-path=/health -target-grpc-port=6565 -max-duration-seconds=60 -concurrency=3 -http-requests=get:/hotel/potatoes -grpc-requests=service/method:"{\"foo\":\"bar\",\"bar\":\"foo\"}"
 
 ### Docker
 #### Build image
@@ -71,7 +65,7 @@ To build a Docker image named `mittens`:
 
 To run the container:
 
-    docker run mittens:latest -target-readiness-path=/health -target-grpc-port=6565 -timeout-seconds=60 -concurrency=3 -http-requests=get:/hotel/potatoes -grpc-requests=service/method:"{\"foo\":\"bar\",\"bar\":\"foo\"}"
+    docker run mittens:latest -target-readiness-path=/health -target-grpc-port=6565 -max-duration-seconds=60 -concurrency=3 -http-requests=get:/hotel/potatoes -grpc-requests=service/method:"{\"foo\":\"bar\",\"bar\":\"foo\"}"
 
 _Note_: If you use Docker for Mac you might need to set the target host (`target-http-host`, `target-grpc-host`) to `docker.for.mac.localhost`, or `docker.for.mac.host.internal`, or `host.docker.internal` (depending on your version of Docker) so that your container can resolve localhost.
 

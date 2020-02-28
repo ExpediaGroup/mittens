@@ -24,8 +24,8 @@ import (
 )
 
 type Options struct {
-	TimeoutSeconds int
-	Concurrency    int
+	MaxDurationSeconds int
+	Concurrency        int
 }
 
 type Warmup struct {

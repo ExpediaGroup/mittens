@@ -1,6 +1,6 @@
 {
   "exit-after-warmup": true,
-  "timeout-seconds": 5,
+  "max-duration-seconds": 5,
   "concurrency": 4,
   "target-readiness-http-path": "/",
   "file-probe-enabled": true,

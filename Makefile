@@ -1,18 +1,13 @@
-.PHONY: all build unit-tests integration-tests
+.PHONY: build unit-tests integration-tests
 
 override GOOS:=$(shell uname)
 override GO111MODULE=on
 
-all: build
-
 unit-tests:
-	@go test ./...
+	@CGO_ENABLED=0 go build && go test ./...
 
 integration-tests:
 	@go test -tags=integration ./...
-
-build: unit-tests
-	@CGO_ENABLED=0 go build
 
 docker:
 	@docker build -t expediagroup/mittens:latest .
