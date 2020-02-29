@@ -4,7 +4,7 @@ RUN mkdir -p /mittens
 COPY ./ /mittens/
 WORKDIR /mittens
 # Run unit tests & build app
-RUN make build
+RUN make unit-tests
 
 FROM alpine:3.7
 COPY --from=0 /mittens/mittens /app/mittens
