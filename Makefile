@@ -1,4 +1,4 @@
-.PHONY: build unit-tests integration-tests
+.PHONY: unit-tests integration-tests
 
 override GOOS:=$(shell uname)
 override GO111MODULE=on
