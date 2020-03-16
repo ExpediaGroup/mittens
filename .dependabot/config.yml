@@ -3,3 +3,6 @@ update_configs:
   - package_manager: 'go:modules'
     directory: '/'
     update_schedule: 'monthly'
+  - package_manager: "javascript"
+    directory: "/website"
+    update_schedule: "monthly"
