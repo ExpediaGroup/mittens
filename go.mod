@@ -2,7 +2,7 @@ module mittens
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/fullstorydev/grpcurl v1.4.0
+	github.com/fullstorydev/grpcurl v1.5.0
 	github.com/jhump/protoreflect v1.6.0
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
