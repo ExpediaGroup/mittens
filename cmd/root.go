@@ -21,6 +21,7 @@ import (
 	"math/rand"
 	"mittens/cmd/flags"
 	"mittens/pkg/probe"
+	"mittens/pkg/response"
 	"mittens/pkg/warmup"
 	"os"
 	"os/signal"
@@ -97,18 +98,40 @@ func RunCmdRoot() {
 
 	targetOptions, err := opts.GetWarmupTargetOptions()
 
+	result := warmup.Result{TotalRequests: 0, ClientErrors: 0, RequestsSent: 0}
 	if err == nil {
 		wp, err1 := createWarmup(targetOptions, done)
 		if err1 == nil {
-			runWarmup(wp, done)
+			result = runWarmup(wp, done)
 		}
 	}
+	log.Printf("summary: total_requests: %d, requests_sent: %d, bad_requests: %d", result.TotalRequests, result.RequestsSent, result.ClientErrors)
 
 	if opts.ServerProbe.Enabled {
-		probeServer.IsReady(true)
+		if opts.FailReadiness.Enabled {
+			if opts.FailReadiness.NoRequests && result.RequestsSent == 0 {
+				log.Print("probeServer readiness failed, no requests sent")
+			} else if opts.FailReadiness.ClientErrors && result.ClientErrors > 0 {
+				log.Print("probeServer readiness failed due to bad requests")
+			} else {
+				probeServer.IsReady(true)
+			}
+		} else {
+			probeServer.IsReady(true)
+		}
 	}
 	if opts.FileProbe.Enabled {
-		probe.WriteFile(opts.FileProbe.ReadinessPath)
+		if opts.FailReadiness.Enabled {
+			if opts.FailReadiness.NoRequests && result.RequestsSent == 0 {
+				log.Print("fileServer readiness failed, no requests sent")
+			} else if opts.FailReadiness.ClientErrors && result.ClientErrors > 0 {
+				log.Print("fileServer readiness failed due to bad requests")
+			} else {
+				probe.WriteFile(opts.FileProbe.ReadinessPath)
+			}
+		} else {
+			probe.WriteFile(opts.FileProbe.ReadinessPath)
+		}
 	}
 	log.Print("warm up finished")
 	if opts.ExitAfterWarmup {
@@ -141,8 +164,11 @@ func RunCmdRoot() {
 	}
 }
 
-func runWarmup(wp warmup.Warmup, done chan struct{}) {
+func runWarmup(wp warmup.Warmup, done chan struct{}) warmup.Result {
 	rand.Seed(time.Now().UnixNano()) // initialize seed only once to prevent deterministic/repeated calls every time we run
+	requestsSent := 0
+	totalRequests := 0
+	badRequests := 0
 
 	httpHeaders := opts.GetWarmupHttpHeaders()
 	httpRequests, err := opts.GetWarmupHttpRequests(done)
@@ -157,13 +183,22 @@ func runWarmup(wp warmup.Warmup, done chan struct{}) {
 	httpResponse := wp.HttpWarmup(httpHeaders, httpRequests)
 	grpcResponse := wp.GrpcWarmup(grpcHeaders, grpcRequests)
 	response := merge(httpResponse, grpcResponse)
+
 	for r := range response {
-		if r.Error != nil {
-			log.Printf("%s response %d milliseconds: error: %v", r.Type, r.Duration/time.Millisecond, r.Error)
+		totalRequests += 1
+		if r.ClientError {
+			badRequests += 1
+		}
+		if r.RequestSent {
+			requestsSent += 1
+		}
+		if r.Err != nil {
+			log.Printf("%s response %d milliseconds: error: %v", r.Type, r.Duration/time.Millisecond, r.Err)
 		} else {
 			log.Printf("%s response %d milliseconds: OK", r.Type, r.Duration/time.Millisecond)
 		}
 	}
+	return warmup.Result{ClientErrors: badRequests, RequestsSent: requestsSent, TotalRequests: totalRequests}
 }
 
 func createWarmup(targetOptions warmup.TargetOptions, done chan struct{}) (warmup.Warmup, error) {
@@ -213,14 +248,14 @@ func start(port int, livenessPath, readinessPath string, stop <-chan struct{}, d
 }
 
 // 'fan in' see: https://blog.golang.org/pipelines
-func merge(cs ...<-chan warmup.Response) <-chan warmup.Response {
+func merge(cs ...<-chan response.Response) <-chan response.Response {
 
 	var wg sync.WaitGroup
-	out := make(chan warmup.Response)
+	out := make(chan response.Response)
 
 	// Start an output goroutine for each input channel in cs.  output
 	// copies values from c to out until c is closed, then calls wg.Done.
-	output := func(c <-chan warmup.Response) {
+	output := func(c <-chan response.Response) {
 		for n := range c {
 			out <- n
 		}

@@ -29,6 +29,7 @@ type Root struct {
 	Concurrency              int  `json:"concurrency"`
 	RequestDelayMilliseconds int  `json:"request-delay-milliseconds"`
 	ExitAfterWarmup          bool `json:"exit-after-warmup"`
+	FailReadiness
 	FileProbe
 	ServerProbe
 	Target
@@ -47,6 +48,7 @@ func (r *Root) InitFlags() {
 	flag.IntVar(&r.RequestDelayMilliseconds, "request-delay-milliseconds", 50, "Delay in milliseconds between requests")
 	flag.BoolVar(&r.ExitAfterWarmup, "exit-after-warmup", false, "If warm up process should finish after completion. This is useful to prevent container restarts.")
 
+	r.FailReadiness.InitFlags()
 	r.FileProbe.InitFlags()
 	r.ServerProbe.InitFlags()
 	r.Target.InitFlags()

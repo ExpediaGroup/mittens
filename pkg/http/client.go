@@ -21,6 +21,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"mittens/pkg/response"
 	"net/http"
 	"strings"
 	"time"
@@ -48,8 +49,8 @@ func NewClient(host string, insecure bool) Client {
 	return Client{httpClient: client, host: strings.TrimRight(host, "/")}
 }
 
-// Request sends an http request and returns error also if response code is NOT 2XX
-func (c Client) Request(method, path string, headers map[string]string, requestBody *string) error {
+// Request sends an http request and wraps useful info into a Response object
+func (c Client) Request(method, path string, headers map[string]string, requestBody *string) response.Response {
 	var body io.Reader
 	if requestBody != nil {
 		body = bytes.NewBufferString(*requestBody)
@@ -58,7 +59,8 @@ func (c Client) Request(method, path string, headers map[string]string, requestB
 	url := fmt.Sprintf("%s/%s", c.host, strings.TrimLeft(path, "/"))
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
-		return fmt.Errorf("new http request: %s %s: %v", method, url, err)
+		log.Printf("new http request: %s %s: %v", method, url, err)
+		return response.Response{Duration: time.Duration(0), Err: err, ClientError: false, RequestSent: false, Type: "http"}
 	}
 
 	for k, v := range headers {
@@ -68,20 +70,23 @@ func (c Client) Request(method, path string, headers map[string]string, requestB
 		req.Header.Add(k, v)
 	}
 
+	startTime := time.Now()
 	resp, err := c.httpClient.Do(req)
+	endTime := time.Now()
 	if err != nil {
-		return fmt.Errorf("http request: %v", err)
+		log.Printf("http request: %v", err)
+		return response.Response{Duration: endTime.Sub(startTime), Err: err, ClientError: false, RequestSent: false, Type: "http"}
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		b, _ := ioutil.ReadAll(resp.Body) // try to read response body as well to give user more info why request failed
-		return fmt.Errorf("%s %s returned %d %s, expected 2xx",
-			method, url, resp.StatusCode, strings.TrimSuffix(string(b), "\n"))
+		return response.Response{Duration: endTime.Sub(startTime), Err: fmt.Errorf("statusCode: %d\n", resp.StatusCode), ClientError: resp.StatusCode/100 == 4, RequestSent: true,
+			Type: "http"}
 	}
 
 	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
-		return fmt.Errorf("read response body: %s %s: %v", method, url, err)
+		log.Printf("read response body: %s %s: %v", method, url, err)
+		return response.Response{Duration: endTime.Sub(startTime), Err: err, ClientError: false, RequestSent: true, Type: "http"}
 	}
-	return nil
+	return response.Response{Duration: endTime.Sub(startTime), Err: nil, ClientError: false, RequestSent: true, Type: "http"}
 }

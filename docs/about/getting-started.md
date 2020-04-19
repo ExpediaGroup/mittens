@@ -18,7 +18,10 @@ The application receives a number of command-line flags including the requests t
 | -grpc-headers                     | strings | N/A                         | gRPC headers to be sent with warm up requests. To send multiple headers define this flag for each header                                                                           |
 | -grpc-requests                    | strings | N/A                         | gRPC requests to be sent. Request is in '\<service\>\<method\>\[:message\]' format. E.g. health/ping:{"key": "value"}. To send multiple requests define this flag for each request |
 | -http-headers                     | strings | N/A                         | Http headers to be sent with warm up requests. To send multiple headers define this flag for each header                                                                           |
-| -http-requests                    | string  | N/A                         | Http request to be sent. Request is in '\<http-method\>:\<path\>\[:body\]' format. E.g. post:/ping:{"key": "value"}. To send multiple requests define this flag for each request   |
+| -http-requests                    | string  | N/A                         | Http request to be sent. Request is in `<http-method>:<path>[:body]` format. E.g. `post:/ping:{"key": "value"}`. To send multiple requests define this flag for each request       |
+| -fail-readiness-enabled           | bool    | false                       | If set to true readiness will fail if there were issues with the warmup                                                                                                            |
+| -fail-readiness-no-requests       | bool    | true                        | Readiness will fail if no requests were sent. Requires `fail-readiness-enabled` to be set to true                                                                                  |
+| -fail-readiness-client-errors     | bool    | false                       | Readiness will fail in case of client errors. Requires `fail-readiness-enabled` to be set to true                                                                                  |
 | -file-probe-enabled               | bool    | true                        | If set to true writes files to be used as readiness/liveness probes                                                                                                                |
 | -file-probe-liveness-path         | string  | alive                       | File to be used for liveness probe                                                                                                                                                 |
 | -file-probe-readiness-path        | string  | ready                       | File to be used for readiness probe                                                                                                                                                |
@@ -37,9 +40,9 @@ The application receives a number of command-line flags including the requests t
 | -target-readiness-grpc-method     | string  | grpc.health.v1.Health/Check | The service method used for gRPC target readiness probe                                                                                                                            |
 | -target-readiness-http-path       | string  | /ready                      | The path used for target readiness probe                                                                                                                                           |
 | -target-readiness-port            | int     | same as -target-http-port   | The port used for target readiness probe                                                                                                                                           |
-| -target-readiness-protocol        | string  | http                        | Protocol to be used for readiness check. One of [http, grpc]                                                                                                                       |
+| -target-readiness-protocol        | string  | http                        | Protocol to be used for readiness check. One of [`http`, `grpc`]                                                                                                                       |
 | -target-readiness-timeout-seconds | int     | -1                          | Timeout for target readiness probe                                                                                                                                                 |
-| -max-duration-seconds             | int     | 60                          | Maximum duration in seconds after which warm up will stop making requests                                                                                                                                 |
+| -max-duration-seconds             | int     | 60                          | Maximum duration in seconds after which warm up will stop making requests                                                                                                          |
 
 ### Warmup request
 A warmup request can be an HTTP one (over REST) or a gRPC one.
@@ -87,10 +90,23 @@ In case such probes are not needed you can disable this feature by setting `file
 Setting `server-probe-enabled` to `true` will start a web server that exposes liveness/readiness endpoints. 
 Note that running this web server instead of or in addition to having file probes increases memory and cpu consumption.
 
+#### Fail Mittens readiness
+
+Mittens exposes properties that can be used to fail its readiness. For this you first need to set `fail-readiness-enabled` to true.
+
+Currently the following options are supported:
+
+- `fail-readiness-no-requests`; Fails readiness if no requests were sent. This could be due to any errors happening before sending the requests (e.g. when parsing the requests
+, when creating the HTTP/gRPC client, etc.).
+- `fail-readiness-client-error`; Fails readiness in case at least one request returned a client error (4xx status code). Note that this is only supported for HTTP requests.
+
 ### Health checks over HTTP and gRPC
 
 Mittens supports both HTTP and gRPC for application health checks.
 
 By default it uses HTTP to call the `-target-readiness-http-path` endpoint. If your app exposes a health check over gRPC you can set `-target-readiness-protocol` to `grpc` and define the RPC method to be called in `-target-readiness-grpc-method`. Method should be in the form `service/method`.
+
 See [here](https://github.com/grpc/grpc/blob/master/doc/health-checking.md) on how to implement a gRPC health check on your applications. This has already been implemented in many languages including [Java](https://github.com/grpc/grpc-java/blob/master/services/src/main/proto/grpc/health/v1/health.proto) and [Go](https://github.com/grpc/grpc/blob/master/src/proto/grpc/health/v1/health.proto).
-Based on the [gRPC Health Checking Protocol](https://github.com/grpc/grpc/blob/master/doc/health-checking.md) the suggested format of service name is `grpc.health.v1.Health` which would translate to `-target-readiness-grpc-method=grpc.health.v1.Health/Check`.
+
+Based on the [gRPC Health Checking Protocol](https://github.com/grpc/grpc/blob/master/doc/health-checking.md) the suggested format for the service name is `grpc.health.v1.Health
+` which would translate to `-target-readiness-grpc-method=grpc.health.v1.Health/Check`.

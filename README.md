@@ -17,9 +17,10 @@ Mittens can run as a standalone [command-line tool](https://expediagroup.github.
 Its main features are summarised below:
 - Sends requests continuously for X seconds
 - Supports REST and gRPC
-- Supports HTTP and gRPC headers
+- Supports placeholders for random elements in requests
 - Supports concurrent requests
 - Provides files or/and endpoints that can be used as liveness/readiness probes in Kubernetes
+- Allows readiness to fail if unable to warm up target app (e.g. client errors)
 
 ## Usage
 The application receives a number of command-line flags. It also supports reading configs from a JSON file. Read the [documentation](https://expediagroup.github.io/mittens/docs/about/getting-started) for more context.
