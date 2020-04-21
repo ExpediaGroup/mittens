@@ -35,17 +35,21 @@ func TestAll(t *testing.T) {
 	result := t.Run("TestWarmupSidecarWithFileProbe", TestWarmupSidecarWithFileProbe)
 	result = result && t.Run("TestWarmupSidecarWithServerProbe", TestWarmupSidecarWithServerProbe)
 	result = result && t.Run("TestConfigsFromFile", TestConfigsFromFile)
+	result = result && t.Run("TestWarmupFailReadiness", TestWarmupFailReadiness)
 	os.Exit(bool2int(!result))
 }
 
 func TestWarmupSidecarWithFileProbe(t *testing.T) {
+	deleteFile("alive")
+	deleteFile("ready")
+
 	os.Args = []string{"mittens",
 		"-file-probe-enabled=true",
 		"-server-probe-enabled=false",
 		"-http-requests=get:/delay",
 		"-concurrency=4",
 		"-exit-after-warmup=true",
-		"-target-readiness-http-path=/",
+		"-target-readiness-http-path=/health",
 		"-max-duration-seconds=5"}
 
 	CreateConfig()
@@ -56,18 +60,25 @@ func TestWarmupSidecarWithFileProbe(t *testing.T) {
 	assert.Contains(t, opts.Http.Requests, "get:/delay")
 	assert.Equal(t, 4, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
-	assert.Equal(t, "/", opts.Target.ReadinessHttpPath)
+	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
+
+	readyFileExists, err := fileExists("ready")
+	require.NoError(t, err)
+	assert.True(t, readyFileExists)
 }
 
 func TestWarmupSidecarWithServerProbe(t *testing.T) {
+	deleteFile("alive")
+	deleteFile("ready")
+
 	os.Args = []string{"mittens",
 		"-file-probe-enabled=true",
 		"-server-probe-enabled=true",
 		"-http-requests=get:/delay",
 		"-concurrency=4",
 		"-exit-after-warmup=true",
-		"-target-readiness-http-path=/",
+		"-target-readiness-http-path=/health",
 		"-max-duration-seconds=5"}
 
 	CreateConfig()
@@ -78,11 +89,18 @@ func TestWarmupSidecarWithServerProbe(t *testing.T) {
 	assert.Contains(t, opts.Http.Requests, "get:/delay")
 	assert.Equal(t, 4, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
-	assert.Equal(t, "/", opts.Target.ReadinessHttpPath)
+	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
+
+	readyFileExists, err := fileExists("ready")
+	require.NoError(t, err)
+	assert.True(t, readyFileExists)
 }
 
 func TestConfigsFromFile(t *testing.T) {
+	deleteFile("alive")
+	deleteFile("ready")
+
 	os.Args = []string{"mittens",
 		"-config=sample_configs.json"}
 
@@ -94,21 +112,56 @@ func TestConfigsFromFile(t *testing.T) {
 	assert.Contains(t, opts.Http.Requests, "get:/delay")
 	assert.Equal(t, 4, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
-	assert.Equal(t, "/", opts.Target.ReadinessHttpPath)
+	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
+
+	readyFileExists, err := fileExists("ready")
+	require.NoError(t, err)
+	assert.True(t, readyFileExists)
+}
+
+func TestWarmupFailReadiness(t *testing.T) {
+	deleteFile("alive")
+	deleteFile("ready")
+
+	// we simulate a failure with no requests being sent by setting the port to a non-functional one
+	// we set the readiness port to the functional one (8080) so that health check passes
+	os.Args = []string{"mittens",
+		"-file-probe-enabled=true",
+		"-http-requests=get:/invalid",
+		"-target-http-port=1111",
+		"-target-readiness-port=8080",
+		"-target-readiness-http-path=/health",
+		"-max-duration-seconds=5",
+		"-exit-after-warmup=true",
+		"-fail-readiness=true"}
+
+	CreateConfig()
+	RunCmdRoot()
+
+	assert.Equal(t, true, opts.FileProbe.Enabled)
+	assert.Contains(t, opts.Http.Requests, "get:/invalid")
+	assert.Equal(t, true, opts.ExitAfterWarmup)
+	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
+	assert.Equal(t, 5, opts.MaxDurationSeconds)
+	assert.Equal(t, true, opts.FailReadiness)
+
+	readyFileExists, err := fileExists("ready")
+	require.NoError(t, err)
+	assert.False(t, readyFileExists)
 }
 
 func StartTargetTestServer(t *testing.T) (shutdown func()) {
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
-		log.Print("handler /")
+		log.Print("handler /health")
 	})
 
-	http.HandleFunc("/delay/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/delay", func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(time.Millisecond * 100)
 		w.WriteHeader(http.StatusNoContent)
-		log.Print("handler /delay/")
+		log.Print("handler /delay")
 	})
 
 	server := &http.Server{Addr: ":8080"}
@@ -133,4 +186,21 @@ func bool2int(b bool) int {
 		return 1
 	}
 	return 0
+}
+
+func deleteFile(path string) {
+	var err = os.Remove(path)
+	if err != nil {
+		log.Printf("File not deleted")
+	}
+}
+
+func fileExists(name string) (bool, error) {
+	if _, err := os.Stat(name); err == nil {
+		return true, nil
+	} else if os.IsNotExist(err) {
+		return false, nil
+	} else {
+		return false, err
+	}
 }

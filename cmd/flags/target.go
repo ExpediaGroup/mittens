@@ -65,7 +65,7 @@ func (t *Target) GetWarmupTargetOptions() warmup.TargetOptions {
 	return warmup.TargetOptions{
 		ReadinessProtocol:         t.ReadinessProtocol,
 		ReadinessHttpPath:         t.ReadinessHttpPath,
-		ReadinessGrpcMethod:	   t.ReadinessGrpcMethod,
+		ReadinessGrpcMethod:       t.ReadinessGrpcMethod,
 		ReadinessPort:             t.ReadinessPort,
 		ReadinessTimeoutInSeconds: t.ReadinessTimeoutSeconds,
 	}

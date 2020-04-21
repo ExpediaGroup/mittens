@@ -15,7 +15,7 @@
 package http
 
 import (
-	"fmt"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -32,24 +32,41 @@ func TestRequestSuccess(t *testing.T) {
 
 	c := NewClient(server.URL, false)
 	reqBody := ""
-	err := c.Request("GET", path, map[string]string{}, &reqBody)
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
+	resp := c.Request("GET", path, map[string]string{}, &reqBody)
+	assert.True(t, resp.RequestSent)
+	assert.Nil(t, resp.Err)
 }
 
-func TestRequestFails(t *testing.T) {
+func TestClientError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		rw.WriteHeader(403)
-		rw.Write([]byte("Unauthorized"))
+		rw.WriteHeader(400)
 	}))
 	defer server.Close()
 
 	c := NewClient(server.URL, false)
 	reqBody := ""
-	err := c.Request("GET", "/", map[string]string{}, &reqBody)
-	expectedErr := fmt.Sprintf("GET %s/ returned 403 Unauthorized, expected 2xx", server.URL)
-	if want, have := expectedErr, err.Error(); want != have {
-		t.Errorf("unexpected error, want %q, have %q", want, have)
-	}
+	resp := c.Request("GET", "/", map[string]string{}, &reqBody)
+	assert.True(t, resp.RequestSent)
+	assert.NotNil(t, resp.Err)
+}
+
+func TestServerError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		rw.WriteHeader(500)
+	}))
+	defer server.Close()
+
+	c := NewClient(server.URL, false)
+	reqBody := ""
+	resp := c.Request("GET", "/", map[string]string{}, &reqBody)
+	assert.True(t, resp.RequestSent)
+	assert.NotNil(t, resp.Err)
+}
+
+func TestRequestNotSent(t *testing.T) {
+	c := NewClient("/", false)
+	reqBody := ""
+	resp := c.Request("GET", "/", map[string]string{}, &reqBody)
+	assert.False(t, resp.RequestSent)
+	assert.NotNil(t, resp.Err)
 }

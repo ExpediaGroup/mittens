@@ -8,7 +8,6 @@ require (
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 	golang.org/x/sys v0.0.0-20190507160741-ecd444e8653b // indirect
 	golang.org/x/text v0.3.2 // indirect
-	google.golang.org/genproto v0.0.0-20190502173448-54afdca5d873 // indirect
 	google.golang.org/grpc v1.28.0
 )
 

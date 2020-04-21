@@ -36,7 +36,7 @@ type TargetOptions struct {
 
 type Target struct {
 	readinessHttpClient whttp.Client
-	readinessGrpcClient	grpc.Client
+	readinessGrpcClient grpc.Client
 	httpClient          whttp.Client
 	grpcClient          grpc.Client
 	options             TargetOptions
@@ -78,7 +78,7 @@ func (t Target) waitForReadinessProbe(done <-chan struct{}) error {
 			return errors.New("target readiness probe: received done signal")
 		default:
 			if t.options.ReadinessProtocol == "http" {
-				if err := t.readinessHttpClient.Request(http.MethodGet, t.options.ReadinessHttpPath, nil, nil); err != nil {
+				if err := t.readinessHttpClient.Request(http.MethodGet, t.options.ReadinessHttpPath, nil, nil); err.Err != nil {
 					log.Printf("target readiness probe: %v", err)
 					continue
 				}
@@ -86,7 +86,7 @@ func (t Target) waitForReadinessProbe(done <-chan struct{}) error {
 				request, err := grpc.ToGrpcRequest(t.options.ReadinessGrpcMethod)
 				if err == nil {
 					err1 := t.readinessGrpcClient.Request(request.ServiceMethod, "", nil)
-					if err1 != nil {
+					if err1.Err != nil {
 						log.Printf("target readiness probe: %v", err1)
 						continue
 					}
