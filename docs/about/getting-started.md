@@ -19,9 +19,7 @@ The application receives a number of command-line flags including the requests t
 | -grpc-requests                    | strings | N/A                         | gRPC requests to be sent. Request is in '\<service\>\<method\>\[:message\]' format. E.g. health/ping:{"key": "value"}. To send multiple requests define this flag for each request |
 | -http-headers                     | strings | N/A                         | Http headers to be sent with warm up requests. To send multiple headers define this flag for each header                                                                           |
 | -http-requests                    | string  | N/A                         | Http request to be sent. Request is in `<http-method>:<path>[:body]` format. E.g. `post:/ping:{"key": "value"}`. To send multiple requests define this flag for each request       |
-| -fail-readiness-enabled           | bool    | false                       | If set to true readiness will fail if there were issues with the warmup                                                                                                            |
-| -fail-readiness-no-requests       | bool    | true                        | Readiness will fail if no requests were sent. Requires `fail-readiness-enabled` to be set to true                                                                                  |
-| -fail-readiness-client-errors     | bool    | false                       | Readiness will fail in case of client errors. Requires `fail-readiness-enabled` to be set to true                                                                                  |
+| -fail-readiness                   | bool    | false                       | If set to true readiness will fail if there were issues with the warmup                                                                                                            |
 | -file-probe-enabled               | bool    | true                        | If set to true writes files to be used as readiness/liveness probes                                                                                                                |
 | -file-probe-liveness-path         | string  | alive                       | File to be used for liveness probe                                                                                                                                                 |
 | -file-probe-readiness-path        | string  | ready                       | File to be used for readiness probe                                                                                                                                                |
@@ -92,13 +90,7 @@ Note that running this web server instead of or in addition to having file probe
 
 #### Fail Mittens readiness
 
-Mittens exposes properties that can be used to fail its readiness. For this you first need to set `fail-readiness-enabled` to true.
-
-Currently the following options are supported:
-
-- `fail-readiness-no-requests`; Fails readiness if no requests were sent. This could be due to any errors happening before sending the requests (e.g. when parsing the requests
-, when creating the HTTP/gRPC client, etc.).
-- `fail-readiness-client-error`; Fails readiness in case at least one request returned a client error (4xx status code). Note that this is only supported for HTTP requests.
+Setting `fail-readiness` to true will cause Mittens readiness to fail in case no requests were sent.
 
 ### Health checks over HTTP and gRPC
 

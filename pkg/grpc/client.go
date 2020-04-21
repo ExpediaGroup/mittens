@@ -86,7 +86,7 @@ func (c *Client) Request(serviceMethod string, message string, headers []string)
 
 	if connErr != nil {
 		log.Printf("grpc client connect: %v", connErr)
-		return response.Response{Duration: time.Duration(0), Err: connErr, ClientError: false, RequestSent: false, Type: "grpc"}
+		return response.Response{Duration: time.Duration(0), Err: connErr, RequestSent: false, Type: "grpc"}
 	}
 
 	in := bytes.NewBufferString(message)
@@ -95,16 +95,16 @@ func (c *Client) Request(serviceMethod string, message string, headers []string)
 	requestParser, formatter, err := grpcurl.RequestParserAndFormatterFor(grpcurl.Format("json"), c.descriptorSource, false, false, in)
 	if err != nil {
 		log.Printf("cannot construct request parser and formatter for json")
-		return response.Response{Duration: time.Duration(0), Err: err, ClientError: false, RequestSent: false, Type: "grpc"}
+		return response.Response{Duration: time.Duration(0), Err: err, RequestSent: false, Type: "grpc"}
 	}
 	loggingEventHandler := grpcurl.NewDefaultEventHandler(os.Stdout, c.descriptorSource, formatter, false)
 	startTime := time.Now()
 	err = grpcurl.InvokeRPC(context.Background(), c.descriptorSource, c.conn, serviceMethod, headers, loggingEventHandler, requestParser.Next)
 	endTime := time.Now()
 	if err != nil {
-		return response.Response{Duration: endTime.Sub(startTime), Err: nil, ClientError: false, RequestSent: true, Type: "grpc"}
+		return response.Response{Duration: endTime.Sub(startTime), Err: nil, RequestSent: true, Type: "grpc"}
 	}
-	return response.Response{Duration: endTime.Sub(startTime), Err: nil, ClientError: false, RequestSent: true, Type: "grpc"}
+	return response.Response{Duration: endTime.Sub(startTime), Err: nil, RequestSent: true, Type: "grpc"}
 }
 
 // Calling close on client that has not established connection does not return error

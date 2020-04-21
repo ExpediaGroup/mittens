@@ -20,7 +20,7 @@ Its main features are summarised below:
 - Supports placeholders for random elements in requests
 - Supports concurrent requests
 - Provides files or/and endpoints that can be used as liveness/readiness probes in Kubernetes
-- Allows readiness to fail if unable to warm up target app (e.g. client errors)
+- Allows readiness to fail if unable to warm up target app
 
 ## Usage
 The application receives a number of command-line flags. It also supports reading configs from a JSON file. Read the [documentation](https://expediagroup.github.io/mittens/docs/about/getting-started) for more context.

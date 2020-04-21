@@ -98,37 +98,25 @@ func RunCmdRoot() {
 
 	targetOptions, err := opts.GetWarmupTargetOptions()
 
-	result := warmup.Result{TotalRequests: 0, ClientErrors: 0, RequestsSent: 0}
+	result := warmup.Result{RequestsToSend: 0, RequestsSent: 0}
 	if err == nil {
 		wp, err1 := createWarmup(targetOptions, done)
 		if err1 == nil {
 			result = runWarmup(wp, done)
 		}
 	}
-	log.Printf("summary: total_requests: %d, requests_sent: %d, bad_requests: %d", result.TotalRequests, result.RequestsSent, result.ClientErrors)
+	log.Printf("summary: requests_to_send: %d, requests_sent: %d", result.RequestsToSend, result.RequestsSent)
 
 	if opts.ServerProbe.Enabled {
-		if opts.FailReadiness.Enabled {
-			if opts.FailReadiness.NoRequests && result.RequestsSent == 0 {
-				log.Print("probeServer readiness failed, no requests sent")
-			} else if opts.FailReadiness.ClientErrors && result.ClientErrors > 0 {
-				log.Print("probeServer readiness failed due to bad requests")
-			} else {
-				probeServer.IsReady(true)
-			}
+		if opts.FailReadiness && result.RequestsSent == 0 {
+			log.Print("probeServer readiness failed, no requests sent")
 		} else {
 			probeServer.IsReady(true)
 		}
 	}
 	if opts.FileProbe.Enabled {
-		if opts.FailReadiness.Enabled {
-			if opts.FailReadiness.NoRequests && result.RequestsSent == 0 {
-				log.Print("fileServer readiness failed, no requests sent")
-			} else if opts.FailReadiness.ClientErrors && result.ClientErrors > 0 {
-				log.Print("fileServer readiness failed due to bad requests")
-			} else {
-				probe.WriteFile(opts.FileProbe.ReadinessPath)
-			}
+		if opts.FailReadiness && result.RequestsSent == 0 {
+			log.Print("fileServer readiness failed, no requests sent")
 		} else {
 			probe.WriteFile(opts.FileProbe.ReadinessPath)
 		}
@@ -167,8 +155,7 @@ func RunCmdRoot() {
 func runWarmup(wp warmup.Warmup, done chan struct{}) warmup.Result {
 	rand.Seed(time.Now().UnixNano()) // initialize seed only once to prevent deterministic/repeated calls every time we run
 	requestsSent := 0
-	totalRequests := 0
-	badRequests := 0
+	requestsToSend := 0
 
 	httpHeaders := opts.GetWarmupHttpHeaders()
 	httpRequests, err := opts.GetWarmupHttpRequests(done)
@@ -185,10 +172,7 @@ func runWarmup(wp warmup.Warmup, done chan struct{}) warmup.Result {
 	response := merge(httpResponse, grpcResponse)
 
 	for r := range response {
-		totalRequests += 1
-		if r.ClientError {
-			badRequests += 1
-		}
+		requestsToSend += 1
 		if r.RequestSent {
 			requestsSent += 1
 		}
@@ -198,7 +182,7 @@ func runWarmup(wp warmup.Warmup, done chan struct{}) warmup.Result {
 			log.Printf("%s response %d milliseconds: OK", r.Type, r.Duration/time.Millisecond)
 		}
 	}
-	return warmup.Result{ClientErrors: badRequests, RequestsSent: requestsSent, TotalRequests: totalRequests}
+	return warmup.Result{RequestsSent: requestsSent, RequestsToSend: requestsToSend}
 }
 
 func createWarmup(targetOptions warmup.TargetOptions, done chan struct{}) (warmup.Warmup, error) {

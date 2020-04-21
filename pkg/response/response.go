@@ -19,7 +19,6 @@ import "time"
 type Response struct {
 	Duration    time.Duration
 	Err         error
-	ClientError bool
 	RequestSent bool
 	Type        string
 }

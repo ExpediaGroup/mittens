@@ -35,8 +35,7 @@ func TestAll(t *testing.T) {
 	result := t.Run("TestWarmupSidecarWithFileProbe", TestWarmupSidecarWithFileProbe)
 	result = result && t.Run("TestWarmupSidecarWithServerProbe", TestWarmupSidecarWithServerProbe)
 	result = result && t.Run("TestConfigsFromFile", TestConfigsFromFile)
-	result = result && t.Run("TestWarmupReadinessNoRequestsFailure", TestWarmupReadinessNoRequestsFailure)
-	result = result && t.Run("TestWarmupReadinessClientErrorsFailure", TestWarmupReadinessClientErrorsFailure)
+	result = result && t.Run("TestWarmupFailReadiness", TestWarmupFailReadiness)
 	os.Exit(bool2int(!result))
 }
 
@@ -121,7 +120,7 @@ func TestConfigsFromFile(t *testing.T) {
 	assert.True(t, readyFileExists)
 }
 
-func TestWarmupReadinessNoRequestsFailure(t *testing.T) {
+func TestWarmupFailReadiness(t *testing.T) {
 	deleteFile("alive")
 	deleteFile("ready")
 
@@ -135,8 +134,7 @@ func TestWarmupReadinessNoRequestsFailure(t *testing.T) {
 		"-target-readiness-http-path=/health",
 		"-max-duration-seconds=5",
 		"-exit-after-warmup=true",
-		"-fail-readiness-enabled=true",
-		"-fail-readiness-no-requests=true"}
+		"-fail-readiness=true"}
 
 	CreateConfig()
 	RunCmdRoot()
@@ -146,38 +144,7 @@ func TestWarmupReadinessNoRequestsFailure(t *testing.T) {
 	assert.Equal(t, true, opts.ExitAfterWarmup)
 	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
-	assert.Equal(t, true, opts.FailReadiness.Enabled)
-	assert.Equal(t, true, opts.FailReadiness.NoRequests)
-
-	readyFileExists, err := fileExists("ready")
-	require.NoError(t, err)
-	assert.False(t, readyFileExists)
-}
-
-func TestWarmupReadinessClientErrorFailure(t *testing.T) {
-	deleteFile("alive")
-	deleteFile("ready")
-
-	os.Args = []string{"mittens",
-		"-file-probe-enabled=true",
-		"-http-requests=get:/clientError",
-		"-target-readiness-http-path=/health",
-		"-max-duration-seconds=5",
-		"-exit-after-warmup=true",
-		"-fail-readiness-enabled=true",
-		"-fail-readiness-no-requests=true",
-		"-fail-readiness-client-errors=true"}
-
-	CreateConfig()
-	RunCmdRoot()
-
-	assert.Equal(t, true, opts.FileProbe.Enabled)
-	assert.Contains(t, opts.Http.Requests, "get:/clientError")
-	assert.Equal(t, true, opts.ExitAfterWarmup)
-	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
-	assert.Equal(t, 5, opts.MaxDurationSeconds)
-	assert.Equal(t, true, opts.FailReadiness.Enabled)
-	assert.Equal(t, true, opts.FailReadiness.ClientErrors)
+	assert.Equal(t, true, opts.FailReadiness)
 
 	readyFileExists, err := fileExists("ready")
 	require.NoError(t, err)
@@ -195,11 +162,6 @@ func StartTargetTestServer(t *testing.T) (shutdown func()) {
 		time.Sleep(time.Millisecond * 100)
 		w.WriteHeader(http.StatusNoContent)
 		log.Print("handler /delay")
-	})
-
-	http.HandleFunc("/clientError", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusBadRequest)
-		log.Print("handler /clientError")
 	})
 
 	server := &http.Server{Addr: ":8080"}

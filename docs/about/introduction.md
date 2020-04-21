@@ -30,6 +30,6 @@ Its main features are summarised below:
 - Supports placeholders for random elements in requests
 - Supports concurrent requests
 - Provides files or/and endpoints that can be used as liveness/readiness probes in Kubernetes
-- Allows readiness to fail if unable to warm up target app (e.g. client errors)
+- Allows readiness to fail if unable to warm up target app
 
 Mittens can run as a standalone [command-line tool](https://expediagroup.github.io/mittens/docs/installation/running#run-as-a-cmd-application), as a [linked Docker container](https://expediagroup.github.io/mittens/docs/installation/running#run-as-a-linked-docker-container), or even as a [sidecar in Kubernetes](https://expediagroup.github.io/mittens/docs/installation/running#run-as-a-sidecar-on-kubernetes).

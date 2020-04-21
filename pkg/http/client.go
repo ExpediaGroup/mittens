@@ -60,7 +60,7 @@ func (c Client) Request(method, path string, headers map[string]string, requestB
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		log.Printf("new http request: %s %s: %v", method, url, err)
-		return response.Response{Duration: time.Duration(0), Err: err, ClientError: false, RequestSent: false, Type: "http"}
+		return response.Response{Duration: time.Duration(0), Err: err, RequestSent: false, Type: "http"}
 	}
 
 	for k, v := range headers {
@@ -75,18 +75,18 @@ func (c Client) Request(method, path string, headers map[string]string, requestB
 	endTime := time.Now()
 	if err != nil {
 		log.Printf("http request: %v", err)
-		return response.Response{Duration: endTime.Sub(startTime), Err: err, ClientError: false, RequestSent: false, Type: "http"}
+		return response.Response{Duration: endTime.Sub(startTime), Err: err, RequestSent: false, Type: "http"}
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		return response.Response{Duration: endTime.Sub(startTime), Err: fmt.Errorf("statusCode: %d\n", resp.StatusCode), ClientError: resp.StatusCode/100 == 4, RequestSent: true,
+		return response.Response{Duration: endTime.Sub(startTime), Err: fmt.Errorf("statusCode: %d\n", resp.StatusCode), RequestSent: true,
 			Type: "http"}
 	}
 
 	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
 		log.Printf("read response body: %s %s: %v", method, url, err)
-		return response.Response{Duration: endTime.Sub(startTime), Err: err, ClientError: false, RequestSent: true, Type: "http"}
+		return response.Response{Duration: endTime.Sub(startTime), Err: err, RequestSent: true, Type: "http"}
 	}
-	return response.Response{Duration: endTime.Sub(startTime), Err: nil, ClientError: false, RequestSent: true, Type: "http"}
+	return response.Response{Duration: endTime.Sub(startTime), Err: nil, RequestSent: true, Type: "http"}
 }

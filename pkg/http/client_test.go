@@ -33,7 +33,6 @@ func TestRequestSuccess(t *testing.T) {
 	c := NewClient(server.URL, false)
 	reqBody := ""
 	resp := c.Request("GET", path, map[string]string{}, &reqBody)
-	assert.False(t, resp.ClientError)
 	assert.True(t, resp.RequestSent)
 	assert.Nil(t, resp.Err)
 }
@@ -47,7 +46,6 @@ func TestClientError(t *testing.T) {
 	c := NewClient(server.URL, false)
 	reqBody := ""
 	resp := c.Request("GET", "/", map[string]string{}, &reqBody)
-	assert.True(t, resp.ClientError)
 	assert.True(t, resp.RequestSent)
 	assert.NotNil(t, resp.Err)
 }
@@ -61,7 +59,6 @@ func TestServerError(t *testing.T) {
 	c := NewClient(server.URL, false)
 	reqBody := ""
 	resp := c.Request("GET", "/", map[string]string{}, &reqBody)
-	assert.False(t, resp.ClientError)
 	assert.True(t, resp.RequestSent)
 	assert.NotNil(t, resp.Err)
 }
@@ -70,7 +67,6 @@ func TestRequestNotSent(t *testing.T) {
 	c := NewClient("/", false)
 	reqBody := ""
 	resp := c.Request("GET", "/", map[string]string{}, &reqBody)
-	assert.False(t, resp.ClientError)
 	assert.False(t, resp.RequestSent)
 	assert.NotNil(t, resp.Err)
 }
