@@ -35,7 +35,6 @@ type Root struct {
 	Target
 	Http
 	Grpc
-	Profile
 }
 
 func (r *Root) String() string {
@@ -54,7 +53,6 @@ func (r *Root) InitFlags() {
 	r.Target.InitFlags()
 	r.Http.InitFlags()
 	r.Grpc.InitFlags()
-	r.Profile.InitFlags()
 }
 
 func (r *Root) GetWarmupOptions() warmup.Options {

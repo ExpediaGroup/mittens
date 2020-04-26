@@ -25,8 +25,6 @@ import (
 	"mittens/pkg/warmup"
 	"os"
 	"os/signal"
-	"runtime"
-	"runtime/pprof"
 	"sync"
 	"syscall"
 	"time"
@@ -60,23 +58,6 @@ func CreateConfig() {
 }
 
 func RunCmdRoot() {
-
-	// CPU profile
-	if opts.Profile.CPU != "" {
-
-		log.Printf("CPU profile will be written to %s file", opts.Profile.CPU)
-		// CPU profile
-		f, err := os.Create(opts.Profile.CPU)
-		if err != nil {
-			log.Printf("could not create CPU profile: %v", err)
-		}
-		defer f.Close()
-
-		if err := pprof.StartCPUProfile(f); err != nil {
-			log.Printf("could not start CPU profile: %v", err)
-		}
-		defer pprof.StopCPUProfile()
-	}
 
 	stop := make(chan struct{})
 	done := make(chan struct{})
@@ -134,22 +115,6 @@ func RunCmdRoot() {
 		select {}
 	}
 	<-done
-
-	// Memory profile
-	if opts.Profile.Memory != "" {
-
-		log.Printf("memory profile will be written to %s file", opts.Profile.Memory)
-		f, err := os.Create(opts.Profile.Memory)
-		if err != nil {
-			log.Printf("could not create memory profile: %v", err)
-		}
-		defer f.Close()
-
-		runtime.GC() // get up-to-date statistics
-		if err := pprof.WriteHeapProfile(f); err != nil {
-			log.Printf("could not write memory profile: %v", err)
-		}
-	}
 }
 
 func runWarmup(wp warmup.Warmup, done chan struct{}) warmup.Result {
