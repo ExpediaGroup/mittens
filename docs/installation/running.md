@@ -3,7 +3,7 @@ id: running
 title: How to Run
 ---
 
-The simplest way to run Mittens is as a cmd application. It receives a number of command line arguments (see [Flags](https://github.com/ExpediaGroup/mittens#flags)).
+The simplest way to run Mittens is as a cmd application. It receives a number of command line arguments (see [flags](https://expediagroup.github.io/mittens/docs/about/getting-started#flags)).
 You can also run it as a linked Docker container or even as a sidecar in Kubernetes.
 
 ## Run as a cmd application
