@@ -88,7 +88,7 @@
 <tr><td style="text-align:left">-target-readiness-http-path</td><td style="text-align:left">string</td><td style="text-align:left">/ready</td><td style="text-align:left">The path used for target readiness probe</td></tr>
 <tr><td style="text-align:left">-target-readiness-port</td><td style="text-align:left">int</td><td style="text-align:left">same as -target-http-port</td><td style="text-align:left">The port used for target readiness probe</td></tr>
 <tr><td style="text-align:left">-target-readiness-protocol</td><td style="text-align:left">string</td><td style="text-align:left">http</td><td style="text-align:left">Protocol to be used for readiness check. One of [<code>http</code>, <code>grpc</code>]</td></tr>
-<tr><td style="text-align:left">-target-readiness-timeout-seconds</td><td style="text-align:left">int</td><td style="text-align:left">-1</td><td style="text-align:left">Timeout for target readiness probe</td></tr>
+<tr><td style="text-align:left">-target-readiness-timeout-seconds</td><td style="text-align:left">int</td><td style="text-align:left">-1</td><td style="text-align:left">Maximum time to wait for the target to become ready. If not ready, Mittens will simply skip the warmup.</td></tr>
 <tr><td style="text-align:left">-max-duration-seconds</td><td style="text-align:left">int</td><td style="text-align:left">60</td><td style="text-align:left">Maximum duration in seconds after which warm up will stop making requests</td></tr>
 </tbody>
 </table>
