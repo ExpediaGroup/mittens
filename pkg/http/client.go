@@ -58,9 +58,10 @@ func (c Client) Request(method, path string, headers map[string]string, requestB
 
 	url := fmt.Sprintf("%s/%s", c.host, strings.TrimLeft(path, "/"))
 	req, err := http.NewRequest(method, url, body)
+
 	if err != nil {
-		log.Printf("new http request: %s %s: %v", method, url, err)
-		return response.Response{Duration: time.Duration(0), Err: err, RequestSent: false, Type: "http"}
+		log.Printf("Failed to create request: %s %s: %v", method, url, err)
+		return response.Response{Duration: time.Duration(0), Err: err, Type: "http"}
 	}
 
 	for k, v := range headers {
@@ -74,19 +75,18 @@ func (c Client) Request(method, path string, headers map[string]string, requestB
 	resp, err := c.httpClient.Do(req)
 	endTime := time.Now()
 	if err != nil {
-		log.Printf("http request: %v", err)
-		return response.Response{Duration: endTime.Sub(startTime), Err: err, RequestSent: false, Type: "http"}
+		log.Printf("⚠️ Http request: %v", err)
+		return response.Response{Duration: endTime.Sub(startTime), Err: err, Type: "http"}
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		return response.Response{Duration: endTime.Sub(startTime), Err: fmt.Errorf("statusCode: %d\n", resp.StatusCode), RequestSent: true,
-			Type: "http"}
+		return response.Response{Duration: endTime.Sub(startTime), Err: fmt.Errorf("statusCode: %d", resp.StatusCode), Type: "http"}
 	}
 
 	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
-		log.Printf("read response body: %s %s: %v", method, url, err)
-		return response.Response{Duration: endTime.Sub(startTime), Err: err, RequestSent: true, Type: "http"}
+		log.Printf("Error reading response body: %s %s: %v", method, url, err)
+		return response.Response{Duration: endTime.Sub(startTime), Err: err, Type: "http"}
 	}
-	return response.Response{Duration: endTime.Sub(startTime), Err: nil, RequestSent: true, Type: "http"}
+	return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: "http"}
 }

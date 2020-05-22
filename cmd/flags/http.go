@@ -55,7 +55,6 @@ func (h *Http) GetWarmupHttpRequests() ([]http.Request, error) {
 }
 
 func toHttpRequests(requestsFlag []string) ([]http.Request, error) {
-
 	var requests []http.Request
 	for _, requestFlag := range requestsFlag {
 		request, err := http.ToHttpRequest(requestFlag)

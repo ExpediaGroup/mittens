@@ -18,13 +18,14 @@ package cmd
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"log"
 	"net/http"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // this is a hack since Go doesn't support setup/tearDown
@@ -124,14 +125,13 @@ func TestWarmupFailReadiness(t *testing.T) {
 	deleteFile("alive")
 	deleteFile("ready")
 
-	// we simulate a failure with no requests being sent by setting the port to a non-functional one
-	// we set the readiness port to the functional one (8080) so that health check passes
+	// we simulate a failure in the target by setting the readiness path to a non existent one so that
+	// the target never becomes ready and the warmup does not run
 	os.Args = []string{"mittens",
 		"-file-probe-enabled=true",
 		"-http-requests=get:/invalid",
-		"-target-http-port=1111",
 		"-target-readiness-port=8080",
-		"-target-readiness-http-path=/health",
+		"-target-readiness-http-path=/non-existent",
 		"-max-duration-seconds=5",
 		"-exit-after-warmup=true",
 		"-fail-readiness=true"}
@@ -142,7 +142,7 @@ func TestWarmupFailReadiness(t *testing.T) {
 	assert.Equal(t, true, opts.FileProbe.Enabled)
 	assert.Contains(t, opts.Http.Requests, "get:/invalid")
 	assert.Equal(t, true, opts.ExitAfterWarmup)
-	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
+	assert.Equal(t, "/non-existent", opts.Target.ReadinessHttpPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
 	assert.Equal(t, true, opts.FailReadiness)
 
@@ -155,13 +155,11 @@ func StartTargetTestServer(t *testing.T) (shutdown func()) {
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
-		log.Print("handler /health")
 	})
 
 	http.HandleFunc("/delay", func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(time.Millisecond * 100)
 		w.WriteHeader(http.StatusNoContent)
-		log.Print("handler /delay")
 	})
 
 	server := &http.Server{Addr: ":8080"}

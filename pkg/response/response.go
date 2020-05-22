@@ -17,8 +17,7 @@ package response
 import "time"
 
 type Response struct {
-	Duration    time.Duration
-	Err         error
-	RequestSent bool
-	Type        string
+	Duration time.Duration
+	Err      error
+	Type     string
 }

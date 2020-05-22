@@ -15,10 +15,11 @@
 package http
 
 import (
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRequestSuccess(t *testing.T) {
@@ -33,7 +34,6 @@ func TestRequestSuccess(t *testing.T) {
 	c := NewClient(server.URL, false)
 	reqBody := ""
 	resp := c.Request("GET", path, map[string]string{}, &reqBody)
-	assert.True(t, resp.RequestSent)
 	assert.Nil(t, resp.Err)
 }
 
@@ -46,7 +46,6 @@ func TestClientError(t *testing.T) {
 	c := NewClient(server.URL, false)
 	reqBody := ""
 	resp := c.Request("GET", "/", map[string]string{}, &reqBody)
-	assert.True(t, resp.RequestSent)
 	assert.NotNil(t, resp.Err)
 }
 
@@ -59,14 +58,5 @@ func TestServerError(t *testing.T) {
 	c := NewClient(server.URL, false)
 	reqBody := ""
 	resp := c.Request("GET", "/", map[string]string{}, &reqBody)
-	assert.True(t, resp.RequestSent)
-	assert.NotNil(t, resp.Err)
-}
-
-func TestRequestNotSent(t *testing.T) {
-	c := NewClient("/", false)
-	reqBody := ""
-	resp := c.Request("GET", "/", map[string]string{}, &reqBody)
-	assert.False(t, resp.RequestSent)
 	assert.NotNil(t, resp.Err)
 }
