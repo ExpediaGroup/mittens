@@ -72,10 +72,8 @@ func (t Target) waitForReadinessProbe() error {
 		select {
 		case <-timeout:
 			return fmt.Errorf("Giving up! Target not ready after %d seconds 🙁", t.options.ReadinessTimeoutInSeconds)
-		//case <-done:
-		//	return errors.New("Target ready 😊")
 		default:
-			// wait one second between attempts
+			// Wait one second between attempts. This is not configurable
 			time.Sleep(time.Second * 1)
 
 			if t.options.ReadinessProtocol == "http" {
