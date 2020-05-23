@@ -42,7 +42,7 @@ func NewWarmup(readinessHttpClient http.Client, readinessGrpcClient grpc.Client,
 	return Warmup{target: target, options: options}, err
 }
 
-func (w Warmup) httpWarmupWorker(wg *sync.WaitGroup, requests <-chan http.Request, headers map[string]string, requestDelayMilliseconds int) {
+func (w Warmup) HttpWarmupWorker(wg *sync.WaitGroup, requests <-chan http.Request, headers map[string]string, requestDelayMilliseconds int) {
 	for request := range requests {
 		time.Sleep(time.Duration(requestDelayMilliseconds) * time.Millisecond)
 
@@ -58,19 +58,7 @@ func (w Warmup) httpWarmupWorker(wg *sync.WaitGroup, requests <-chan http.Reques
 	wg.Done()
 }
 
-func (w Warmup) HttpWarmup(headers map[string]string, requests <-chan http.Request, requestDelayMilliseconds int, concurrency int) {
-	var wg sync.WaitGroup
-
-	for i := 1; i <= concurrency; i++ {
-		log.Printf("Spawning new go routine")
-		wg.Add(1)
-		go w.httpWarmupWorker(&wg, requests, headers, requestDelayMilliseconds)
-	}
-
-	wg.Wait()
-}
-
-func (w Warmup) grpcWarmupWorker(wg *sync.WaitGroup, headers []string, requests <-chan grpc.Request, requestDelayMilliseconds int) {
+func (w Warmup) GrpcWarmupWorker(wg *sync.WaitGroup, headers []string, requests <-chan grpc.Request, requestDelayMilliseconds int) {
 	for request := range requests {
 		time.Sleep(time.Duration(requestDelayMilliseconds) * time.Millisecond)
 
@@ -84,16 +72,4 @@ func (w Warmup) grpcWarmupWorker(wg *sync.WaitGroup, headers []string, requests 
 
 	}
 	wg.Done()
-}
-
-func (w Warmup) GrpcWarmup(headers []string, requests <-chan grpc.Request, requestDelayMilliseconds int, concurrency int) {
-	var wg sync.WaitGroup
-
-	for i := 1; i <= concurrency; i++ {
-		log.Printf("Spawning new go routine")
-		wg.Add(1)
-		go w.grpcWarmupWorker(&wg, headers, requests, requestDelayMilliseconds)
-	}
-
-	wg.Wait()
 }

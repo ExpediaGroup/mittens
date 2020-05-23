@@ -24,6 +24,7 @@ import (
 	"mittens/pkg/warmup"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -113,8 +114,21 @@ func runWarmup(wp warmup.Warmup) {
 		log.Printf("Grpc options: %v", err)
 	}
 
-	wp.HttpWarmup(httpHeaders, httpRequests, opts.RequestDelayMilliseconds, opts.Concurrency)
-	wp.GrpcWarmup(grpcHeaders, grpcRequests, opts.RequestDelayMilliseconds, opts.Concurrency)
+	var wg sync.WaitGroup
+
+	for i := 1; i <= opts.Concurrency; i++ {
+		log.Printf("Spawning new go routine for http requests")
+		wg.Add(1)
+		go wp.HttpWarmupWorker(&wg, httpRequests, httpHeaders, opts.RequestDelayMilliseconds)
+	}
+
+	for i := 1; i <= opts.Concurrency; i++ {
+		log.Printf("Spawning new go routine for grpc requests")
+		wg.Add(1)
+		go wp.GrpcWarmupWorker(&wg, grpcHeaders, grpcRequests, opts.RequestDelayMilliseconds)
+	}
+
+	wg.Wait()
 }
 
 // TODO: this is doing too many things including waiting for target to become ready. split into smaller blocks.
