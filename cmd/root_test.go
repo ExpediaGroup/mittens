@@ -37,7 +37,37 @@ func TestAll(t *testing.T) {
 	result = result && t.Run("TestWarmupSidecarWithServerProbe", TestWarmupSidecarWithServerProbe)
 	result = result && t.Run("TestConfigsFromFile", TestConfigsFromFile)
 	result = result && t.Run("TestWarmupFailReadiness", TestWarmupFailReadiness)
+	result = result && t.Run("TestShouldBeReadyRegardlessIfWarmupRan", TestShouldBeReadyRegardlessIfWarmupRan)
 	os.Exit(bool2int(!result))
+}
+
+func TestShouldBeReadyRegardlessIfWarmupRan(t *testing.T) {
+	deleteFile("alive")
+	deleteFile("ready")
+
+	os.Args = []string{"mittens",
+		"-file-probe-enabled=true",
+		"-server-probe-enabled=false",
+		"-http-requests=get:/non-existent",
+		"-concurrency=2",
+		"-exit-after-warmup=true",
+		"-target-readiness-http-path=/health",
+		"-max-duration-seconds=5"}
+
+	CreateConfig()
+	RunCmdRoot()
+
+	assert.Equal(t, true, opts.FileProbe.Enabled)
+	assert.Equal(t, false, opts.ServerProbe.Enabled)
+	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/non-existent"})
+	assert.Equal(t, 4, opts.Concurrency)
+	assert.Equal(t, true, opts.ExitAfterWarmup)
+	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
+	assert.Equal(t, 5, opts.MaxDurationSeconds)
+
+	readyFileExists, err := fileExists("ready")
+	require.NoError(t, err)
+	assert.True(t, readyFileExists)
 }
 
 func TestWarmupSidecarWithFileProbe(t *testing.T) {
@@ -48,7 +78,7 @@ func TestWarmupSidecarWithFileProbe(t *testing.T) {
 		"-file-probe-enabled=true",
 		"-server-probe-enabled=false",
 		"-http-requests=get:/delay",
-		"-concurrency=4",
+		"-concurrency=2",
 		"-exit-after-warmup=true",
 		"-target-readiness-http-path=/health",
 		"-max-duration-seconds=5"}
@@ -58,7 +88,7 @@ func TestWarmupSidecarWithFileProbe(t *testing.T) {
 
 	assert.Equal(t, true, opts.FileProbe.Enabled)
 	assert.Equal(t, false, opts.ServerProbe.Enabled)
-	assert.Contains(t, opts.Http.Requests, "get:/delay")
+	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/delay"})
 	assert.Equal(t, 4, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
 	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
@@ -77,7 +107,7 @@ func TestWarmupSidecarWithServerProbe(t *testing.T) {
 		"-file-probe-enabled=true",
 		"-server-probe-enabled=true",
 		"-http-requests=get:/delay",
-		"-concurrency=4",
+		"-concurrency=2",
 		"-exit-after-warmup=true",
 		"-target-readiness-http-path=/health",
 		"-max-duration-seconds=5"}
@@ -87,7 +117,7 @@ func TestWarmupSidecarWithServerProbe(t *testing.T) {
 
 	assert.Equal(t, true, opts.FileProbe.Enabled)
 	assert.Equal(t, true, opts.ServerProbe.Enabled)
-	assert.Contains(t, opts.Http.Requests, "get:/delay")
+	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/delay"})
 	assert.Equal(t, 4, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
 	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
@@ -110,7 +140,7 @@ func TestConfigsFromFile(t *testing.T) {
 
 	assert.Equal(t, true, opts.FileProbe.Enabled)
 	assert.Equal(t, true, opts.ServerProbe.Enabled)
-	assert.Contains(t, opts.Http.Requests, "get:/delay")
+	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/delay"})
 	assert.Equal(t, 4, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
 	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
@@ -129,7 +159,7 @@ func TestWarmupFailReadiness(t *testing.T) {
 	// the target never becomes ready and the warmup does not run
 	os.Args = []string{"mittens",
 		"-file-probe-enabled=true",
-		"-http-requests=get:/invalid",
+		"-http-requests=get:/delay",
 		"-target-readiness-port=8080",
 		"-target-readiness-http-path=/non-existent",
 		"-max-duration-seconds=5",
@@ -140,7 +170,7 @@ func TestWarmupFailReadiness(t *testing.T) {
 	RunCmdRoot()
 
 	assert.Equal(t, true, opts.FileProbe.Enabled)
-	assert.Contains(t, opts.Http.Requests, "get:/invalid")
+	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/delay"})
 	assert.Equal(t, true, opts.ExitAfterWarmup)
 	assert.Equal(t, "/non-existent", opts.Target.ReadinessHttpPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)

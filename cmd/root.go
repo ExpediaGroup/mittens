@@ -54,7 +54,6 @@ func CreateConfig() {
 			log.Print("Can't decode config JSON: ", err)
 		}
 	}
-	flag.Parse()
 }
 
 func RunCmdRoot() {
