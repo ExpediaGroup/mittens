@@ -117,11 +117,9 @@ func (r *Root) GetWarmupHttpRequests(done <-chan struct{}) (chan http.Request, e
 				time.Sleep(time.Duration(r.RequestDelayMilliseconds) * time.Millisecond)
 				select {
 				case <-timeout:
-					log.Printf("Timeout %d seconds exceeded", r.MaxDurationSeconds)
 					close(requestsChan)
 					return
 				case <-done:
-					log.Print("Get http requests: received done signal, closing http chan")
 					close(requestsChan)
 					return
 				default:
@@ -156,11 +154,9 @@ func (r *Root) GetWarmupGrpcRequests(done <-chan struct{}) (chan grpc.Request, e
 				time.Sleep(time.Duration(r.RequestDelayMilliseconds) * time.Millisecond)
 				select {
 				case <-timeout:
-					log.Printf("Max duration %d seconds exceeded", r.MaxDurationSeconds)
 					close(requestsChan)
 					return
 				case <-done:
-					log.Print("Get grpc requests: received done signal, closing grpc chan")
 					close(requestsChan)
 					return
 				default:
