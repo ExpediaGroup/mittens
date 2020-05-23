@@ -53,9 +53,9 @@ func (w Warmup) HttpWarmupWorker(wg *sync.WaitGroup, requests <-chan http.Reques
 			*requestsSentCounter++
 
 			if resp.StatusCode/100 == 2 {
-				log.Printf("🟢 %s response for %s %d milliseconds: OK", resp.Type, request.Path, resp.Duration/time.Millisecond)
+				log.Printf("🟢 %s response for %s %d ms: %v", resp.Type, request.Path, resp.Duration/time.Millisecond, resp.StatusCode)
 			} else {
-				log.Printf("🔴 %s response for %s %d milliseconds: %v", resp.Type, request.Path, resp.Duration/time.Millisecond, resp.StatusCode)
+				log.Printf("🔴 %s response for %s %d ms: %v", resp.Type, request.Path, resp.Duration/time.Millisecond, resp.StatusCode)
 			}
 		}
 	}
@@ -73,7 +73,7 @@ func (w Warmup) GrpcWarmupWorker(wg *sync.WaitGroup, headers []string, requests 
 		} else {
 			*requestsSentCounter++
 
-			log.Printf("%s response for %s %d milliseconds: OK", resp.Type, request.ServiceMethod, resp.Duration/time.Millisecond)
+			log.Printf("%s response for %s %d ms", resp.Type, request.ServiceMethod, resp.Duration/time.Millisecond)
 		}
 
 	}
