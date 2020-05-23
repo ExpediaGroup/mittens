@@ -12,8 +12,6 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-// +build integration
-
 package cmd
 
 import (
@@ -60,7 +58,7 @@ func TestShouldBeReadyRegardlessIfWarmupRan(t *testing.T) {
 	assert.Equal(t, true, opts.FileProbe.Enabled)
 	assert.Equal(t, false, opts.ServerProbe.Enabled)
 	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/non-existent"})
-	assert.Equal(t, 4, opts.Concurrency)
+	assert.Equal(t, 2, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
 	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
@@ -71,6 +69,10 @@ func TestShouldBeReadyRegardlessIfWarmupRan(t *testing.T) {
 }
 
 func TestWarmupSidecarWithFileProbe(t *testing.T) {
+	// FIXME
+	shutdown := StartTargetTestServer(t)
+	defer shutdown()
+	// FIXME ^ delete these 2 lines
 	deleteFile("alive")
 	deleteFile("ready")
 
@@ -89,7 +91,7 @@ func TestWarmupSidecarWithFileProbe(t *testing.T) {
 	assert.Equal(t, true, opts.FileProbe.Enabled)
 	assert.Equal(t, false, opts.ServerProbe.Enabled)
 	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/delay"})
-	assert.Equal(t, 4, opts.Concurrency)
+	assert.Equal(t, 2, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
 	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
@@ -118,7 +120,7 @@ func TestWarmupSidecarWithServerProbe(t *testing.T) {
 	assert.Equal(t, true, opts.FileProbe.Enabled)
 	assert.Equal(t, true, opts.ServerProbe.Enabled)
 	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/delay"})
-	assert.Equal(t, 4, opts.Concurrency)
+	assert.Equal(t, 2, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
 	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
@@ -141,7 +143,7 @@ func TestConfigsFromFile(t *testing.T) {
 	assert.Equal(t, true, opts.FileProbe.Enabled)
 	assert.Equal(t, true, opts.ServerProbe.Enabled)
 	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/delay"})
-	assert.Equal(t, 4, opts.Concurrency)
+	assert.Equal(t, 2, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
 	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)

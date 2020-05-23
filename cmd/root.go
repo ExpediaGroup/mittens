@@ -57,8 +57,7 @@ func CreateConfig() {
 }
 
 func RunCmdRoot() {
-	stop := make(chan struct{})
-	done := make(chan struct{})
+	//stop := make(chan struct{})
 	var probeServer *probe.Server
 
 	if opts.ServerProbe.Enabled {
@@ -66,8 +65,6 @@ func RunCmdRoot() {
 			opts.ServerProbe.Port,
 			opts.ServerProbe.LivenessPath,
 			opts.ServerProbe.ReadinessPath,
-			stop,
-			done,
 		)
 	}
 
@@ -77,11 +74,10 @@ func RunCmdRoot() {
 
 	targetOptions, err := opts.GetWarmupTargetOptions()
 
-	var result warmup.Result
 	if err == nil {
-		wp, err1 := createWarmup(targetOptions, done)
+		wp, err1 := createWarmup(targetOptions)
 		if err1 == nil {
-			result = runWarmup(wp, done)
+			runWarmup(wp)
 			log.Print("Warm up finished 😊")
 		} else {
 			log.Print("Target still not ready. Giving up! No requests were sent 🙁")
@@ -99,55 +95,41 @@ func RunCmdRoot() {
 		}
 
 	}
-	log.Printf("Summary: SuccesfulRequests: %d, FailedRequests: %d", result.SuccesfulRequests, result.FailedRequests)
 
 	if opts.ExitAfterWarmup {
 		// exit after warmup, we close the stop/done channels
 		// in case probe server is used the done channel is closed by the server to ensure graceful termination
-		if opts.ServerProbe.Enabled {
-			close(stop)
-		} else {
-			close(done)
-		}
+		// if opts.ServerProbe.Enabled {
+		// 	close(stop)
+		// } else {
+		// 	close(done)
+		// }
 	} else {
 		select {}
 	}
-	<-done
+	//<-done
 }
 
-func runWarmup(wp warmup.Warmup, done chan struct{}) warmup.Result {
+func runWarmup(wp warmup.Warmup) {
 	rand.Seed(time.Now().UnixNano()) // initialize seed only once to prevent deterministic/repeated calls every time we run
-	succesfulRequests := 0
-	failedRequests := 0
 
 	httpHeaders := opts.GetWarmupHttpHeaders()
-	httpRequests, err := opts.GetWarmupHttpRequests(done)
+	httpRequests, err := opts.GetWarmupHttpRequests()
 	if err != nil {
 		log.Printf("Http options: %v", err)
 	}
 	grpcHeaders := opts.GetWarmupGrpcHeaders()
-	grpcRequests, err := opts.GetWarmupGrpcRequests(done)
+	grpcRequests, err := opts.GetWarmupGrpcRequests()
 	if err != nil {
 		log.Printf("Grpc options: %v", err)
 	}
-	httpResponse := wp.HttpWarmup(httpHeaders, httpRequests)
-	grpcResponse := wp.GrpcWarmup(grpcHeaders, grpcRequests)
-	response := merge(httpResponse, grpcResponse)
 
-	for r := range response {
-		if r.Err != nil {
-			log.Printf("🔴 %s response %d milliseconds: error: %v", r.Type, r.Duration/time.Millisecond, r.Err)
-			failedRequests++
-		} else {
-			succesfulRequests++
-			log.Printf("🟢 %s response %d milliseconds: OK", r.Type, r.Duration/time.Millisecond)
-		}
-	}
-	return warmup.Result{SuccesfulRequests: succesfulRequests, FailedRequests: failedRequests}
+	wp.HttpWarmup(httpHeaders, httpRequests, opts.RequestDelayMilliseconds, opts.Concurrency)
+	wp.GrpcWarmup(grpcHeaders, grpcRequests, opts.RequestDelayMilliseconds, opts.Concurrency)
 }
 
 // TODO: this is doing too many things including waiting for target to become ready. split into smaller blocks.
-func createWarmup(targetOptions warmup.TargetOptions, done chan struct{}) (warmup.Warmup, error) {
+func createWarmup(targetOptions warmup.TargetOptions) (warmup.Warmup, error) {
 	wp, err := warmup.NewWarmup(
 		opts.GetReadinessHttpClient(),
 		opts.GetReadinessGrpcClient(),
@@ -155,12 +137,11 @@ func createWarmup(targetOptions warmup.TargetOptions, done chan struct{}) (warmu
 		opts.GetGrpcClient(),
 		opts.GetWarmupOptions(),
 		targetOptions,
-		done,
 	)
 	return wp, err
 }
 
-func start(port int, livenessPath, readinessPath string, stop <-chan struct{}, done chan struct{}) *probe.Server {
+func start(port int, livenessPath, readinessPath string) *probe.Server {
 
 	serverErr := make(chan struct{})
 	probeServer := probe.NewServer(port, livenessPath, readinessPath)
@@ -179,15 +160,15 @@ func start(port int, livenessPath, readinessPath string, stop <-chan struct{}, d
 		select {
 		case <-serverErr:
 			log.Print("Received probe server error")
-			close(done)
-		case <-stop:
-			log.Print("Received stop signal")
-			probeServer.Shutdown()
-			close(done)
+			//close(done)
+		//case <-stop:
+		// log.Print("Received stop signal")
+		// probeServer.Shutdown()
+		//close(done)
 		case sig := <-sigs:
 			log.Printf("Received %s signal", sig)
 			probeServer.Shutdown()
-			close(done)
+			//close(done)
 		}
 	}()
 	return probeServer

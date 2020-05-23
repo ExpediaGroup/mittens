@@ -18,6 +18,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"mittens/pkg/grpc"
 	"mittens/pkg/http"
 	"mittens/pkg/warmup"
@@ -97,14 +98,15 @@ func (r *Root) GetWarmupHttpHeaders() map[string]string {
 	return r.Http.GetWarmupHttpHeaders()
 }
 
-func (r *Root) GetWarmupHttpRequests(done <-chan struct{}) (chan http.Request, error) {
-
+func (r *Root) GetWarmupHttpRequests() (chan http.Request, error) {
 	requests, err := r.Http.GetWarmupHttpRequests()
 	if err != nil {
 		return nil, err
 	}
 
-	requestsChan := make(chan http.Request, r.Concurrency)
+	requestsChan := make(chan http.Request)
+
+	// create a goroutine that continuously adds requests to a channel for a maximum of MaxDurationSeconds
 	go func() {
 		if len(requests) == 0 {
 			log.Print("No http warm up requests specified")
@@ -112,19 +114,46 @@ func (r *Root) GetWarmupHttpRequests(done <-chan struct{}) (chan http.Request, e
 			return
 		}
 		timeout := time.After(time.Duration(r.MaxDurationSeconds) * time.Second)
+
 		for {
-			for _, v := range requests {
-				time.Sleep(time.Duration(r.RequestDelayMilliseconds) * time.Millisecond)
-				select {
-				case <-timeout:
-					close(requestsChan)
-					return
-				case <-done:
-					close(requestsChan)
-					return
-				default:
-					requestsChan <- v
-				}
+			select {
+			case <-timeout:
+				close(requestsChan)
+				return
+			default:
+				number := rand.Intn(len(requests))
+				requestsChan <- requests[number]
+			}
+		}
+	}()
+	return requestsChan, nil
+}
+
+func (r *Root) GetWarmupGrpcRequests() (chan grpc.Request, error) {
+	requests, err := r.Grpc.GetWarmupGrpcRequests()
+	if err != nil {
+		return nil, err
+	}
+
+	requestsChan := make(chan grpc.Request)
+
+	// create a goroutine that continuously adds requests to a channel for a maximum of MaxDurationSeconds
+	go func() {
+		if len(requests) == 0 {
+			log.Print("No grpc warm up requests specified")
+			close(requestsChan)
+			return
+		}
+		timeout := time.After(time.Duration(r.MaxDurationSeconds) * time.Second)
+
+		for {
+			select {
+			case <-timeout:
+				close(requestsChan)
+				return
+			default:
+				number := rand.Intn(len(requests))
+				requestsChan <- requests[number]
 			}
 		}
 	}()
@@ -133,37 +162,4 @@ func (r *Root) GetWarmupHttpRequests(done <-chan struct{}) (chan http.Request, e
 
 func (r *Root) GetWarmupGrpcHeaders() []string {
 	return r.Grpc.GetWarmupGrpcHeaders()
-}
-
-func (r *Root) GetWarmupGrpcRequests(done <-chan struct{}) (chan grpc.Request, error) {
-	requests, err := r.Grpc.GetWarmupGrpcRequests()
-	if err != nil {
-		return nil, err
-	}
-
-	requestsChan := make(chan grpc.Request, r.Concurrency)
-	go func() {
-		if len(requests) == 0 {
-			log.Print("No grpc warm up requests specified")
-			close(requestsChan)
-			return
-		}
-		timeout := time.After(time.Duration(r.MaxDurationSeconds) * time.Second)
-		for {
-			for _, v := range requests {
-				time.Sleep(time.Duration(r.RequestDelayMilliseconds) * time.Millisecond)
-				select {
-				case <-timeout:
-					close(requestsChan)
-					return
-				case <-done:
-					close(requestsChan)
-					return
-				default:
-					requestsChan <- v
-				}
-			}
-		}
-	}()
-	return requestsChan, nil
 }
