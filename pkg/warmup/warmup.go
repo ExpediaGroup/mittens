@@ -47,8 +47,6 @@ func (w Warmup) spawnHttpWarmupWorker(wg *sync.WaitGroup, requests <-chan http.R
 		time.Sleep(time.Duration(requestDelayMilliseconds) * time.Millisecond)
 
 		go func(r http.Request) {
-			wg.Add(1)
-			defer wg.Done()
 			resp := w.target.httpClient.Request(r.Method, r.Path, headers, r.Body)
 
 			if resp.Err != nil {
@@ -78,8 +76,6 @@ func (w Warmup) spawnGrpcWarmupWorker(wg *sync.WaitGroup, headers []string, requ
 		time.Sleep(time.Duration(requestDelayMilliseconds) * time.Millisecond)
 
 		go func(r grpc.Request) {
-			wg.Add(1)
-			defer wg.Done()
 			resp := w.target.grpcClient.Request(r.ServiceMethod, r.Message, headers)
 
 			if resp.Err != nil {
