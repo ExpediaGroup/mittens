@@ -93,21 +93,12 @@ func RunCmdRoot() {
 				probe.WriteFile(opts.FileProbe.ReadinessPath)
 			}
 		}
-
 	}
 
-	if opts.ExitAfterWarmup {
-		// exit after warmup, we close the stop/done channels
-		// in case probe server is used the done channel is closed by the server to ensure graceful termination
-		// if opts.ServerProbe.Enabled {
-		// 	close(stop)
-		// } else {
-		// 	close(done)
-		// }
-	} else {
+	// Block forever if we don't want to wait after the warmup finishes
+	if !opts.ExitAfterWarmup {
 		select {}
 	}
-	//<-done
 }
 
 func runWarmup(wp warmup.Warmup) {
