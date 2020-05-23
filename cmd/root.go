@@ -21,11 +21,9 @@ import (
 	"math/rand"
 	"mittens/cmd/flags"
 	"mittens/pkg/probe"
-	"mittens/pkg/response"
 	"mittens/pkg/warmup"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 )
@@ -151,44 +149,10 @@ func start(port int, livenessPath, readinessPath string) *probe.Server {
 		select {
 		case <-serverErr:
 			log.Print("Received probe server error")
-			//close(done)
-		//case <-stop:
-		// log.Print("Received stop signal")
-		// probeServer.Shutdown()
-		//close(done)
 		case sig := <-sigs:
 			log.Printf("Received %s signal", sig)
 			probeServer.Shutdown()
-			//close(done)
 		}
 	}()
 	return probeServer
-}
-
-// 'fan in' see: https://blog.golang.org/pipelines
-func merge(cs ...<-chan response.Response) <-chan response.Response {
-
-	var wg sync.WaitGroup
-	out := make(chan response.Response)
-
-	// Start an output goroutine for each input channel in cs.  output
-	// copies values from c to out until c is closed, then calls wg.Done.
-	output := func(c <-chan response.Response) {
-		for n := range c {
-			out <- n
-		}
-		wg.Done()
-	}
-	wg.Add(len(cs))
-	for _, c := range cs {
-		go output(c)
-	}
-
-	// Start a goroutine to close out once all the output goroutines are
-	// done.  This must start after the wg.Add call.
-	go func() {
-		wg.Wait()
-		close(out)
-	}()
-	return out
 }
