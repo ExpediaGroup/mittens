@@ -1,9 +1,11 @@
 {
   "exit-after-warmup": true,
   "max-duration-seconds": 5,
-  "concurrency": 4,
+  "concurrency": 2,
   "target-readiness-http-path": "/health",
   "file-probe-enabled": true,
   "server-probe-enabled": true,
-  "http-requests": ["get:/delay"]
+  "http-requests": [
+    "get:/delay"
+  ]
 }
