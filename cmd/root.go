@@ -56,7 +56,6 @@ func CreateConfig() {
 }
 
 func RunCmdRoot() {
-	//stop := make(chan struct{})
 	var probeServer *probe.Server
 
 	if opts.ServerProbe.Enabled {
@@ -72,19 +71,25 @@ func RunCmdRoot() {
 	}
 
 	targetOptions, err := opts.GetWarmupTargetOptions()
+	requestsSentCounter := 0
 
 	if err == nil {
 		wp, err1 := createWarmup(targetOptions)
 		if err1 == nil {
-			runWarmup(wp)
-			log.Print("Warm up finished 😊")
+			runWarmup(wp, &requestsSentCounter)
 		} else {
 			log.Print("Target still not ready. Giving up! No requests were sent 🙁")
 		}
 
-		if opts.FailReadiness && err1 != nil {
-			log.Print("Mittens is not ready. Warmup did not run. 🛑")
+		if opts.FailReadiness && requestsSentCounter == 0 {
+			log.Print("🛑 Warmup did not run. Mittens readiness probe will fail")
 		} else {
+			if requestsSentCounter == 0 {
+				log.Print("🛑 Warm up finished but no requests were sent")
+			} else {
+				log.Printf("Warm up finished 😊 Aproximately %d reqs were sent", requestsSentCounter)
+			}
+
 			if opts.ServerProbe.Enabled {
 				probeServer.IsReady(true)
 			}
@@ -100,7 +105,7 @@ func RunCmdRoot() {
 	}
 }
 
-func runWarmup(wp warmup.Warmup) {
+func runWarmup(wp warmup.Warmup, requestsSentCounter *int) {
 	rand.Seed(time.Now().UnixNano()) // initialize seed only once to prevent deterministic/repeated calls every time we run
 
 	httpHeaders := opts.GetWarmupHttpHeaders()
@@ -115,17 +120,16 @@ func runWarmup(wp warmup.Warmup) {
 	}
 
 	var wg sync.WaitGroup
-
 	for i := 1; i <= opts.Concurrency; i++ {
 		log.Printf("Spawning new go routine for http requests")
 		wg.Add(1)
-		go wp.HttpWarmupWorker(&wg, httpRequests, httpHeaders, opts.RequestDelayMilliseconds)
+		go wp.HttpWarmupWorker(&wg, httpRequests, httpHeaders, opts.RequestDelayMilliseconds, requestsSentCounter)
 	}
 
 	for i := 1; i <= opts.Concurrency; i++ {
 		log.Printf("Spawning new go routine for grpc requests")
 		wg.Add(1)
-		go wp.GrpcWarmupWorker(&wg, grpcHeaders, grpcRequests, opts.RequestDelayMilliseconds)
+		go wp.GrpcWarmupWorker(&wg, grpcHeaders, grpcRequests, opts.RequestDelayMilliseconds, requestsSentCounter)
 	}
 
 	wg.Wait()

@@ -75,18 +75,12 @@ func (c Client) Request(method, path string, headers map[string]string, requestB
 	resp, err := c.httpClient.Do(req)
 	endTime := time.Now()
 	if err != nil {
-		log.Printf("⚠️ Http request: %v", err)
 		return response.Response{Duration: endTime.Sub(startTime), Err: err, Type: "http"}
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode/100 != 2 {
-		return response.Response{Duration: endTime.Sub(startTime), Err: fmt.Errorf("statusCode: %d", resp.StatusCode), Type: "http"}
-	}
-
 	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
-		log.Printf("Error reading response body: %s %s: %v", method, url, err)
-		return response.Response{Duration: endTime.Sub(startTime), Err: err, Type: "http"}
+		return response.Response{Duration: endTime.Sub(startTime), Err: err, Type: "http", StatusCode: resp.StatusCode}
 	}
-	return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: "http"}
+	return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: "http", StatusCode: resp.StatusCode}
 }

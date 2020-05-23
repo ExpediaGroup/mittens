@@ -12,8 +12,6 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-// +build integration
-
 package cmd
 
 import (
@@ -36,7 +34,8 @@ func TestAll(t *testing.T) {
 	result := t.Run("TestWarmupSidecarWithFileProbe", TestWarmupSidecarWithFileProbe)
 	result = result && t.Run("TestWarmupSidecarWithServerProbe", TestWarmupSidecarWithServerProbe)
 	result = result && t.Run("TestConfigsFromFile", TestConfigsFromFile)
-	result = result && t.Run("TestWarmupFailReadiness", TestWarmupFailReadiness)
+	result = result && t.Run("TestWarmupFailReadinessIfTargetIsNeverReady", TestWarmupFailReadinessIfTargetIsNeverReady)
+	result = result && t.Run("TestWarmupFailReadinessIfNoRequestsAreSentToTarget", TestWarmupFailReadinessIfNoRequestsAreSentToTarget)
 	result = result && t.Run("TestShouldBeReadyRegardlessIfWarmupRan", TestShouldBeReadyRegardlessIfWarmupRan)
 	os.Exit(bool2int(!result))
 }
@@ -151,7 +150,7 @@ func TestConfigsFromFile(t *testing.T) {
 	assert.True(t, readyFileExists)
 }
 
-func TestWarmupFailReadiness(t *testing.T) {
+func TestWarmupFailReadinessIfTargetIsNeverReady(t *testing.T) {
 	deleteFile("alive")
 	deleteFile("ready")
 
@@ -173,6 +172,36 @@ func TestWarmupFailReadiness(t *testing.T) {
 	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/delay"})
 	assert.Equal(t, true, opts.ExitAfterWarmup)
 	assert.Equal(t, "/non-existent", opts.Target.ReadinessHttpPath)
+	assert.Equal(t, 5, opts.MaxDurationSeconds)
+	assert.Equal(t, true, opts.FailReadiness)
+
+	readyFileExists, err := fileExists("ready")
+	require.NoError(t, err)
+	assert.False(t, readyFileExists)
+}
+
+func TestWarmupFailReadinessIfNoRequestsAreSentToTarget(t *testing.T) {
+	deleteFile("alive")
+	deleteFile("ready")
+
+	// we simulate a failure by using a port that doesnt exist (9999)
+	os.Args = []string{"mittens",
+		"-file-probe-enabled=true",
+		"-http-requests=get:/delay",
+		"-target-http-port=9999",
+		"-target-readiness-port=8080",
+		"-target-readiness-http-path=/health",
+		"-max-duration-seconds=5",
+		"-exit-after-warmup=true",
+		"-fail-readiness=true"}
+
+	CreateConfig()
+	RunCmdRoot()
+
+	assert.Equal(t, true, opts.FileProbe.Enabled)
+	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/delay"})
+	assert.Equal(t, true, opts.ExitAfterWarmup)
+	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
 	assert.Equal(t, true, opts.FailReadiness)
 

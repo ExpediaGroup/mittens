@@ -64,7 +64,6 @@ func NewTarget(readinessHttpClient whttp.Client, readinessGrpcClient grpc.Client
 }
 
 func (t Target) waitForReadinessProbe() error {
-
 	log.Printf("Waiting for target to be ready for a max of %ds", t.options.ReadinessTimeoutInSeconds)
 
 	timeout := time.After(time.Duration(t.options.ReadinessTimeoutInSeconds) * time.Second)
