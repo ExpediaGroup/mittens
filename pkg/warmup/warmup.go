@@ -42,19 +42,18 @@ func NewWarmup(readinessHttpClient http.Client, readinessGrpcClient grpc.Client,
 	return Warmup{target: target, options: options}, err
 }
 
-func (w Warmup) spawnHttpWarmupWorker(wg *sync.WaitGroup, requests <-chan http.Request, headers map[string]string, requestDelayMilliseconds int) {
+func (w Warmup) httpWarmupWorker(wg *sync.WaitGroup, requests <-chan http.Request, headers map[string]string, requestDelayMilliseconds int) {
 	for request := range requests {
 		time.Sleep(time.Duration(requestDelayMilliseconds) * time.Millisecond)
 
-		go func(r http.Request) {
-			resp := w.target.httpClient.Request(r.Method, r.Path, headers, r.Body)
+		resp := w.target.httpClient.Request(request.Method, request.Path, headers, request.Body)
 
-			if resp.Err != nil {
-				log.Printf("🔴 %s response %d milliseconds: error: %v", resp.Type, resp.Duration/time.Millisecond, resp.Err)
-			} else {
-				log.Printf("🟢 %s response %d milliseconds: OK", resp.Type, resp.Duration/time.Millisecond)
-			}
-		}(request)
+		if resp.Err != nil {
+			log.Printf("🔴 %s response %d milliseconds: error: %v", resp.Type, resp.Duration/time.Millisecond, resp.Err)
+		} else {
+			log.Printf("🟢 %s response %d milliseconds: OK", resp.Type, resp.Duration/time.Millisecond)
+		}
+
 	}
 	wg.Done()
 }
@@ -65,25 +64,24 @@ func (w Warmup) HttpWarmup(headers map[string]string, requests <-chan http.Reque
 	for i := 1; i <= concurrency; i++ {
 		log.Printf("Spawning new go routine")
 		wg.Add(1)
-		go w.spawnHttpWarmupWorker(&wg, requests, headers, requestDelayMilliseconds)
+		go w.httpWarmupWorker(&wg, requests, headers, requestDelayMilliseconds)
 	}
 
 	wg.Wait()
 }
 
-func (w Warmup) spawnGrpcWarmupWorker(wg *sync.WaitGroup, headers []string, requests <-chan grpc.Request, requestDelayMilliseconds int) {
+func (w Warmup) grpcWarmupWorker(wg *sync.WaitGroup, headers []string, requests <-chan grpc.Request, requestDelayMilliseconds int) {
 	for request := range requests {
 		time.Sleep(time.Duration(requestDelayMilliseconds) * time.Millisecond)
 
-		go func(r grpc.Request) {
-			resp := w.target.grpcClient.Request(r.ServiceMethod, r.Message, headers)
+		resp := w.target.grpcClient.Request(request.ServiceMethod, request.Message, headers)
 
-			if resp.Err != nil {
-				log.Printf("🔴 %s response %d milliseconds: error: %v", resp.Type, resp.Duration/time.Millisecond, resp.Err)
-			} else {
-				log.Printf("🟢 %s response %d milliseconds: OK", resp.Type, resp.Duration/time.Millisecond)
-			}
-		}(request)
+		if resp.Err != nil {
+			log.Printf("🔴 %s response %d milliseconds: error: %v", resp.Type, resp.Duration/time.Millisecond, resp.Err)
+		} else {
+			log.Printf("🟢 %s response %d milliseconds: OK", resp.Type, resp.Duration/time.Millisecond)
+		}
+
 	}
 	wg.Done()
 }
@@ -94,7 +92,7 @@ func (w Warmup) GrpcWarmup(headers []string, requests <-chan grpc.Request, reque
 	for i := 1; i <= concurrency; i++ {
 		log.Printf("Spawning new go routine")
 		wg.Add(1)
-		go w.spawnGrpcWarmupWorker(&wg, headers, requests, requestDelayMilliseconds)
+		go w.grpcWarmupWorker(&wg, headers, requests, requestDelayMilliseconds)
 	}
 
 	wg.Wait()

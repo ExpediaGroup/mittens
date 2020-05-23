@@ -69,10 +69,6 @@ func TestShouldBeReadyRegardlessIfWarmupRan(t *testing.T) {
 }
 
 func TestWarmupSidecarWithFileProbe(t *testing.T) {
-	// FIXME
-	shutdown := StartTargetTestServer(t)
-	defer shutdown()
-	// FIXME ^ delete these 2 lines
 	deleteFile("alive")
 	deleteFile("ready")
 
