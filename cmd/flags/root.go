@@ -45,7 +45,7 @@ func (r *Root) String() string {
 func (r *Root) InitFlags() {
 	flag.IntVar(&r.MaxDurationSeconds, "max-duration-seconds", 60, "Max duration in seconds after which warm up will stop making requests")
 	flag.IntVar(&r.Concurrency, "concurrency", 2, "Number of concurrent requests for warm up")
-	flag.IntVar(&r.RequestDelayMilliseconds, "request-delay-milliseconds", 250, "Delay in milliseconds between requests")
+	flag.IntVar(&r.RequestDelayMilliseconds, "request-delay-milliseconds", 500, "Delay in milliseconds between requests")
 	flag.BoolVar(&r.ExitAfterWarmup, "exit-after-warmup", false, "If warm up process should finish after completion. This is useful to prevent container restarts.")
 	flag.BoolVar(&r.FailReadiness, "fail-readiness", false, "If set to true readiness will fail if no requests were sent.")
 
