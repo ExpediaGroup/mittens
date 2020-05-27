@@ -33,8 +33,8 @@ var allowedHttpMethods = map[string]interface{}{
 }
 
 type Http struct {
-	Headers  stringArray `json:"http-headers"`
-	Requests stringArray `json:"http-requests"`
+	Headers  stringArray
+	Requests stringArray
 }
 
 func (h *Http) String() string {

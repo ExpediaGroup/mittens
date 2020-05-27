@@ -20,10 +20,10 @@ import (
 )
 
 type ServerProbe struct {
-	Enabled       bool   `json:"server-probe-enabled"`
-	Port          int    `json:"server-probe-port"`
-	LivenessPath  string `json:"server-probe-liveness-path"`
-	ReadinessPath string `json:"server-probe-readiness-path"`
+	Enabled       bool
+	Port          int
+	LivenessPath  string
+	ReadinessPath string
 }
 
 func (p *ServerProbe) String() string {

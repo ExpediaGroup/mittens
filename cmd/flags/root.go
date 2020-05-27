@@ -26,11 +26,11 @@ import (
 )
 
 type Root struct {
-	MaxDurationSeconds       int  `json:"max-duration-seconds"`
-	Concurrency              int  `json:"concurrency"`
-	RequestDelayMilliseconds int  `json:"request-delay-milliseconds"`
-	ExitAfterWarmup          bool `json:"exit-after-warmup"`
-	FailReadiness            bool `json:"fail-readiness"`
+	MaxDurationSeconds       int
+	Concurrency              int
+	RequestDelayMilliseconds int
+	ExitAfterWarmup          bool
+	FailReadiness            bool
 	FileProbe
 	ServerProbe
 	Target
