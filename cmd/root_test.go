@@ -35,7 +35,6 @@ func TestAll(t *testing.T) {
 	defer shutdown()
 	result := t.Run("TestWarmupSidecarWithFileProbe", TestWarmupSidecarWithFileProbe)
 	result = result && t.Run("TestWarmupSidecarWithServerProbe", TestWarmupSidecarWithServerProbe)
-	result = result && t.Run("TestConfigsFromFile", TestConfigsFromFile)
 	result = result && t.Run("TestWarmupFailReadinessIfTargetIsNeverReady", TestWarmupFailReadinessIfTargetIsNeverReady)
 	result = result && t.Run("TestWarmupFailReadinessIfNoRequestsAreSentToTarget", TestWarmupFailReadinessIfNoRequestsAreSentToTarget)
 	result = result && t.Run("TestShouldBeReadyRegardlessIfWarmupRan", TestShouldBeReadyRegardlessIfWarmupRan)
@@ -112,29 +111,6 @@ func TestWarmupSidecarWithServerProbe(t *testing.T) {
 		"-exit-after-warmup=true",
 		"-target-readiness-http-path=/health",
 		"-max-duration-seconds=5"}
-
-	CreateConfig()
-	RunCmdRoot()
-
-	assert.Equal(t, true, opts.FileProbe.Enabled)
-	assert.Equal(t, true, opts.ServerProbe.Enabled)
-	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/delay"})
-	assert.Equal(t, 2, opts.Concurrency)
-	assert.Equal(t, true, opts.ExitAfterWarmup)
-	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
-	assert.Equal(t, 5, opts.MaxDurationSeconds)
-
-	readyFileExists, err := fileExists("ready")
-	require.NoError(t, err)
-	assert.True(t, readyFileExists)
-}
-
-func TestConfigsFromFile(t *testing.T) {
-	deleteFile("alive")
-	deleteFile("ready")
-
-	os.Args = []string{"mittens",
-		"-config=sample_configs.json"}
 
 	CreateConfig()
 	RunCmdRoot()

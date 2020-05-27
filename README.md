@@ -23,7 +23,7 @@ Its main features are summarised below:
 - Allows readiness to fail if unable to warm up target app
 
 ## Usage
-The application receives a number of command-line flags. It also supports reading configs from a JSON file. Read the [documentation](https://expediagroup.github.io/mittens/docs/about/getting-started) for more context.
+The application receives a number of command-line flags. Read the [documentation](https://expediagroup.github.io/mittens/docs/about/getting-started) for more context.
 
 ## How to build and run
 Mittens is written in Go and the simplest way to run it is as a cmd application. It receives a number of command line arguments (see [Flags](https://expediagroup.github.io/mittens/docs/about/getting-started#flags)).

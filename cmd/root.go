@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"flag"
 	"log"
 	"math/rand"
@@ -33,26 +32,9 @@ var opts *flags.Root
 
 func CreateConfig() {
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	var cfgFile string
-
-	flag.StringVar(&cfgFile, "config", "", "Config file to be used. If empty configs will be read from cmd.")
 	opts = &flags.Root{}
 	opts.InitFlags()
 	flag.Parse()
-
-	if cfgFile != "" {
-		log.Printf("Reading configs from file: %v", cfgFile)
-		file, err := os.Open(cfgFile)
-		if err != nil {
-			log.Print("Can't open config file: ", err)
-		}
-		defer file.Close()
-		decoder := json.NewDecoder(file)
-		err = decoder.Decode(&opts)
-		if err != nil {
-			log.Print("Can't decode config JSON: ", err)
-		}
-	}
 }
 
 func RunCmdRoot() {
