@@ -15,10 +15,11 @@
 package http
 
 import (
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRequestSuccess(t *testing.T) {
@@ -33,11 +34,10 @@ func TestRequestSuccess(t *testing.T) {
 	c := NewClient(server.URL, false)
 	reqBody := ""
 	resp := c.Request("GET", path, map[string]string{}, &reqBody)
-	assert.True(t, resp.RequestSent)
 	assert.Nil(t, resp.Err)
 }
 
-func TestClientError(t *testing.T) {
+func TestHttpError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(400)
 	}))
@@ -46,27 +46,13 @@ func TestClientError(t *testing.T) {
 	c := NewClient(server.URL, false)
 	reqBody := ""
 	resp := c.Request("GET", "/", map[string]string{}, &reqBody)
-	assert.True(t, resp.RequestSent)
-	assert.NotNil(t, resp.Err)
+	assert.Nil(t, resp.Err)
+	assert.Equal(t, resp.StatusCode, 400)
 }
 
-func TestServerError(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		rw.WriteHeader(500)
-	}))
-	defer server.Close()
-
-	c := NewClient(server.URL, false)
+func TestConnectionError(t *testing.T) {
+	c := NewClient("http://localhost:9999", false)
 	reqBody := ""
-	resp := c.Request("GET", "/", map[string]string{}, &reqBody)
-	assert.True(t, resp.RequestSent)
-	assert.NotNil(t, resp.Err)
-}
-
-func TestRequestNotSent(t *testing.T) {
-	c := NewClient("/", false)
-	reqBody := ""
-	resp := c.Request("GET", "/", map[string]string{}, &reqBody)
-	assert.False(t, resp.RequestSent)
+	resp := c.Request("GET", "/potato", map[string]string{}, &reqBody)
 	assert.NotNil(t, resp.Err)
 }

@@ -23,13 +23,13 @@ import (
 
 // Writes dummy content to a file. This file can be used as a liveness/readiness check in Kubernetes.
 func WriteFile(file string) {
-	log.Printf("writing to file: %s", file)
+	log.Printf("Writing file: %s", file)
 
 	fileBytes := []byte("foo bar")
 
 	if err := ioutil.WriteFile(file, fileBytes, 0644); err != nil {
-		log.Printf("writing to file failed with error: %v", err)
+		log.Printf("Writing to file failed with error: %v", err)
 		return
 	}
-	log.Printf("wrote file: %s", file)
+	log.Printf("Wrote file: %s", file)
 }

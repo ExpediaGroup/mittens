@@ -15,7 +15,6 @@
 package warmup
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"mittens/pkg/grpc"
@@ -42,8 +41,7 @@ type Target struct {
 	options             TargetOptions
 }
 
-func NewTarget(readinessHttpClient whttp.Client, readinessGrpcClient grpc.Client, httpClient whttp.Client, grpcClient grpc.Client, options TargetOptions,
-	done <-chan struct{}) (Target,
+func NewTarget(readinessHttpClient whttp.Client, readinessGrpcClient grpc.Client, httpClient whttp.Client, grpcClient grpc.Client, options TargetOptions) (Target,
 	error) {
 
 	if _, err := url.Parse(options.URL); err != nil {
@@ -58,28 +56,29 @@ func NewTarget(readinessHttpClient whttp.Client, readinessGrpcClient grpc.Client
 		options:             options,
 	}
 
-	err := t.waitForReadinessProbe(done)
+	err := t.waitForReadinessProbe()
 	if err != nil {
-		return Target{}, fmt.Errorf("wait for readiness probe: %v", err)
+		return Target{}, fmt.Errorf("Error waiting for target to be ready: %v", err)
 	}
 	return t, err
 }
 
-func (t Target) waitForReadinessProbe(done <-chan struct{}) error {
-
-	log.Printf("waiting for target readiness probe for %ds", t.options.ReadinessTimeoutInSeconds)
+func (t Target) waitForReadinessProbe() error {
+	log.Printf("Waiting for target to be ready for a max of %ds", t.options.ReadinessTimeoutInSeconds)
 
 	timeout := time.After(time.Duration(t.options.ReadinessTimeoutInSeconds) * time.Second)
 	for {
 		select {
 		case <-timeout:
-			return fmt.Errorf("target readiness probe: timeout %d seconds exceeded", t.options.ReadinessTimeoutInSeconds)
-		case <-done:
-			return errors.New("target readiness probe: received done signal")
+			return fmt.Errorf("Giving up! Target not ready after %d seconds 🙁", t.options.ReadinessTimeoutInSeconds)
 		default:
+			// Wait one second between attempts. This is not configurable
+			time.Sleep(time.Second * 1)
+
 			if t.options.ReadinessProtocol == "http" {
-				if err := t.readinessHttpClient.Request(http.MethodGet, t.options.ReadinessHttpPath, nil, nil); err.Err != nil {
-					log.Printf("target readiness probe: %v", err)
+				// error if error in the response or status code not in the 200 range
+				if resp := t.readinessHttpClient.Request(http.MethodGet, t.options.ReadinessHttpPath, nil, nil); resp.Err != nil || resp.StatusCode/100 != 2 {
+					log.Printf("Target not ready yet...")
 					continue
 				}
 			} else {
@@ -87,12 +86,11 @@ func (t Target) waitForReadinessProbe(done <-chan struct{}) error {
 				if err == nil {
 					err1 := t.readinessGrpcClient.Request(request.ServiceMethod, "", nil)
 					if err1.Err != nil {
-						log.Printf("target readiness probe: %v", err1)
+						log.Printf("Target not ready yet...")
 						continue
 					}
 				}
 			}
-			log.Print("target is ready")
 			return nil
 		}
 	}

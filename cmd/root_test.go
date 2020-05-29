@@ -18,13 +18,14 @@ package cmd
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"log"
 	"net/http"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // this is a hack since Go doesn't support setup/tearDown
@@ -34,9 +35,39 @@ func TestAll(t *testing.T) {
 	defer shutdown()
 	result := t.Run("TestWarmupSidecarWithFileProbe", TestWarmupSidecarWithFileProbe)
 	result = result && t.Run("TestWarmupSidecarWithServerProbe", TestWarmupSidecarWithServerProbe)
-	result = result && t.Run("TestConfigsFromFile", TestConfigsFromFile)
-	result = result && t.Run("TestWarmupFailReadiness", TestWarmupFailReadiness)
+	result = result && t.Run("TestWarmupFailReadinessIfTargetIsNeverReady", TestWarmupFailReadinessIfTargetIsNeverReady)
+	result = result && t.Run("TestWarmupFailReadinessIfNoRequestsAreSentToTarget", TestWarmupFailReadinessIfNoRequestsAreSentToTarget)
+	result = result && t.Run("TestShouldBeReadyRegardlessIfWarmupRan", TestShouldBeReadyRegardlessIfWarmupRan)
 	os.Exit(bool2int(!result))
+}
+
+func TestShouldBeReadyRegardlessIfWarmupRan(t *testing.T) {
+	deleteFile("alive")
+	deleteFile("ready")
+
+	os.Args = []string{"mittens",
+		"-file-probe-enabled=true",
+		"-server-probe-enabled=false",
+		"-http-requests=get:/non-existent",
+		"-concurrency=2",
+		"-exit-after-warmup=true",
+		"-target-readiness-http-path=/health",
+		"-max-duration-seconds=5"}
+
+	CreateConfig()
+	RunCmdRoot()
+
+	assert.Equal(t, true, opts.FileProbe.Enabled)
+	assert.Equal(t, false, opts.ServerProbe.Enabled)
+	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/non-existent"})
+	assert.Equal(t, 2, opts.Concurrency)
+	assert.Equal(t, true, opts.ExitAfterWarmup)
+	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
+	assert.Equal(t, 5, opts.MaxDurationSeconds)
+
+	readyFileExists, err := fileExists("ready")
+	require.NoError(t, err)
+	assert.True(t, readyFileExists)
 }
 
 func TestWarmupSidecarWithFileProbe(t *testing.T) {
@@ -47,7 +78,7 @@ func TestWarmupSidecarWithFileProbe(t *testing.T) {
 		"-file-probe-enabled=true",
 		"-server-probe-enabled=false",
 		"-http-requests=get:/delay",
-		"-concurrency=4",
+		"-concurrency=2",
 		"-exit-after-warmup=true",
 		"-target-readiness-http-path=/health",
 		"-max-duration-seconds=5"}
@@ -57,8 +88,8 @@ func TestWarmupSidecarWithFileProbe(t *testing.T) {
 
 	assert.Equal(t, true, opts.FileProbe.Enabled)
 	assert.Equal(t, false, opts.ServerProbe.Enabled)
-	assert.Contains(t, opts.Http.Requests, "get:/delay")
-	assert.Equal(t, 4, opts.Concurrency)
+	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/delay"})
+	assert.Equal(t, 2, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
 	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
@@ -76,7 +107,7 @@ func TestWarmupSidecarWithServerProbe(t *testing.T) {
 		"-file-probe-enabled=true",
 		"-server-probe-enabled=true",
 		"-http-requests=get:/delay",
-		"-concurrency=4",
+		"-concurrency=2",
 		"-exit-after-warmup=true",
 		"-target-readiness-http-path=/health",
 		"-max-duration-seconds=5"}
@@ -86,8 +117,8 @@ func TestWarmupSidecarWithServerProbe(t *testing.T) {
 
 	assert.Equal(t, true, opts.FileProbe.Enabled)
 	assert.Equal(t, true, opts.ServerProbe.Enabled)
-	assert.Contains(t, opts.Http.Requests, "get:/delay")
-	assert.Equal(t, 4, opts.Concurrency)
+	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/delay"})
+	assert.Equal(t, 2, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
 	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
@@ -97,39 +128,45 @@ func TestWarmupSidecarWithServerProbe(t *testing.T) {
 	assert.True(t, readyFileExists)
 }
 
-func TestConfigsFromFile(t *testing.T) {
+func TestWarmupFailReadinessIfTargetIsNeverReady(t *testing.T) {
 	deleteFile("alive")
 	deleteFile("ready")
 
+	// we simulate a failure in the target by setting the readiness path to a non existent one so that
+	// the target never becomes ready and the warmup does not run
 	os.Args = []string{"mittens",
-		"-config=sample_configs.json"}
+		"-file-probe-enabled=true",
+		"-http-requests=get:/delay",
+		"-target-readiness-port=8080",
+		"-target-readiness-http-path=/non-existent",
+		"-max-duration-seconds=5",
+		"-exit-after-warmup=true",
+		"-fail-readiness=true"}
 
 	CreateConfig()
 	RunCmdRoot()
 
 	assert.Equal(t, true, opts.FileProbe.Enabled)
-	assert.Equal(t, true, opts.ServerProbe.Enabled)
-	assert.Contains(t, opts.Http.Requests, "get:/delay")
-	assert.Equal(t, 4, opts.Concurrency)
+	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/delay"})
 	assert.Equal(t, true, opts.ExitAfterWarmup)
-	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
+	assert.Equal(t, "/non-existent", opts.Target.ReadinessHttpPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
+	assert.Equal(t, true, opts.FailReadiness)
 
 	readyFileExists, err := fileExists("ready")
 	require.NoError(t, err)
-	assert.True(t, readyFileExists)
+	assert.False(t, readyFileExists)
 }
 
-func TestWarmupFailReadiness(t *testing.T) {
+func TestWarmupFailReadinessIfNoRequestsAreSentToTarget(t *testing.T) {
 	deleteFile("alive")
 	deleteFile("ready")
 
-	// we simulate a failure with no requests being sent by setting the port to a non-functional one
-	// we set the readiness port to the functional one (8080) so that health check passes
+	// we simulate a failure by using a port that doesnt exist (9999)
 	os.Args = []string{"mittens",
 		"-file-probe-enabled=true",
-		"-http-requests=get:/invalid",
-		"-target-http-port=1111",
+		"-http-requests=get:/delay",
+		"-target-http-port=9999",
 		"-target-readiness-port=8080",
 		"-target-readiness-http-path=/health",
 		"-max-duration-seconds=5",
@@ -140,7 +177,7 @@ func TestWarmupFailReadiness(t *testing.T) {
 	RunCmdRoot()
 
 	assert.Equal(t, true, opts.FileProbe.Enabled)
-	assert.Contains(t, opts.Http.Requests, "get:/invalid")
+	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/delay"})
 	assert.Equal(t, true, opts.ExitAfterWarmup)
 	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
@@ -155,13 +192,11 @@ func StartTargetTestServer(t *testing.T) (shutdown func()) {
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
-		log.Print("handler /health")
 	})
 
 	http.HandleFunc("/delay", func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(time.Millisecond * 100)
 		w.WriteHeader(http.StatusNoContent)
-		log.Print("handler /delay")
 	})
 
 	server := &http.Server{Addr: ":8080"}

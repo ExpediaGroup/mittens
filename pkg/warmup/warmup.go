@@ -19,8 +19,8 @@ import (
 	"log"
 	"mittens/pkg/grpc"
 	"mittens/pkg/http"
-	"mittens/pkg/response"
 	"sync"
+	"time"
 )
 
 type Options struct {
@@ -33,51 +33,49 @@ type Warmup struct {
 	options Options
 }
 
-func NewWarmup(readinessHttpClient http.Client, readinessGrpcClient grpc.Client, httpClient http.Client, grpcClient grpc.Client, options Options, targetOptions TargetOptions,
-	done <-chan struct{}) (Warmup, error) {
-
-	target, err := NewTarget(readinessHttpClient, readinessGrpcClient, httpClient, grpcClient, targetOptions, done)
+func NewWarmup(readinessHttpClient http.Client, readinessGrpcClient grpc.Client, httpClient http.Client, grpcClient grpc.Client, options Options, targetOptions TargetOptions) (Warmup, error) {
+	target, err := NewTarget(readinessHttpClient, readinessGrpcClient, httpClient, grpcClient, targetOptions)
 	if err != nil {
 		return Warmup{}, fmt.Errorf("new target: %v", err)
 	}
 	return Warmup{target: target, options: options}, err
 }
 
-func (w Warmup) HttpWarmup(headers map[string]string, requests <-chan http.Request) <-chan response.Response {
+func (w Warmup) HttpWarmupWorker(wg *sync.WaitGroup, requests <-chan http.Request, headers map[string]string, requestDelayMilliseconds int, requestsSentCounter *int) {
+	for request := range requests {
+		time.Sleep(time.Duration(requestDelayMilliseconds) * time.Millisecond)
 
-	response := make(chan response.Response)
-	go func() {
-		var wg sync.WaitGroup
-		for request := range requests {
-			go func(r http.Request) {
-				wg.Add(1)
-				defer wg.Done()
-				response <- w.target.httpClient.Request(r.Method, r.Path, headers, r.Body)
-			}(request)
+		resp := w.target.httpClient.Request(request.Method, request.Path, headers, request.Body)
+
+		if resp.Err != nil {
+			log.Printf("🔴 Error in request for %s: %v", request.Path, resp.Err)
+		} else {
+			*requestsSentCounter++
+
+			if resp.StatusCode/100 == 2 {
+				log.Printf("🟢 %s response for %s %d ms: %v", resp.Type, request.Path, resp.Duration/time.Millisecond, resp.StatusCode)
+			} else {
+				log.Printf("🔴 %s response for %s %d ms: %v", resp.Type, request.Path, resp.Duration/time.Millisecond, resp.StatusCode)
+			}
 		}
-		wg.Wait()
-		close(response)
-	}()
-	return response
+	}
+	wg.Done()
 }
 
-func (w Warmup) GrpcWarmup(headers []string, requests <-chan grpc.Request) <-chan response.Response {
+func (w Warmup) GrpcWarmupWorker(wg *sync.WaitGroup, headers []string, requests <-chan grpc.Request, requestDelayMilliseconds int, requestsSentCounter *int) {
+	for request := range requests {
+		time.Sleep(time.Duration(requestDelayMilliseconds) * time.Millisecond)
 
-	response := make(chan response.Response)
-	go func() {
-		var wg sync.WaitGroup
-		for request := range requests {
-			go func(r grpc.Request) {
-				wg.Add(1)
-				defer wg.Done()
-				response <- w.target.grpcClient.Request(r.ServiceMethod, r.Message, headers)
-			}(request)
+		resp := w.target.grpcClient.Request(request.ServiceMethod, request.Message, headers)
+
+		if resp.Err != nil {
+			log.Printf("🔴 Error in request for %s: %v", request.ServiceMethod, resp.Err)
+		} else {
+			*requestsSentCounter++
+
+			log.Printf("%s response for %s %d ms", resp.Type, request.ServiceMethod, resp.Duration/time.Millisecond)
 		}
-		wg.Wait()
-		if err := w.target.grpcClient.Close(); err != nil {
-			log.Printf("grpc client close: %v", err)
-		}
-		close(response)
-	}()
-	return response
+
+	}
+	wg.Done()
 }

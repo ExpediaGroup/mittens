@@ -22,8 +22,8 @@ import (
 )
 
 type Grpc struct {
-	Headers  stringArray `json:"grpc-headers"`
-	Requests stringArray `json:"grpc-requests"`
+	Headers  stringArray
+	Requests stringArray
 }
 
 func (g *Grpc) String() string {

@@ -18,6 +18,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"mittens/pkg/grpc"
 	"mittens/pkg/http"
 	"mittens/pkg/warmup"
@@ -25,11 +26,11 @@ import (
 )
 
 type Root struct {
-	MaxDurationSeconds       int  `json:"max-duration-seconds"`
-	Concurrency              int  `json:"concurrency"`
-	RequestDelayMilliseconds int  `json:"request-delay-milliseconds"`
-	ExitAfterWarmup          bool `json:"exit-after-warmup"`
-	FailReadiness            bool `json:"fail-readiness"`
+	MaxDurationSeconds       int
+	Concurrency              int
+	RequestDelayMilliseconds int
+	ExitAfterWarmup          bool
+	FailReadiness            bool
 	FileProbe
 	ServerProbe
 	Target
@@ -44,7 +45,7 @@ func (r *Root) String() string {
 func (r *Root) InitFlags() {
 	flag.IntVar(&r.MaxDurationSeconds, "max-duration-seconds", 60, "Max duration in seconds after which warm up will stop making requests")
 	flag.IntVar(&r.Concurrency, "concurrency", 2, "Number of concurrent requests for warm up")
-	flag.IntVar(&r.RequestDelayMilliseconds, "request-delay-milliseconds", 50, "Delay in milliseconds between requests")
+	flag.IntVar(&r.RequestDelayMilliseconds, "request-delay-milliseconds", 500, "Delay in milliseconds between requests")
 	flag.BoolVar(&r.ExitAfterWarmup, "exit-after-warmup", false, "If warm up process should finish after completion. This is useful to prevent container restarts.")
 	flag.BoolVar(&r.FailReadiness, "fail-readiness", false, "If set to true readiness will fail if no requests were sent.")
 
@@ -83,11 +84,11 @@ func (r *Root) GetWarmupTargetOptions() (warmup.TargetOptions, error) {
 
 	options := r.Target.GetWarmupTargetOptions()
 	if options.ReadinessTimeoutInSeconds <= 0 {
-		log.Printf("readiness timeout in seconds not set, defaulting to max duration in seconds: %ds", r.MaxDurationSeconds)
+		log.Printf("Readiness timeout in seconds not set, defaulting to max duration in seconds: %ds", r.MaxDurationSeconds)
 		options.ReadinessTimeoutInSeconds = r.MaxDurationSeconds
 	}
 	if options.ReadinessProtocol != "http" && options.ReadinessProtocol != "grpc" {
-		err := fmt.Errorf("readiness protocol %s not supported, please use http or grpc", r.ReadinessProtocol)
+		err := fmt.Errorf("Readiness protocol %s not supported, please use http or grpc", r.ReadinessProtocol)
 		return options, err
 	}
 	return options, nil
@@ -97,36 +98,62 @@ func (r *Root) GetWarmupHttpHeaders() map[string]string {
 	return r.Http.GetWarmupHttpHeaders()
 }
 
-func (r *Root) GetWarmupHttpRequests(done <-chan struct{}) (chan http.Request, error) {
-
+func (r *Root) GetWarmupHttpRequests() (chan http.Request, error) {
 	requests, err := r.Http.GetWarmupHttpRequests()
 	if err != nil {
 		return nil, err
 	}
 
-	requestsChan := make(chan http.Request, r.Concurrency)
+	requestsChan := make(chan http.Request)
+
+	// create a goroutine that continuously adds requests to a channel for a maximum of MaxDurationSeconds
 	go func() {
 		if len(requests) == 0 {
-			log.Print("no http warm up requests specified")
+			log.Print("No http warm up requests specified")
 			close(requestsChan)
 			return
 		}
 		timeout := time.After(time.Duration(r.MaxDurationSeconds) * time.Second)
+
 		for {
-			for _, v := range requests {
-				time.Sleep(time.Duration(r.RequestDelayMilliseconds) * time.Millisecond)
-				select {
-				case <-timeout:
-					log.Printf("timeout %d seconds exceeded", r.MaxDurationSeconds)
-					close(requestsChan)
-					return
-				case <-done:
-					log.Print("get http requests: received done signal, closing http chan")
-					close(requestsChan)
-					return
-				default:
-					requestsChan <- v
-				}
+			select {
+			case <-timeout:
+				close(requestsChan)
+				return
+			default:
+				number := rand.Intn(len(requests))
+				requestsChan <- requests[number]
+			}
+		}
+	}()
+	return requestsChan, nil
+}
+
+func (r *Root) GetWarmupGrpcRequests() (chan grpc.Request, error) {
+	requests, err := r.Grpc.GetWarmupGrpcRequests()
+	if err != nil {
+		return nil, err
+	}
+
+	requestsChan := make(chan grpc.Request)
+
+	// create a goroutine that continuously adds requests to a channel for a maximum of MaxDurationSeconds
+	go func() {
+		if len(requests) == 0 {
+			log.Print("No grpc warm up requests specified")
+			close(requestsChan)
+			return
+		}
+		timeout := time.After(time.Duration(r.MaxDurationSeconds) * time.Second)
+
+		for {
+			select {
+			case <-timeout:
+				close(requestsChan)
+				return
+			default:
+				number := rand.Intn(len(requests))
+				requestsChan <- requests[number]
 			}
 		}
 	}()
@@ -135,40 +162,4 @@ func (r *Root) GetWarmupHttpRequests(done <-chan struct{}) (chan http.Request, e
 
 func (r *Root) GetWarmupGrpcHeaders() []string {
 	return r.Grpc.GetWarmupGrpcHeaders()
-}
-
-func (r *Root) GetWarmupGrpcRequests(done <-chan struct{}) (chan grpc.Request, error) {
-
-	requests, err := r.Grpc.GetWarmupGrpcRequests()
-	if err != nil {
-		return nil, err
-	}
-
-	requestsChan := make(chan grpc.Request, r.Concurrency)
-	go func() {
-		if len(requests) == 0 {
-			log.Print("no grpc warm up requests specified")
-			close(requestsChan)
-			return
-		}
-		timeout := time.After(time.Duration(r.MaxDurationSeconds) * time.Second)
-		for {
-			for _, v := range requests {
-				time.Sleep(time.Duration(r.RequestDelayMilliseconds) * time.Millisecond)
-				select {
-				case <-timeout:
-					log.Printf("max duration %d seconds exceeded", r.MaxDurationSeconds)
-					close(requestsChan)
-					return
-				case <-done:
-					log.Print("get grpc requests: received done signal, closing grpc chan")
-					close(requestsChan)
-					return
-				default:
-					requestsChan <- v
-				}
-			}
-		}
-	}()
-	return requestsChan, nil
 }

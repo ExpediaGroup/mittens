@@ -15,13 +15,11 @@
 package cmd
 
 import (
-	"encoding/json"
 	"flag"
 	"log"
 	"math/rand"
 	"mittens/cmd/flags"
 	"mittens/pkg/probe"
-	"mittens/pkg/response"
 	"mittens/pkg/warmup"
 	"os"
 	"os/signal"
@@ -34,33 +32,12 @@ var opts *flags.Root
 
 func CreateConfig() {
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	var cfgFile string
-
-	flag.StringVar(&cfgFile, "config", "", "Config file to be used. If empty configs will be read from cmd.")
 	opts = &flags.Root{}
 	opts.InitFlags()
-	flag.Parse()
-
-	if cfgFile != "" {
-		log.Printf("reading configs from file: %v", cfgFile)
-		file, err := os.Open(cfgFile)
-		if err != nil {
-			log.Print("can't open config file: ", err)
-		}
-		defer file.Close()
-		decoder := json.NewDecoder(file)
-		err = decoder.Decode(&opts)
-		if err != nil {
-			log.Print("can't decode config JSON: ", err)
-		}
-	}
 	flag.Parse()
 }
 
 func RunCmdRoot() {
-
-	stop := make(chan struct{})
-	done := make(chan struct{})
 	var probeServer *probe.Server
 
 	if opts.ServerProbe.Enabled {
@@ -68,8 +45,6 @@ func RunCmdRoot() {
 			opts.ServerProbe.Port,
 			opts.ServerProbe.LivenessPath,
 			opts.ServerProbe.ReadinessPath,
-			stop,
-			done,
 		)
 	}
 
@@ -78,79 +53,72 @@ func RunCmdRoot() {
 	}
 
 	targetOptions, err := opts.GetWarmupTargetOptions()
+	requestsSentCounter := 0
 
-	result := warmup.Result{RequestsToSend: 0, RequestsSent: 0}
 	if err == nil {
-		wp, err1 := createWarmup(targetOptions, done)
+		wp, err1 := createWarmup(targetOptions)
 		if err1 == nil {
-			result = runWarmup(wp, done)
+			runWarmup(wp, &requestsSentCounter)
+		} else {
+			log.Print("Target still not ready. Giving up! No requests were sent 🙁")
 		}
-	}
-	log.Printf("summary: requests_to_send: %d, requests_sent: %d", result.RequestsToSend, result.RequestsSent)
 
-	if opts.ServerProbe.Enabled {
-		if opts.FailReadiness && result.RequestsSent == 0 {
-			log.Print("probeServer readiness failed, no requests sent")
+		if opts.FailReadiness && requestsSentCounter == 0 {
+			log.Print("🛑 Warmup did not run. Mittens readiness probe will fail")
 		} else {
-			probeServer.IsReady(true)
+			if requestsSentCounter == 0 {
+				log.Print("🛑 Warm up finished but no requests were sent")
+			} else {
+				log.Printf("Warm up finished 😊 Aproximately %d reqs were sent", requestsSentCounter)
+			}
+
+			if opts.ServerProbe.Enabled {
+				probeServer.IsReady(true)
+			}
+			if opts.FileProbe.Enabled {
+				probe.WriteFile(opts.FileProbe.ReadinessPath)
+			}
 		}
 	}
-	if opts.FileProbe.Enabled {
-		if opts.FailReadiness && result.RequestsSent == 0 {
-			log.Print("fileServer readiness failed, no requests sent")
-		} else {
-			probe.WriteFile(opts.FileProbe.ReadinessPath)
-		}
-	}
-	log.Print("warm up finished")
-	if opts.ExitAfterWarmup {
-		// exit after warmup, we close the stop/done channels
-		// in case probe server is used the done channel is closed by the server to ensure graceful termination
-		if opts.ServerProbe.Enabled {
-			close(stop)
-		} else {
-			close(done)
-		}
-	} else {
+
+	// Block forever if we don't want to wait after the warmup finishes
+	if !opts.ExitAfterWarmup {
 		select {}
 	}
-	<-done
 }
 
-func runWarmup(wp warmup.Warmup, done chan struct{}) warmup.Result {
+func runWarmup(wp warmup.Warmup, requestsSentCounter *int) {
 	rand.Seed(time.Now().UnixNano()) // initialize seed only once to prevent deterministic/repeated calls every time we run
-	requestsSent := 0
-	requestsToSend := 0
 
 	httpHeaders := opts.GetWarmupHttpHeaders()
-	httpRequests, err := opts.GetWarmupHttpRequests(done)
+	httpRequests, err := opts.GetWarmupHttpRequests()
 	if err != nil {
-		log.Printf("http options: %v", err)
+		log.Printf("Http options: %v", err)
 	}
 	grpcHeaders := opts.GetWarmupGrpcHeaders()
-	grpcRequests, err := opts.GetWarmupGrpcRequests(done)
+	grpcRequests, err := opts.GetWarmupGrpcRequests()
 	if err != nil {
-		log.Printf("grpc options: %v", err)
+		log.Printf("Grpc options: %v", err)
 	}
-	httpResponse := wp.HttpWarmup(httpHeaders, httpRequests)
-	grpcResponse := wp.GrpcWarmup(grpcHeaders, grpcRequests)
-	response := merge(httpResponse, grpcResponse)
 
-	for r := range response {
-		requestsToSend += 1
-		if r.RequestSent {
-			requestsSent += 1
-		}
-		if r.Err != nil {
-			log.Printf("%s response %d milliseconds: error: %v", r.Type, r.Duration/time.Millisecond, r.Err)
-		} else {
-			log.Printf("%s response %d milliseconds: OK", r.Type, r.Duration/time.Millisecond)
-		}
+	var wg sync.WaitGroup
+	for i := 1; i <= opts.Concurrency; i++ {
+		log.Printf("Spawning new go routine for http requests")
+		wg.Add(1)
+		go wp.HttpWarmupWorker(&wg, httpRequests, httpHeaders, opts.RequestDelayMilliseconds, requestsSentCounter)
 	}
-	return warmup.Result{RequestsSent: requestsSent, RequestsToSend: requestsToSend}
+
+	for i := 1; i <= opts.Concurrency; i++ {
+		log.Printf("Spawning new go routine for grpc requests")
+		wg.Add(1)
+		go wp.GrpcWarmupWorker(&wg, grpcHeaders, grpcRequests, opts.RequestDelayMilliseconds, requestsSentCounter)
+	}
+
+	wg.Wait()
 }
 
-func createWarmup(targetOptions warmup.TargetOptions, done chan struct{}) (warmup.Warmup, error) {
+// TODO: this is doing too many things including waiting for target to become ready. split into smaller blocks.
+func createWarmup(targetOptions warmup.TargetOptions) (warmup.Warmup, error) {
 	wp, err := warmup.NewWarmup(
 		opts.GetReadinessHttpClient(),
 		opts.GetReadinessGrpcClient(),
@@ -158,19 +126,18 @@ func createWarmup(targetOptions warmup.TargetOptions, done chan struct{}) (warmu
 		opts.GetGrpcClient(),
 		opts.GetWarmupOptions(),
 		targetOptions,
-		done,
 	)
 	return wp, err
 }
 
-func start(port int, livenessPath, readinessPath string, stop <-chan struct{}, done chan struct{}) *probe.Server {
+func start(port int, livenessPath, readinessPath string) *probe.Server {
 
 	serverErr := make(chan struct{})
 	probeServer := probe.NewServer(port, livenessPath, readinessPath)
 	go func() {
 		if err := probeServer.ListenAndServe(); err != nil {
-			if err.Error() != "http: Server closed" {
-				log.Printf("probe server: %v", err)
+			if err.Error() != "Http: Server closed" {
+				log.Printf("Probe server: %v", err)
 				close(serverErr)
 			}
 		}
@@ -181,45 +148,11 @@ func start(port int, livenessPath, readinessPath string, stop <-chan struct{}, d
 	go func() {
 		select {
 		case <-serverErr:
-			log.Print("received probe server error")
-			close(done)
-		case <-stop:
-			log.Print("received stop signal")
-			probeServer.Shutdown()
-			close(done)
+			log.Print("Received probe server error")
 		case sig := <-sigs:
-			log.Printf("received %s signal", sig)
+			log.Printf("Received %s signal", sig)
 			probeServer.Shutdown()
-			close(done)
 		}
 	}()
 	return probeServer
-}
-
-// 'fan in' see: https://blog.golang.org/pipelines
-func merge(cs ...<-chan response.Response) <-chan response.Response {
-
-	var wg sync.WaitGroup
-	out := make(chan response.Response)
-
-	// Start an output goroutine for each input channel in cs.  output
-	// copies values from c to out until c is closed, then calls wg.Done.
-	output := func(c <-chan response.Response) {
-		for n := range c {
-			out <- n
-		}
-		wg.Done()
-	}
-	wg.Add(len(cs))
-	for _, c := range cs {
-		go output(c)
-	}
-
-	// Start a goroutine to close out once all the output goroutines are
-	// done.  This must start after the wg.Add call.
-	go func() {
-		wg.Wait()
-		close(out)
-	}()
-	return out
 }

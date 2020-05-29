@@ -12,23 +12,6 @@ You can run the binary executable as follows:
         
     ./mittens -target-readiness-http-path=/health -target-grpc-port=6565 -max-duration-seconds=60 -concurrency=3 -http-request=get:/hotel/potatoes -grpc-requests=service/method:"{\"foo\":\"bar\", \"bar\":\"foo\"}"
 
-To read the above configs from file:
-
-    ./mittens -config=configs.json
-
-where `configs.json`:
-
-```json
-{
-  "target-readiness-http-path": "/health",
-  "target-grpc-port": 6565,
-  "max-duration-seconds": 60,
-  "concurrency": 3,
-  "http-requests": ["get:/hotel/potatoes"],
-  "grpc-requests": ["service/method:'{\"foo\":\"bar\", \"bar\":\"foo\"}'"]
-}
-```
-
 ## Run as a linked Docker container
 
     version: "2"

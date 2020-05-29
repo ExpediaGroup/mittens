@@ -20,9 +20,9 @@ import (
 )
 
 type FileProbe struct {
-	Enabled       bool   `json:"file-probe-enabled"`
-	LivenessPath  string `json:"file-probe-liveness-path"`
-	ReadinessPath string `json:"file-probe-readiness-path"`
+	Enabled       bool
+	LivenessPath  string
+	ReadinessPath string
 }
 
 func (p *FileProbe) String() string {

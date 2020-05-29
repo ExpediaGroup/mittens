@@ -23,16 +23,16 @@ import (
 )
 
 type Target struct {
-	HttpHost                string `json:"target-http-host"`
-	HttpPort                int    `json:"target-http-port"`
-	GrpcHost                string `json:"target-grpc-host"`
-	GrpcPort                int    `json:"target-grpc-port"`
-	ReadinessProtocol       string `json:"target-readiness-protocol"`
-	ReadinessHttpPath       string `json:"target-readiness-http-path"`
-	ReadinessGrpcMethod     string `json:"target-readiness-grpc-method"`
-	ReadinessPort           int    `json:"target-readiness-port"`
-	ReadinessTimeoutSeconds int    `json:"target-readiness-timeout-seconds"`
-	Insecure                bool   `json:"target-insecure"`
+	HttpHost                string
+	HttpPort                int
+	GrpcHost                string
+	GrpcPort                int
+	ReadinessProtocol       string
+	ReadinessHttpPath       string
+	ReadinessGrpcMethod     string
+	ReadinessPort           int
+	ReadinessTimeoutSeconds int
+	Insecure                bool
 }
 
 func (t *Target) String() string {

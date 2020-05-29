@@ -33,8 +33,8 @@ var allowedHttpMethods = map[string]interface{}{
 }
 
 type Http struct {
-	Headers  stringArray `json:"http-headers"`
-	Requests stringArray `json:"http-requests"`
+	Headers  stringArray
+	Requests stringArray
 }
 
 func (h *Http) String() string {
@@ -55,7 +55,6 @@ func (h *Http) GetWarmupHttpRequests() ([]http.Request, error) {
 }
 
 func toHttpRequests(requestsFlag []string) ([]http.Request, error) {
-
 	var requests []http.Request
 	for _, requestFlag := range requestsFlag {
 		request, err := http.ToHttpRequest(requestFlag)

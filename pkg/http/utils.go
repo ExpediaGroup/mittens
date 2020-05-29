@@ -47,16 +47,16 @@ var templateRangeRegex = regexp.MustCompile("{\\$range\\|min=(?P<Min>\\d+),max=(
 var templateElementsRegex = regexp.MustCompile("{\\$random\\|(?P<Elements>[,\\w-]+)}")
 var templateDatesRegex = regexp.MustCompile("{\\$currentDate(?:\\|(?:days(?P<Days>[+-]\\d+))*(?:[,]*months(?P<Months>[+-]\\d+))*(?:[,]*years(?P<Years>[+-]\\d+))*)*}") // we did it \o/ 100+ chars regex
 
-func ToHttpRequest(requestFlag string) (Request, error) {
-	parts := strings.SplitN(requestFlag, ":", 3)
+func ToHttpRequest(requestString string) (Request, error) {
+	parts := strings.SplitN(requestString, ":", 3)
 	if len(parts) < 2 {
-		return Request{}, fmt.Errorf("invalid request flag: %s, expected format <http-method>:<path>[:body]", requestFlag)
+		return Request{}, fmt.Errorf("invalid request flag: %s, expected format <http-method>:<path>[:body]", requestString)
 	}
 
 	method := strings.ToUpper(parts[0])
 	_, ok := allowedHttpMethods[method]
 	if !ok {
-		return Request{}, fmt.Errorf("invalid request flag: %s, method %s is not supported", requestFlag, method)
+		return Request{}, fmt.Errorf("invalid request flag: %s, method %s is not supported", requestString, method)
 	}
 
 	// <method>:<path>

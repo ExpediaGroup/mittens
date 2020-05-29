@@ -36,9 +36,9 @@ func NewServer(port int, livenessPath, readinessPath string) *Server {
 	mux.HandleFunc(livenessPath, handler.aliveHandler())
 	mux.HandleFunc(readinessPath, handler.readyHandler())
 
-	log.Printf("probe server on %d port", port)
-	log.Printf("liveness path: %s", livenessPath)
-	log.Printf("readiness path: %s", readinessPath)
+	log.Printf("Probe server on %d port", port)
+	log.Printf("Liveness path: %s", livenessPath)
+	log.Printf("Readiness path: %s", readinessPath)
 
 	return &Server{
 		httpServer: newServer(port, mux),
@@ -49,7 +49,7 @@ func NewServer(port int, livenessPath, readinessPath string) *Server {
 func (s *Server) ListenAndServe() error {
 
 	s.isAlive(true)
-	log.Print("starting probe server")
+	log.Print("Starting probe server")
 	return s.httpServer.ListenAndServe()
 }
 
@@ -57,9 +57,9 @@ func (s *Server) Shutdown() {
 
 	s.IsReady(false)
 	s.isAlive(false)
-	log.Print("shutting down probe server")
+	log.Print("Shutting down probe server")
 	if err := s.httpServer.Shutdown(context.Background()); err != nil {
-		log.Printf("probe server shutdown: %v", err)
+		log.Printf("Probe server shutdown: %v", err)
 	}
 }
 

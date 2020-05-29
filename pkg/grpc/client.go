@@ -17,17 +17,18 @@ package grpc
 import (
 	"bytes"
 	"fmt"
+	"log"
+	"mittens/pkg/response"
+	"os"
+	"sync"
+	"time"
+
 	"github.com/fullstorydev/grpcurl"
 	"github.com/jhump/protoreflect/grpcreflect"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	reflectpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
-	"log"
-	"mittens/pkg/response"
-	"os"
-	"sync"
-	"time"
 )
 
 type Client struct {
@@ -56,20 +57,20 @@ func (c *Client) connect(headers []string) error {
 
 	dialOptions := []grpc.DialOption{grpc.WithBlock()}
 	if c.insecure {
-		log.Print("grpc client insecure")
+		log.Print("Grpc client insecure")
 		dialOptions = append(dialOptions, grpc.WithInsecure())
 	}
 
-	log.Printf("grpc client connecting to %s", c.host)
+	log.Printf("Grpc client connecting to %s", c.host)
 	conn, err := grpc.DialContext(connCtx, c.host, dialOptions...)
 	if err != nil {
-		return fmt.Errorf("grpc dial: %v", err)
+		return fmt.Errorf("Grpc dial: %v", err)
 	}
 
 	reflectionClient := grpcreflect.NewClient(contextWithMetadata, reflectpb.NewServerReflectionClient(conn))
 	descriptorSource := grpcurl.DescriptorSourceFromServer(contextWithMetadata, reflectionClient)
 
-	log.Print("grpc client connected")
+	log.Print("Grpc client connected")
 	c.conn = conn
 	c.connClose = func() error { cancel(); return conn.Close() }
 	c.descriptorSource = descriptorSource
@@ -85,8 +86,8 @@ func (c *Client) Request(serviceMethod string, message string, headers []string)
 	})
 
 	if connErr != nil {
-		log.Printf("grpc client connect: %v", connErr)
-		return response.Response{Duration: time.Duration(0), Err: connErr, RequestSent: false, Type: "grpc"}
+		log.Printf("Grpc client connect: %v", connErr)
+		return response.Response{Duration: time.Duration(0), Err: connErr, Type: "grpc"}
 	}
 
 	in := bytes.NewBufferString(message)
@@ -94,21 +95,22 @@ func (c *Client) Request(serviceMethod string, message string, headers []string)
 	// TODO - create generic parser and formatter for any request, can we use text parser/formatter?
 	requestParser, formatter, err := grpcurl.RequestParserAndFormatterFor(grpcurl.Format("json"), c.descriptorSource, false, false, in)
 	if err != nil {
-		log.Printf("cannot construct request parser and formatter for json")
-		return response.Response{Duration: time.Duration(0), Err: err, RequestSent: false, Type: "grpc"}
+		log.Printf("Cannot construct request parser and formatter for json")
+		// FIXME FATAL
+		return response.Response{Duration: time.Duration(0), Err: err, Type: "grpc"}
 	}
 	loggingEventHandler := grpcurl.NewDefaultEventHandler(os.Stdout, c.descriptorSource, formatter, false)
 	startTime := time.Now()
 	err = grpcurl.InvokeRPC(context.Background(), c.descriptorSource, c.conn, serviceMethod, headers, loggingEventHandler, requestParser.Next)
 	endTime := time.Now()
 	if err != nil {
-		return response.Response{Duration: endTime.Sub(startTime), Err: nil, RequestSent: true, Type: "grpc"}
+		return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: "grpc"}
 	}
-	return response.Response{Duration: endTime.Sub(startTime), Err: nil, RequestSent: true, Type: "grpc"}
+	return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: "grpc"}
 }
 
 // Calling close on client that has not established connection does not return error
 func (c Client) Close() error {
-	log.Print("closing grpc client connection")
+	log.Print("Closing grpc client connection")
 	return c.connClose()
 }
