@@ -37,7 +37,6 @@ The application receives a number of command-line flags including the requests t
 | -target-readiness-http-path       | string  | /ready                      | The path used for target readiness probe                                                                                                                                           |
 | -target-readiness-port            | int     | same as -target-http-port   | The port used for target readiness probe                                                                                                                                           |
 | -target-readiness-protocol        | string  | http                        | Protocol to be used for readiness check. One of [`http`, `grpc`]                                                                                                                   |
-| -target-readiness-timeout-seconds | int     | -1                          | Maximum time to wait for the target to become ready. If not ready, Mittens will simply skip the warmup.                                                                            |
 | -max-duration-seconds             | int     | 60                          | Maximum duration in seconds after which warm up will stop making requests                                                                                                          |
 
 ### Warmup request

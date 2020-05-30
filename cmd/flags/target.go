@@ -48,7 +48,6 @@ func (t *Target) InitFlags() {
 	flag.StringVar(&t.ReadinessHttpPath, "target-readiness-http-path", "/ready", "The path used for HTTP target readiness probe")
 	flag.StringVar(&t.ReadinessGrpcMethod, "target-readiness-grpc-method", "grpc.health.v1.Health/Check", "The service method used for gRPC target readiness probe")
 	flag.IntVar(&t.ReadinessPort, "target-readiness-port", toIntOrDefaultIfNull(&t.HttpPort, 8080), "The port used for target readiness probe")
-	flag.IntVar(&t.ReadinessTimeoutSeconds, "target-readiness-timeout-seconds", -1, "Timeout for target readiness probe")
 	flag.BoolVar(&t.Insecure, "target-insecure", false, "Whether to skip TLS validation")
 }
 
