@@ -8,7 +8,7 @@ We provide a [Makefile](https://github.com/ExpediaGroup/mittens/blob/master/Make
 
 ### Binary
 
-To build the binary make sure you've installed [Go 1.13](https://golang.org/dl/).
+To build the binary make sure you've installed [Go 1.14](https://golang.org/dl/).
 
 #### Build binary executable & run unit tests
 
