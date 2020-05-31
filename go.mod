@@ -11,4 +11,4 @@ require (
 	google.golang.org/grpc v1.29.1
 )
 
-go 1.13
+go 1.14

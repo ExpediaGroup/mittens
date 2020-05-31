@@ -19,6 +19,13 @@ const users = [
     infoLink: 'https://www.hotels.com',
     pinned: true,
   },
+  {
+    caption: 'Expedia Group',
+
+    image: 'img/expedia_group_logo.png',
+    infoLink: 'https://www.expediagroup.com/',
+    pinned: true,
+  },
 ];
 
 const siteConfig = {
@@ -74,8 +81,8 @@ const siteConfig = {
   cleanUrl: true,
 
   // Open Graph and Twitter card images.
-  ogImage: 'img/undraw_online.svg',
-  twitterImage: 'img/undraw_tweetstorm.svg',
+  ogImage: 'img/mittens_logo.svg',
+  twitterImage: 'img/mittens_logo.svg',
 
   // For sites with a sizable amount of content, set collapsible to true.
   // Expand/collapse the links and subcategories under categories.
