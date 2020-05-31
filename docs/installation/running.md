@@ -94,39 +94,10 @@ Kubernetes does not natively support gRPC health checks.
 
 This leaves you with a couple of options which are documented [here](https://kubernetes.io/blog/2018/10/01/health-checking-grpc-servers-on-kubernetes/).
 
-## Notes about warm-up duration
+## Note about warm-up duration
 
-Be aware that setting **target-readiness-timeout-seconds** will change how long the warmup routine will run for.
-
-### Option 1: setting just -max-duration-seconds
-
-```
-"-server-probe-readiness-path": /ready
-"-max-duration-seconds": 90
-"-http-requests": someRequest
-"-http-requests": anotherRequest
-```
-
-With these configs the mittens container will start to call _/ready_.
+`-max-duration-seconds` includes the time needed for your application to start.
 Let's say that your application takes 30 seconds to start (ie, for _/ready_ to start returning 200).
 What happens is that after these initial 30 seconds, mittens will start but it will only run for 60 seconds. This is because we already spent 30 seconds waiting for the app to start.
-Note that during the warmup _someRequest_ and _anotherRequest_ will be called randomly and not in any particular order.
 
 If the application is not ready after 90 seconds, we skip the warmup routine.
-
-### Option 2: setting -max-duration-seconds and -target-readiness-timeout-seconds
-
-```
-"-server-probe-readiness-path": /ready
-"-max-duration-seconds": 90
-"-target-readiness-timeout-seconds": 60
-"-http-requests": someRequest
-"-http-requests": anotherRequest
-```
-
-With these configs the mittens container will start to call _/ready_.
-Let's say that your application takes 30 seconds to start (ie, for _/ready_ to start returning 200).
-What happens is that after these initial 30 seconds, the warmup will start but unlike the previous example, this time it will run for a full 90 seconds.
-Note that during the warmup _someRequest_ and _anotherRequest_ will be called randomly and not in any particular order.
-
-If the application is not ready after the defined 60 seconds, we skip the warmup routine.
