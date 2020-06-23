@@ -8,7 +8,7 @@
 [![Docker](https://img.shields.io/badge/docker-mittens-blue.svg)](https://hub.docker.com/r/expediagroup/mittens/)
 
 # Mittens
-Mittens is a tool that can be used to warm up an http application over REST or gRPC. A more detailed overview and the background of this project can be found in this blog post: [Mittens — Warming up Your Application](https://medium.com/expedia-group-tech/mittens-warming-up-your-application-f8dd244357b0).
+Mittens is a tool that can be used to warm up an http application over REST or gRPC. For a more detailed overview and the background behind this project you can read our [blogpost](https://medium.com/expedia-group-tech/mittens-warming-up-your-application-f8dd244357b0).
 
 ## Features
 
