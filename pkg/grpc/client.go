@@ -113,7 +113,7 @@ func (c *Client) SendRequest(serviceMethod string, message string, headers []str
 	return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: "grpc"}
 }
 
-// Close calling close on a client that has not established connection does not return an error
+// Close calling close on a client that has not established connection does not return an error.
 func (c Client) Close() error {
 	log.Print("Closing gRPC client connection")
 	return c.connClose()

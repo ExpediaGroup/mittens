@@ -42,9 +42,7 @@ type Target struct {
 }
 
 // NewTarget returns an instance of the target versus which mittens will run.
-func NewTarget(readinessHTTPClient whttp.Client, readinessGrpcClient grpc.Client, httpClient whttp.Client, grpcClient grpc.Client, options TargetOptions) (Target,
-	error) {
-
+func NewTarget(readinessHTTPClient whttp.Client, readinessGrpcClient grpc.Client, httpClient whttp.Client, grpcClient grpc.Client, options TargetOptions) Target {
 	t := Target{
 		readinessHTTPClient: readinessHTTPClient,
 		readinessGrpcClient: readinessGrpcClient,
@@ -52,7 +50,7 @@ func NewTarget(readinessHTTPClient whttp.Client, readinessGrpcClient grpc.Client
 		grpcClient:          grpcClient,
 		options:             options,
 	}
-	return t, nil
+	return t
 }
 
 // WaitForReadinessProbe sends health-check requests to the target and waits until it becomes ready.

@@ -56,16 +56,14 @@ func RunCmdRoot() {
 
 	if targetOptions, err := opts.GetWarmupTargetOptions(); err == nil {
 		requestsSentCounter := 0
-		if target, err := createTarget(targetOptions); err == nil {
-			if err := target.WaitForReadinessProbe(); err == nil {
-				wp := warmup.Warmup{Target: target, MaxDurationSeconds: opts.GetMaxDurationSeconds(), Concurrency: opts.GetConcurrency()}
-				runWarmup(wp, &requestsSentCounter)
-			} else {
-				log.Print("Target still not ready. Giving up! 🙁")
-			}
+		target := createTarget(targetOptions)
+		if err := target.WaitForReadinessProbe(); err == nil {
+			wp := warmup.Warmup{Target: target, MaxDurationSeconds: opts.GetMaxDurationSeconds(), Concurrency: opts.GetConcurrency()}
+			runWarmup(wp, &requestsSentCounter)
 		} else {
-			log.Print("Cannot create target. 🙁")
+			log.Print("Target still not ready. Giving up! 🙁")
 		}
+
 		postProcess(requestsSentCounter, probeServer)
 	}
 
@@ -97,7 +95,7 @@ func postProcess(requestsSentCounter int, probeServer *probe.Server) {
 	}
 }
 
-// runWarmup sends requests to the target using goroutines
+// runWarmup sends requests to the target using goroutines.
 func runWarmup(wp warmup.Warmup, requestsSentCounter *int) {
 	rand.Seed(time.Now().UnixNano()) // initialize seed only once to prevent deterministic/repeated calls every time we run
 
@@ -112,13 +110,13 @@ func runWarmup(wp warmup.Warmup, requestsSentCounter *int) {
 
 	var wg sync.WaitGroup
 	for i := 1; i <= opts.Concurrency; i++ {
-		log.Printf("Spawning new go routine for http requests")
+		log.Printf("Spawning new go routine for HTTP requests")
 		wg.Add(1)
 		go wp.HTTPWarmupWorker(&wg, httpRequests, opts.GetWarmupHTTPHeaders(), opts.RequestDelayMilliseconds, requestsSentCounter)
 	}
 
 	for i := 1; i <= opts.Concurrency; i++ {
-		log.Printf("Spawning new go routine for grpc requests")
+		log.Printf("Spawning new go routine for gRPC requests")
 		wg.Add(1)
 		go wp.GrpcWarmupWorker(&wg, grpcRequests, opts.GetWarmupGrpcHeaders(), opts.RequestDelayMilliseconds, requestsSentCounter)
 	}
@@ -126,19 +124,18 @@ func runWarmup(wp warmup.Warmup, requestsSentCounter *int) {
 	wg.Wait()
 }
 
-// createTarget creates the target versus which mittens will run
-func createTarget(targetOptions warmup.TargetOptions) (warmup.Target, error) {
-	target, err := warmup.NewTarget(
+// createTarget creates the target versus which mittens will run.
+func createTarget(targetOptions warmup.TargetOptions) warmup.Target {
+	return warmup.NewTarget(
 		opts.GetReadinessHTTPClient(),
 		opts.GetReadinessGrpcClient(),
 		opts.GetHTTPClient(),
 		opts.GetGrpcClient(),
 		targetOptions,
 	)
-	return target, err
 }
 
-// startServerProbe starts a web server that can be used for readiness and liveness checks
+// startServerProbe starts a web server that can be used for readiness and liveness checks.
 func startServerProbe(port int, livenessPath, readinessPath string) *probe.Server {
 
 	serverErr := make(chan struct{})

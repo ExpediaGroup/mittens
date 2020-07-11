@@ -25,7 +25,7 @@ import (
 	"time"
 )
 
-// Root stores all the flags
+// Root stores all the flags.
 type Root struct {
 	MaxDurationSeconds       int
 	Concurrency              int
@@ -43,7 +43,7 @@ func (r *Root) String() string {
 	return fmt.Sprintf("%+v", *r)
 }
 
-// InitFlags initialises all the flags
+// InitFlags initialises all the flags.
 func (r *Root) InitFlags() {
 	flag.IntVar(&r.MaxDurationSeconds, "max-duration-seconds", 60, "Max duration in seconds after which warm up will stop making requests")
 	flag.IntVar(&r.Concurrency, "concurrency", 2, "Number of concurrent requests for warm up")
@@ -88,7 +88,7 @@ func (r *Root) GetGrpcClient() grpc.Client {
 	return r.Target.getGrpcClient(r.MaxDurationSeconds)
 }
 
-// GetWarmupTargetOptions validates and returns any options that apply to the target
+// GetWarmupTargetOptions validates and returns any options that apply to the target.
 func (r *Root) GetWarmupTargetOptions() (warmup.TargetOptions, error) {
 	options := r.Target.getWarmupTargetOptions()
 	options.ReadinessTimeoutInSeconds = r.MaxDurationSeconds
@@ -148,7 +148,7 @@ func (r *Root) GetWarmupGrpcRequests() (chan grpc.Request, error) {
 	// create a goroutine that continuously adds requests to a channel for a maximum of MaxDurationSeconds
 	go func() {
 		if len(requests) == 0 {
-			log.Print("No grpc warm up requests specified")
+			log.Print("No gRPC warm up requests specified")
 			close(requestsChan)
 			return
 		}

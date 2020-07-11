@@ -22,14 +22,14 @@ import (
 	"time"
 )
 
-// Warmup holds any information needed for the workers to send requests
+// Warmup holds any information needed for the workers to send requests.
 type Warmup struct {
 	Target             Target
 	MaxDurationSeconds int
 	Concurrency        int
 }
 
-// HTTPWarmupWorker sends HTTP requests to the target using goroutines
+// HTTPWarmupWorker sends HTTP requests to the target using goroutines.
 func (w Warmup) HTTPWarmupWorker(wg *sync.WaitGroup, requests <-chan http.Request, headers map[string]string, requestDelayMilliseconds int, requestsSentCounter *int) {
 	for request := range requests {
 		time.Sleep(time.Duration(requestDelayMilliseconds) * time.Millisecond)
@@ -51,7 +51,7 @@ func (w Warmup) HTTPWarmupWorker(wg *sync.WaitGroup, requests <-chan http.Reques
 	wg.Done()
 }
 
-// GrpcWarmupWorker sends gRPC requests to the target using goroutines
+// GrpcWarmupWorker sends gRPC requests to the target using goroutines.
 func (w Warmup) GrpcWarmupWorker(wg *sync.WaitGroup, requests <-chan grpc.Request, headers []string, requestDelayMilliseconds int, requestsSentCounter *int) {
 	for request := range requests {
 		time.Sleep(time.Duration(requestDelayMilliseconds) * time.Millisecond)

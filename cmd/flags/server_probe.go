@@ -19,7 +19,7 @@ import (
 	"fmt"
 )
 
-// ServerProbe stores flags related to the file probe.
+// ServerProbe stores flags related to the server probe.
 type ServerProbe struct {
 	Enabled       bool
 	Port          int

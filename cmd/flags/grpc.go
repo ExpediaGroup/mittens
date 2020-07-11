@@ -21,7 +21,7 @@ import (
 	"mittens/pkg/grpc"
 )
 
-// Grpc stores flags related to gRPC requests
+// Grpc stores flags related to gRPC requests.
 type Grpc struct {
 	Headers  stringArray
 	Requests stringArray
@@ -36,7 +36,6 @@ func (g *Grpc) initFlags() {
 	flag.Var(&g.Requests, "grpc-requests", `gRPC request to be sent. Request is in '<service>/<method>[:message]' format. E.g. health/ping:{"key": "value"}`)
 }
 
-// Grpc stores flags related to gRPC requests
 func (g *Grpc) getWarmupGrpcHeaders() []string {
 	return g.Headers
 }

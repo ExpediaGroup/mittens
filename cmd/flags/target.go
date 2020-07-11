@@ -22,7 +22,7 @@ import (
 	"mittens/pkg/warmup"
 )
 
-// Target stores flags related to the target
+// Target stores flags related to the target.
 type Target struct {
 	HTTPHost                string
 	HTTPPort                int

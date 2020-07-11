@@ -32,7 +32,7 @@ var allowedHTTPMethods = map[string]interface{}{
 	"TRACE":   nil,
 }
 
-// HTTP stores flags related to HTTP requests
+// HTTP stores flags related to HTTP requests.
 type HTTP struct {
 	Headers  stringArray
 	Requests stringArray
