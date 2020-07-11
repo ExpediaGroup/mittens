@@ -19,6 +19,7 @@ import (
 	"fmt"
 )
 
+// ServerProbe stores flags related to the file probe.
 type ServerProbe struct {
 	Enabled       bool
 	Port          int
@@ -30,7 +31,7 @@ func (p *ServerProbe) String() string {
 	return fmt.Sprintf("%+v", *p)
 }
 
-func (p *ServerProbe) InitFlags() {
+func (p *ServerProbe) initFlags() {
 	flag.BoolVar(&p.Enabled, "server-probe-enabled", false, "If set to true runs a web server that exposes endpoints to be used as readiness/liveness probes")
 	flag.IntVar(&p.Port, "server-probe-port", 8000, "Port on which probe server is running")
 	flag.StringVar(&p.LivenessPath, "server-probe-liveness-path", "/alive", "Probe server endpoint used as liveness probe")

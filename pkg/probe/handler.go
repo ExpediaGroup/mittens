@@ -16,21 +16,23 @@ package probe
 
 import "net/http"
 
+// Handler stores the liveness and readiness values for the probes
 type Handler struct {
 	alive bool
 	ready bool
 }
 
-// sets liveness probe
+// isAlive sets the liveness probe
 func (h *Handler) isAlive(alive bool) {
 	h.alive = alive
 }
 
-// sets readiness probe
+// IsReady sets the readiness probe
 func (h *Handler) IsReady(ready bool) {
 	h.ready = ready
 }
 
+// aliveHandler returns 200 if the probe server is alive and 404 if it is not
 func (h *Handler) aliveHandler() func(http.ResponseWriter, *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -42,6 +44,7 @@ func (h *Handler) aliveHandler() func(http.ResponseWriter, *http.Request) {
 	}
 }
 
+// aliveHandler returns 200 if the probe server is ready and 404 if it is not
 func (h *Handler) readyHandler() func(http.ResponseWriter, *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {

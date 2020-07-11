@@ -27,7 +27,7 @@ import (
 	"time"
 )
 
-// Client is a wrapper for the httpClient which includes a host
+// Client is a wrapper for the HTTP Client which includes a host.
 type Client struct {
 	httpClient *http.Client
 	host       string
@@ -49,8 +49,8 @@ func NewClient(host string, insecure bool) Client {
 	return Client{httpClient: client, host: strings.TrimRight(host, "/")}
 }
 
-// Request sends an http request and wraps useful info into a Response object
-func (c Client) Request(method, path string, headers map[string]string, requestBody *string) response.Response {
+// SendRequest sends a request to the HTTP server and wraps useful information into a Response object.
+func (c Client) SendRequest(method, path string, headers map[string]string, requestBody *string) response.Response {
 	var body io.Reader
 	if requestBody != nil {
 		body = bytes.NewBufferString(*requestBody)

@@ -33,7 +33,7 @@ func TestRequestSuccess(t *testing.T) {
 
 	c := NewClient(server.URL, false)
 	reqBody := ""
-	resp := c.Request("GET", path, map[string]string{}, &reqBody)
+	resp := c.SendRequest("GET", path, map[string]string{}, &reqBody)
 	assert.Nil(t, resp.Err)
 }
 
@@ -45,7 +45,7 @@ func TestHttpError(t *testing.T) {
 
 	c := NewClient(server.URL, false)
 	reqBody := ""
-	resp := c.Request("GET", "/", map[string]string{}, &reqBody)
+	resp := c.SendRequest("GET", "/", map[string]string{}, &reqBody)
 	assert.Nil(t, resp.Err)
 	assert.Equal(t, resp.StatusCode, 400)
 }
@@ -53,6 +53,6 @@ func TestHttpError(t *testing.T) {
 func TestConnectionError(t *testing.T) {
 	c := NewClient("http://localhost:9999", false)
 	reqBody := ""
-	resp := c.Request("GET", "/potato", map[string]string{}, &reqBody)
+	resp := c.SendRequest("GET", "/potato", map[string]string{}, &reqBody)
 	assert.NotNil(t, resp.Err)
 }

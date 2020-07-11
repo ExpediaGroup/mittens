@@ -19,11 +19,13 @@ import (
 	"strings"
 )
 
+// Request represents a gRPC request.
 type Request struct {
 	ServiceMethod string
 	Message       string
 }
 
+// ToGrpcRequest parses a gRPC request which is in a string format and stores it in a struct.
 func ToGrpcRequest(requestFlag string) (Request, error) {
 
 	// service/method[:message]

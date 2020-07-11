@@ -27,7 +27,7 @@ import (
 
 func TestHttp_FlagToHttpRequest(t *testing.T) {
 	requestFlag := `post:/db:{"db": "true"}`
-	request, err := ToHttpRequest(requestFlag)
+	request, err := ToHTTPRequest(requestFlag)
 	require.NoError(t, err)
 
 	assert.Equal(t, http.MethodPost, request.Method)
@@ -37,7 +37,7 @@ func TestHttp_FlagToHttpRequest(t *testing.T) {
 
 func TestHttp_FlagWithoutBodyToHttpRequest(t *testing.T) {
 	requestFlag := `get:ping`
-	request, err := ToHttpRequest(requestFlag)
+	request, err := ToHTTPRequest(requestFlag)
 	require.NoError(t, err)
 
 	assert.Equal(t, http.MethodGet, request.Method)
@@ -47,7 +47,7 @@ func TestHttp_FlagWithoutBodyToHttpRequest(t *testing.T) {
 
 func TestHttp_DateInterpolation(t *testing.T) {
 	requestFlag := `post:/db_{$currentDate}:{"date": "{$currentDate|days+5,months+2,years-1}"}`
-	request, err := ToHttpRequest(requestFlag)
+	request, err := ToHTTPRequest(requestFlag)
 	require.NoError(t, err)
 
 	assert.Equal(t, http.MethodPost, request.Method)
@@ -59,13 +59,13 @@ func TestHttp_DateInterpolation(t *testing.T) {
 
 func TestHttp_FlagWithInvalidMethodToHttpRequest(t *testing.T) {
 	requestFlag := `hmm:/ping:all=true`
-	_, err := ToHttpRequest(requestFlag)
+	_, err := ToHTTPRequest(requestFlag)
 	require.Error(t, err)
 }
 
 func TestHttp_TimestampInterpolation(t *testing.T) {
 	requestFlag := `post:/path_{$currentTimestamp}:{"body": "{$currentTimestamp}"}`
-	request, err := ToHttpRequest(requestFlag)
+	request, err := ToHTTPRequest(requestFlag)
 	require.NoError(t, err)
 
 	assert.Equal(t, http.MethodPost, request.Method)
@@ -82,7 +82,7 @@ func TestHttp_TimestampInterpolation(t *testing.T) {
 
 func TestHttp_MultipleInterpolation(t *testing.T) {
 	requestFlag := `post:/path_{$range|min=1,max=2}_{$random|foo,bar}:{"body": "{$random|foo,bar} {$range|min=1,max=2}"}`
-	request, err := ToHttpRequest(requestFlag)
+	request, err := ToHTTPRequest(requestFlag)
 	require.NoError(t, err)
 
 	assert.Equal(t, http.MethodPost, request.Method)
@@ -99,7 +99,7 @@ func TestHttp_MultipleInterpolation(t *testing.T) {
 
 func TestHttp_RangeInterpolation(t *testing.T) {
 	requestFlag := `post:/path_{$range|min=1,max=2}:{"body": "{$range|min=1,max=2}"}`
-	request, err := ToHttpRequest(requestFlag)
+	request, err := ToHTTPRequest(requestFlag)
 	require.NoError(t, err)
 
 	assert.Equal(t, http.MethodPost, request.Method)
@@ -116,7 +116,7 @@ func TestHttp_RangeInterpolation(t *testing.T) {
 
 func TestHttp_InvalidRangeInterpolation(t *testing.T) {
 	requestFlag := `post:/path_{$range|min=2,max=1}:{"body": "{$range|min=2,max=1}"}`
-	request, err := ToHttpRequest(requestFlag)
+	request, err := ToHTTPRequest(requestFlag)
 	require.NoError(t, err)
 
 	assert.Equal(t, http.MethodPost, request.Method)
@@ -128,7 +128,7 @@ func TestHttp_InvalidRangeInterpolation(t *testing.T) {
 
 func TestHttp_RandomElementInterpolation(t *testing.T) {
 	requestFlag := `post:/path_{$random|fo-o,b_ar}:{"body": "{$random|fo-o,b_ar}"}`
-	request, err := ToHttpRequest(requestFlag)
+	request, err := ToHTTPRequest(requestFlag)
 	require.NoError(t, err)
 
 	assert.Equal(t, http.MethodPost, request.Method)

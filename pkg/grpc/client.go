@@ -31,6 +31,7 @@ import (
 	reflectpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 )
 
+// Client represents a gRPC client.
 type Client struct {
 	host             string
 	timeoutSeconds   int
@@ -41,10 +42,12 @@ type Client struct {
 	descriptorSource grpcurl.DescriptorSource
 }
 
+// NewClient returns a gRPC client.
 func NewClient(host string, insecure bool, timeoutSeconds int) Client {
 	return Client{host: host, timeoutSeconds: timeoutSeconds, grpcConnectOnce: new(sync.Once), insecure: insecure, connClose: func() error { return nil }}
 }
 
+// connect attempts to establish a connection with a gRPC server.
 func (c *Client) connect(headers []string) error {
 
 	dialTime := 10 * time.Second
@@ -57,28 +60,29 @@ func (c *Client) connect(headers []string) error {
 
 	dialOptions := []grpc.DialOption{grpc.WithBlock()}
 	if c.insecure {
-		log.Print("Grpc client insecure")
+		log.Print("gRPC client insecure")
 		dialOptions = append(dialOptions, grpc.WithInsecure())
 	}
 
-	log.Printf("Grpc client connecting to %s", c.host)
+	log.Printf("gRPC client connecting to %s", c.host)
 	conn, err := grpc.DialContext(connCtx, c.host, dialOptions...)
 	if err != nil {
-		return fmt.Errorf("Grpc dial: %v", err)
+		return fmt.Errorf("gRPC dial: %v", err)
 	}
 
 	reflectionClient := grpcreflect.NewClient(contextWithMetadata, reflectpb.NewServerReflectionClient(conn))
 	descriptorSource := grpcurl.DescriptorSourceFromServer(contextWithMetadata, reflectionClient)
 
-	log.Print("Grpc client connected")
+	log.Print("gRPC client connected")
 	c.conn = conn
 	c.connClose = func() error { cancel(); return conn.Close() }
 	c.descriptorSource = descriptorSource
 	return nil
 }
 
-// note that the message cannot be null. Even if there's no message to be sent you need to set it to an empty string.
-func (c *Client) Request(serviceMethod string, message string, headers []string) response.Response {
+// SendRequest sends a request to the gRPC server and wraps useful information into a Response object.
+// Note that the message cannot be null. Even if there is no message to be sent this needs to be set to an empty string.
+func (c *Client) SendRequest(serviceMethod string, message string, headers []string) response.Response {
 
 	var connErr error
 	c.grpcConnectOnce.Do(func() {
@@ -86,7 +90,7 @@ func (c *Client) Request(serviceMethod string, message string, headers []string)
 	})
 
 	if connErr != nil {
-		log.Printf("Grpc client connect: %v", connErr)
+		log.Printf("gRPC client connect: %v", connErr)
 		return response.Response{Duration: time.Duration(0), Err: connErr, Type: "grpc"}
 	}
 
@@ -109,8 +113,8 @@ func (c *Client) Request(serviceMethod string, message string, headers []string)
 	return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: "grpc"}
 }
 
-// Calling close on client that has not established connection does not return error
+// Close calling close on a client that has not established connection does not return an error
 func (c Client) Close() error {
-	log.Print("Closing grpc client connection")
+	log.Print("Closing gRPC client connection")
 	return c.connClose()
 }
