@@ -61,7 +61,7 @@ func RunCmdRoot() {
 			wp := warmup.Warmup{Target: target, MaxDurationSeconds: opts.GetMaxDurationSeconds(), Concurrency: opts.GetConcurrency()}
 			runWarmup(wp, &requestsSentCounter)
 		} else {
-			log.Print("Target still not ready. Giving up! 🙁")
+			log.Print("Target still not ready. Giving up!")
 		}
 
 		postProcess(requestsSentCounter, probeServer)
@@ -78,12 +78,12 @@ func RunCmdRoot() {
 // The latter only happens if mittens did not send any requests and the user allows the readiness to fail.
 func postProcess(requestsSentCounter int, probeServer *probe.Server) {
 	if opts.FailReadiness && requestsSentCounter == 0 {
-		log.Print("🛑 Warmup did not run. Mittens readiness probe will fail")
+		log.Print("🛑 Warmup did not run. Mittens readiness probe will fail 🙁")
 	} else {
 		if requestsSentCounter == 0 {
-			log.Print("🛑 Warm up finished but no requests were sent")
+			log.Print("🛑 Warm up finished but no requests were sent 🙁")
 		} else {
-			log.Printf("Warm up finished 😊 Aproximately %d reqs were sent", requestsSentCounter)
+			log.Printf("Warm up finished 😊 Approximately %d reqs were sent", requestsSentCounter)
 		}
 
 		if opts.ServerProbe.Enabled {
