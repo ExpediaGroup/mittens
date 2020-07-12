@@ -60,7 +60,7 @@ func (c *Client) connect(headers []string) error {
 
 	dialOptions := []grpc.DialOption{grpc.WithBlock()}
 	if c.insecure {
-		log.Print("gRPC client insecure")
+		log.Print("gRPC client: insecure")
 		dialOptions = append(dialOptions, grpc.WithInsecure())
 	}
 
@@ -83,7 +83,7 @@ func (c *Client) connect(headers []string) error {
 // SendRequest sends a request to the gRPC server and wraps useful information into a Response object.
 // Note that the message cannot be null. Even if there is no message to be sent this needs to be set to an empty string.
 func (c *Client) SendRequest(serviceMethod string, message string, headers []string) response.Response {
-
+	const respType = "grpc"
 	var connErr error
 	c.grpcConnectOnce.Do(func() {
 		connErr = c.connect(headers)
@@ -91,26 +91,26 @@ func (c *Client) SendRequest(serviceMethod string, message string, headers []str
 
 	if connErr != nil {
 		log.Printf("gRPC client connect: %v", connErr)
-		return response.Response{Duration: time.Duration(0), Err: connErr, Type: "grpc"}
+		return response.Response{Duration: time.Duration(0), Err: connErr, Type: respType}
 	}
 
 	in := bytes.NewBufferString(message)
 
 	// TODO - create generic parser and formatter for any request, can we use text parser/formatter?
-	requestParser, formatter, err := grpcurl.RequestParserAndFormatterFor(grpcurl.Format("json"), c.descriptorSource, false, false, in)
+	requestParser, formatter, err := grpcurl.RequestParserAndFormatterFor("json", c.descriptorSource, false, false, in)
 	if err != nil {
 		log.Printf("Cannot construct request parser and formatter for json")
 		// FIXME FATAL
-		return response.Response{Duration: time.Duration(0), Err: err, Type: "grpc"}
+		return response.Response{Duration: time.Duration(0), Err: err, Type: respType}
 	}
 	loggingEventHandler := grpcurl.NewDefaultEventHandler(os.Stdout, c.descriptorSource, formatter, false)
 	startTime := time.Now()
 	err = grpcurl.InvokeRPC(context.Background(), c.descriptorSource, c.conn, serviceMethod, headers, loggingEventHandler, requestParser.Next)
 	endTime := time.Now()
 	if err != nil {
-		return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: "grpc"}
+		return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: respType}
 	}
-	return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: "grpc"}
+	return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: respType}
 }
 
 // Close calling close on a client that has not established connection does not return an error.

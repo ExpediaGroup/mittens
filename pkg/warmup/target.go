@@ -71,7 +71,7 @@ func (t Target) WaitForReadinessProbe() error {
 			if t.options.ReadinessProtocol == "http" {
 				// error if error in the response or status code not in the 200 range
 				if resp := t.readinessHTTPClient.SendRequest(http.MethodGet, t.options.ReadinessHTTPPath, nil, nil); resp.Err != nil || resp.StatusCode/100 != 2 {
-					log.Printf("Target not ready yet...")
+					log.Printf("HTTP target not ready yet...")
 					continue
 				}
 			} else {
@@ -79,7 +79,7 @@ func (t Target) WaitForReadinessProbe() error {
 				if err == nil {
 					err1 := t.readinessGrpcClient.SendRequest(request.ServiceMethod, "", nil)
 					if err1.Err != nil {
-						log.Printf("Target not ready yet...")
+						log.Printf("gRPC target not ready yet...")
 						continue
 					}
 				}

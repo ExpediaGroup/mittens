@@ -41,7 +41,7 @@ func NewClient(host string, insecure bool) Client {
 	}
 
 	if insecure {
-		log.Printf("http client: insecure skip verify is set to true")
+		log.Printf("HTTP client: insecure")
 		client.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
@@ -51,6 +51,7 @@ func NewClient(host string, insecure bool) Client {
 
 // SendRequest sends a request to the HTTP server and wraps useful information into a Response object.
 func (c Client) SendRequest(method, path string, headers map[string]string, requestBody *string) response.Response {
+	const respType = "http"
 	var body io.Reader
 	if requestBody != nil {
 		body = bytes.NewBufferString(*requestBody)
@@ -61,7 +62,7 @@ func (c Client) SendRequest(method, path string, headers map[string]string, requ
 
 	if err != nil {
 		log.Printf("Failed to create request: %s %s: %v", method, url, err)
-		return response.Response{Duration: time.Duration(0), Err: err, Type: "http"}
+		return response.Response{Duration: time.Duration(0), Err: err, Type: respType}
 	}
 
 	for k, v := range headers {
@@ -75,12 +76,12 @@ func (c Client) SendRequest(method, path string, headers map[string]string, requ
 	resp, err := c.httpClient.Do(req)
 	endTime := time.Now()
 	if err != nil {
-		return response.Response{Duration: endTime.Sub(startTime), Err: err, Type: "http"}
+		return response.Response{Duration: endTime.Sub(startTime), Err: err, Type: respType}
 	}
 	defer resp.Body.Close()
 
 	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
-		return response.Response{Duration: endTime.Sub(startTime), Err: err, Type: "http", StatusCode: resp.StatusCode}
+		return response.Response{Duration: endTime.Sub(startTime), Err: err, Type: respType, StatusCode: resp.StatusCode}
 	}
-	return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: "http", StatusCode: resp.StatusCode}
+	return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: respType, StatusCode: resp.StatusCode}
 }

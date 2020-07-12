@@ -42,7 +42,7 @@ func (w Warmup) HTTPWarmupWorker(wg *sync.WaitGroup, requests <-chan http.Reques
 			*requestsSentCounter++
 
 			if resp.StatusCode/100 == 2 {
-				log.Printf("🟢 %s response for %s %d ms: %v", resp.Type, request.Path, resp.Duration/time.Millisecond, resp.StatusCode)
+				log.Printf("%s response for %s %d ms: %v", resp.Type, request.Path, resp.Duration/time.Millisecond, resp.StatusCode)
 			} else {
 				log.Printf("🔴 %s response for %s %d ms: %v", resp.Type, request.Path, resp.Duration/time.Millisecond, resp.StatusCode)
 			}
