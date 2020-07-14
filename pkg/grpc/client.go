@@ -31,6 +31,7 @@ import (
 	reflectpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 )
 
+// Client represents a gRPC client.
 type Client struct {
 	host             string
 	timeoutSeconds   int
@@ -41,10 +42,12 @@ type Client struct {
 	descriptorSource grpcurl.DescriptorSource
 }
 
+// NewClient returns a gRPC client.
 func NewClient(host string, insecure bool, timeoutSeconds int) Client {
 	return Client{host: host, timeoutSeconds: timeoutSeconds, grpcConnectOnce: new(sync.Once), insecure: insecure, connClose: func() error { return nil }}
 }
 
+// connect attempts to establish a connection with a gRPC server.
 func (c *Client) connect(headers []string) error {
 
 	dialTime := 10 * time.Second
@@ -57,60 +60,61 @@ func (c *Client) connect(headers []string) error {
 
 	dialOptions := []grpc.DialOption{grpc.WithBlock()}
 	if c.insecure {
-		log.Print("Grpc client insecure")
+		log.Print("gRPC client: insecure")
 		dialOptions = append(dialOptions, grpc.WithInsecure())
 	}
 
-	log.Printf("Grpc client connecting to %s", c.host)
+	log.Printf("gRPC client connecting to %s", c.host)
 	conn, err := grpc.DialContext(connCtx, c.host, dialOptions...)
 	if err != nil {
-		return fmt.Errorf("Grpc dial: %v", err)
+		return fmt.Errorf("gRPC dial: %v", err)
 	}
 
 	reflectionClient := grpcreflect.NewClient(contextWithMetadata, reflectpb.NewServerReflectionClient(conn))
 	descriptorSource := grpcurl.DescriptorSourceFromServer(contextWithMetadata, reflectionClient)
 
-	log.Print("Grpc client connected")
+	log.Print("gRPC client connected")
 	c.conn = conn
 	c.connClose = func() error { cancel(); return conn.Close() }
 	c.descriptorSource = descriptorSource
 	return nil
 }
 
-// note that the message cannot be null. Even if there's no message to be sent you need to set it to an empty string.
-func (c *Client) Request(serviceMethod string, message string, headers []string) response.Response {
-
+// SendRequest sends a request to the gRPC server and wraps useful information into a Response object.
+// Note that the message cannot be null. Even if there is no message to be sent this needs to be set to an empty string.
+func (c *Client) SendRequest(serviceMethod string, message string, headers []string) response.Response {
+	const respType = "grpc"
 	var connErr error
 	c.grpcConnectOnce.Do(func() {
 		connErr = c.connect(headers)
 	})
 
 	if connErr != nil {
-		log.Printf("Grpc client connect: %v", connErr)
-		return response.Response{Duration: time.Duration(0), Err: connErr, Type: "grpc"}
+		log.Printf("gRPC client connect: %v", connErr)
+		return response.Response{Duration: time.Duration(0), Err: connErr, Type: respType}
 	}
 
 	in := bytes.NewBufferString(message)
 
 	// TODO - create generic parser and formatter for any request, can we use text parser/formatter?
-	requestParser, formatter, err := grpcurl.RequestParserAndFormatterFor(grpcurl.Format("json"), c.descriptorSource, false, false, in)
+	requestParser, formatter, err := grpcurl.RequestParserAndFormatterFor("json", c.descriptorSource, false, false, in)
 	if err != nil {
 		log.Printf("Cannot construct request parser and formatter for json")
 		// FIXME FATAL
-		return response.Response{Duration: time.Duration(0), Err: err, Type: "grpc"}
+		return response.Response{Duration: time.Duration(0), Err: err, Type: respType}
 	}
 	loggingEventHandler := grpcurl.NewDefaultEventHandler(os.Stdout, c.descriptorSource, formatter, false)
 	startTime := time.Now()
 	err = grpcurl.InvokeRPC(context.Background(), c.descriptorSource, c.conn, serviceMethod, headers, loggingEventHandler, requestParser.Next)
 	endTime := time.Now()
 	if err != nil {
-		return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: "grpc"}
+		return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: respType}
 	}
-	return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: "grpc"}
+	return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: respType}
 }
 
-// Calling close on client that has not established connection does not return error
+// Close calling close on a client that has not established connection does not return an error.
 func (c Client) Close() error {
-	log.Print("Closing grpc client connection")
+	log.Print("Closing gRPC client connection")
 	return c.connClose()
 }

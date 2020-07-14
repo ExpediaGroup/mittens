@@ -19,6 +19,7 @@ import (
 	"fmt"
 )
 
+// FileProbe stores flags related to the file probe.
 type FileProbe struct {
 	Enabled       bool
 	LivenessPath  string
@@ -29,7 +30,7 @@ func (p *FileProbe) String() string {
 	return fmt.Sprintf("%+v", *p)
 }
 
-func (p *FileProbe) InitFlags() {
+func (p *FileProbe) initFlags() {
 	flag.BoolVar(&p.Enabled, "file-probe-enabled", true, "If set to true writes files to be used as readiness/liveness probes")
 	flag.StringVar(&p.LivenessPath, "file-probe-liveness-path", "alive", "File to be used for liveness probe")
 	flag.StringVar(&p.ReadinessPath, "file-probe-readiness-path", "ready", "File to be used for readiness probe")

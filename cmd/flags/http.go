@@ -20,7 +20,7 @@ import (
 	"mittens/pkg/http"
 )
 
-var allowedHttpMethods = map[string]interface{}{
+var allowedHTTPMethods = map[string]interface{}{
 	"GET":     nil,
 	"HEAD":    nil,
 	"POST":    nil,
@@ -32,32 +32,33 @@ var allowedHttpMethods = map[string]interface{}{
 	"TRACE":   nil,
 }
 
-type Http struct {
+// HTTP stores flags related to HTTP requests.
+type HTTP struct {
 	Headers  stringArray
 	Requests stringArray
 }
 
-func (h *Http) String() string {
+func (h *HTTP) String() string {
 	return fmt.Sprintf("%+v", *h)
 }
 
-func (h *Http) InitFlags() {
-	flag.Var(&h.Headers, "http-headers", "Http header to be sent with warm up requests.")
-	flag.Var(&h.Requests, "http-requests", `Http request to be sent. Request is in '<http-method>:<path>[:body]' format. E.g. post:/ping:{"key":"value"}`)
+func (h *HTTP) initFlags() {
+	flag.Var(&h.Headers, "http-headers", "HTTP header to be sent with warm up requests.")
+	flag.Var(&h.Requests, "http-requests", `HTTP request to be sent. Request is in '<http-method>:<path>[:body]' format. E.g. post:/ping:{"key":"value"}`)
 }
 
-func (h *Http) GetWarmupHttpHeaders() map[string]string {
+func (h *HTTP) getWarmupHTTPHeaders() map[string]string {
 	return toHeaders(h.Headers)
 }
 
-func (h *Http) GetWarmupHttpRequests() ([]http.Request, error) {
-	return toHttpRequests(h.Requests)
+func (h *HTTP) getWarmupHTTPRequests() ([]http.Request, error) {
+	return toHTTPRequests(h.Requests)
 }
 
-func toHttpRequests(requestsFlag []string) ([]http.Request, error) {
+func toHTTPRequests(requestsFlag []string) ([]http.Request, error) {
 	var requests []http.Request
 	for _, requestFlag := range requestsFlag {
-		request, err := http.ToHttpRequest(requestFlag)
+		request, err := http.ToHTTPRequest(requestFlag)
 		if err != nil {
 			return nil, err
 		}

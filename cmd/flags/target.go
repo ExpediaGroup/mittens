@@ -22,13 +22,14 @@ import (
 	"mittens/pkg/warmup"
 )
 
+// Target stores flags related to the target.
 type Target struct {
-	HttpHost                string
-	HttpPort                int
+	HTTPHost                string
+	HTTPPort                int
 	GrpcHost                string
 	GrpcPort                int
 	ReadinessProtocol       string
-	ReadinessHttpPath       string
+	ReadinessHTTPPath       string
 	ReadinessGrpcMethod     string
 	ReadinessPort           int
 	ReadinessTimeoutSeconds int
@@ -39,49 +40,48 @@ func (t *Target) String() string {
 	return fmt.Sprintf("%+v", *t)
 }
 
-func (t *Target) InitFlags() {
-	flag.StringVar(&t.HttpHost, "target-http-host", "http://localhost", "Http host to warm up")
-	flag.IntVar(&t.HttpPort, "target-http-port", 8080, "Http port for warm up requests")
+func (t *Target) initFlags() {
+	flag.StringVar(&t.HTTPHost, "target-http-host", "http://localhost", "HTTP host to warm up")
+	flag.IntVar(&t.HTTPPort, "target-http-port", 8080, "HTTP port for warm up requests")
 	flag.StringVar(&t.GrpcHost, "target-grpc-host", "localhost", "Grpc host to warm up")
 	flag.IntVar(&t.GrpcPort, "target-grpc-port", 50051, "Grpc port for warm up requests")
 	flag.StringVar(&t.ReadinessProtocol, "target-readiness-protocol", "http", "Protocol to be used for readiness check. One of [http, grpc]")
-	flag.StringVar(&t.ReadinessHttpPath, "target-readiness-http-path", "/ready", "The path used for HTTP target readiness probe")
+	flag.StringVar(&t.ReadinessHTTPPath, "target-readiness-http-path", "/ready", "The path used for HTTP target readiness probe")
 	flag.StringVar(&t.ReadinessGrpcMethod, "target-readiness-grpc-method", "grpc.health.v1.Health/Check", "The service method used for gRPC target readiness probe")
-	flag.IntVar(&t.ReadinessPort, "target-readiness-port", toIntOrDefaultIfNull(&t.HttpPort, 8080), "The port used for target readiness probe")
+	flag.IntVar(&t.ReadinessPort, "target-readiness-port", toIntOrDefaultIfNull(&t.HTTPPort, 8080), "The port used for target readiness probe")
 	flag.BoolVar(&t.Insecure, "target-insecure", false, "Whether to skip TLS validation")
 }
 
 func toIntOrDefaultIfNull(value *int, defaultValue int) int {
 	if value == nil {
 		return defaultValue
-	} else {
-		return *value
 	}
+	return *value
 }
 
-func (t *Target) GetWarmupTargetOptions() warmup.TargetOptions {
+func (t *Target) getWarmupTargetOptions() warmup.TargetOptions {
 
 	return warmup.TargetOptions{
 		ReadinessProtocol:         t.ReadinessProtocol,
-		ReadinessHttpPath:         t.ReadinessHttpPath,
+		ReadinessHTTPPath:         t.ReadinessHTTPPath,
 		ReadinessGrpcMethod:       t.ReadinessGrpcMethod,
 		ReadinessPort:             t.ReadinessPort,
 		ReadinessTimeoutInSeconds: t.ReadinessTimeoutSeconds,
 	}
 }
 
-func (t *Target) GetReadinessHttpClient() http.Client {
-	return http.NewClient(fmt.Sprintf("%s:%d", t.HttpHost, t.ReadinessPort), t.Insecure)
+func (t *Target) getReadinessHTTPClient() http.Client {
+	return http.NewClient(fmt.Sprintf("%s:%d", t.HTTPHost, t.ReadinessPort), t.Insecure)
 }
 
-func (t *Target) GetReadinessGrpcClient() grpc.Client {
+func (t *Target) getReadinessGrpcClient() grpc.Client {
 	return grpc.NewClient(fmt.Sprintf("%s:%d", t.GrpcHost, t.ReadinessPort), t.Insecure, t.ReadinessTimeoutSeconds)
 }
 
-func (t *Target) GetHttpClient() http.Client {
-	return http.NewClient(fmt.Sprintf("%s:%d", t.HttpHost, t.HttpPort), t.Insecure)
+func (t *Target) getHTTPClient() http.Client {
+	return http.NewClient(fmt.Sprintf("%s:%d", t.HTTPHost, t.HTTPPort), t.Insecure)
 }
 
-func (t *Target) GetGrpcClient(timeoutSeconds int) grpc.Client {
+func (t *Target) getGrpcClient(timeoutSeconds int) grpc.Client {
 	return grpc.NewClient(fmt.Sprintf("%s:%d", t.GrpcHost, t.GrpcPort), t.Insecure, timeoutSeconds)
 }

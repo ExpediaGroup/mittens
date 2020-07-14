@@ -27,7 +27,7 @@ func TestHttp_ToHttpRequests(t *testing.T) {
 		"get:/ping",
 	}
 
-	requests, err := toHttpRequests(requestFlags)
+	requests, err := toHTTPRequests(requestFlags)
 	require.NoError(t, err)
 
 	require.Equal(t, 2, len(requests))

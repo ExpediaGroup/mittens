@@ -24,13 +24,14 @@ import (
 	"time"
 )
 
+// Request represents an HTTP request.
 type Request struct {
 	Method string
 	Path   string
 	Body   *string
 }
 
-var allowedHttpMethods = map[string]interface{}{
+var allowedHTTPMethods = map[string]interface{}{
 	"GET":     nil,
 	"HEAD":    nil,
 	"POST":    nil,
@@ -42,19 +43,21 @@ var allowedHttpMethods = map[string]interface{}{
 	"TRACE":   nil,
 }
 
-var templatePlaceholderRegex = regexp.MustCompile("{\\$(\\w+(?:[\\|(?:[\\w+-=,]+)]*)}") // anything that starts with {$ followed by any word character and optinally followed by a modifier identifier | and the modifiers that can contain word chars + - = and ,
+// anything that starts with {$, followed by any word character, and optionally followed by a modifier identifier | and the modifiers that can contain word chars + - = and ,
+var templatePlaceholderRegex = regexp.MustCompile("{\\$(\\w+(?:[\\|(?:[\\w+-=,]+)]*)}")
 var templateRangeRegex = regexp.MustCompile("{\\$range\\|min=(?P<Min>\\d+),max=(?P<Max>\\d+)}")
 var templateElementsRegex = regexp.MustCompile("{\\$random\\|(?P<Elements>[,\\w-]+)}")
-var templateDatesRegex = regexp.MustCompile("{\\$currentDate(?:\\|(?:days(?P<Days>[+-]\\d+))*(?:[,]*months(?P<Months>[+-]\\d+))*(?:[,]*years(?P<Years>[+-]\\d+))*)*}") // we did it \o/ 100+ chars regex
+var templateDatesRegex = regexp.MustCompile("{\\$currentDate(?:\\|(?:days(?P<Days>[+-]\\d+))*(?:[,]*months(?P<Months>[+-]\\d+))*(?:[,]*years(?P<Years>[+-]\\d+))*)*}")
 
-func ToHttpRequest(requestString string) (Request, error) {
+// ToHTTPRequest parses an HTTP request which is in a string format and stores it in a struct.
+func ToHTTPRequest(requestString string) (Request, error) {
 	parts := strings.SplitN(requestString, ":", 3)
 	if len(parts) < 2 {
 		return Request{}, fmt.Errorf("invalid request flag: %s, expected format <http-method>:<path>[:body]", requestString)
 	}
 
 	method := strings.ToUpper(parts[0])
-	_, ok := allowedHttpMethods[method]
+	_, ok := allowedHTTPMethods[method]
 	if !ok {
 		return Request{}, fmt.Errorf("invalid request flag: %s, method %s is not supported", requestString, method)
 	}
@@ -80,6 +83,7 @@ func ToHttpRequest(requestString string) (Request, error) {
 	}, nil
 }
 
+// dateElements replaces date placeholders with the actual dates. It supports offsets for days, months, and years.
 func dateElements(source string) string {
 	r := templateDatesRegex.FindStringSubmatch(source)
 
@@ -98,12 +102,14 @@ func dateElements(source string) string {
 	return time.Now().AddDate(offsetYears, offsetMonths, offsetDays).Format("2006-01-02")
 }
 
+// timestampElements returns the current time from Unix epoch in milliseconds.
 func timestampElements() string {
 	epoch := time.Now().UnixNano() / 1000000
 
 	return strconv.FormatInt(epoch, 10)
 }
 
+// randomElements replaces random element placeholders with elements which are randomly selected from the provided list.
 func randomElements(source string) string {
 	r := templateElementsRegex.FindStringSubmatch(source)
 
@@ -117,6 +123,7 @@ func randomElements(source string) string {
 	return s[number]
 }
 
+// rangeElements replaces range element placeholders with random integers within the specified range.
 func rangeElements(source string) string {
 	r := templateRangeRegex.FindStringSubmatch(source)
 	if r == nil {
@@ -136,6 +143,8 @@ func rangeElements(source string) string {
 	return strconv.Itoa(number)
 }
 
+// interpolatePlaceholders scans a string and replaces placeholders with actual values.
+// At the moment this supports; dates, timestamps, random values from a list, and random integers.
 func interpolatePlaceholders(source string) string {
 	return templatePlaceholderRegex.ReplaceAllStringFunc(source, func(templateString string) string {
 
