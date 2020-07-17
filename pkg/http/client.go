@@ -27,21 +27,21 @@ import (
 	"time"
 )
 
-// Client is a wrapper for the httpClient which includes a host
+// Client is a wrapper for the HTTP Client which includes a host.
 type Client struct {
 	httpClient *http.Client
 	host       string
 }
 
-// NewClient creates a new client for a given host. if insecure is true,
-// client won't verify the server's certificate chain and host name
+// NewClient creates a new HTTP client for a given host.
+// If insecure is true, the client will not verify the server's certificate chain and host name.
 func NewClient(host string, insecure bool) Client {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
 
 	if insecure {
-		log.Printf("http client: insecure skip verify is set to true")
+		log.Printf("HTTP client: insecure")
 		client.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
@@ -49,8 +49,9 @@ func NewClient(host string, insecure bool) Client {
 	return Client{httpClient: client, host: strings.TrimRight(host, "/")}
 }
 
-// Request sends an http request and wraps useful info into a Response object
-func (c Client) Request(method, path string, headers map[string]string, requestBody *string) response.Response {
+// SendRequest sends a request to the HTTP server and wraps useful information into a Response object.
+func (c Client) SendRequest(method, path string, headers map[string]string, requestBody *string) response.Response {
+	const respType = "http"
 	var body io.Reader
 	if requestBody != nil {
 		body = bytes.NewBufferString(*requestBody)
@@ -61,7 +62,7 @@ func (c Client) Request(method, path string, headers map[string]string, requestB
 
 	if err != nil {
 		log.Printf("Failed to create request: %s %s: %v", method, url, err)
-		return response.Response{Duration: time.Duration(0), Err: err, Type: "http"}
+		return response.Response{Duration: time.Duration(0), Err: err, Type: respType}
 	}
 
 	for k, v := range headers {
@@ -75,12 +76,12 @@ func (c Client) Request(method, path string, headers map[string]string, requestB
 	resp, err := c.httpClient.Do(req)
 	endTime := time.Now()
 	if err != nil {
-		return response.Response{Duration: endTime.Sub(startTime), Err: err, Type: "http"}
+		return response.Response{Duration: endTime.Sub(startTime), Err: err, Type: respType}
 	}
 	defer resp.Body.Close()
 
 	if _, err = io.Copy(ioutil.Discard, resp.Body); err != nil {
-		return response.Response{Duration: endTime.Sub(startTime), Err: err, Type: "http", StatusCode: resp.StatusCode}
+		return response.Response{Duration: endTime.Sub(startTime), Err: err, Type: respType, StatusCode: resp.StatusCode}
 	}
-	return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: "http", StatusCode: resp.StatusCode}
+	return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: respType, StatusCode: resp.StatusCode}
 }

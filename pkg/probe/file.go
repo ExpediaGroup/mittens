@@ -21,7 +21,7 @@ import (
 	"log"
 )
 
-// Writes dummy content to a file. This file can be used as a liveness/readiness check in Kubernetes.
+// WriteFile writes sample content to a file. This file can be used as a liveness/readiness check e.g. in Kubernetes.
 func WriteFile(file string) {
 	log.Printf("Writing file: %s", file)
 

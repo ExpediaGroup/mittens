@@ -59,10 +59,10 @@ func TestShouldBeReadyRegardlessIfWarmupRan(t *testing.T) {
 
 	assert.Equal(t, true, opts.FileProbe.Enabled)
 	assert.Equal(t, false, opts.ServerProbe.Enabled)
-	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/non-existent"})
+	assert.ElementsMatch(t, opts.HTTP.Requests, []string{"get:/non-existent"})
 	assert.Equal(t, 2, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
-	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
+	assert.Equal(t, "/health", opts.Target.ReadinessHTTPPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
 
 	readyFileExists, err := fileExists("ready")
@@ -88,10 +88,10 @@ func TestWarmupSidecarWithFileProbe(t *testing.T) {
 
 	assert.Equal(t, true, opts.FileProbe.Enabled)
 	assert.Equal(t, false, opts.ServerProbe.Enabled)
-	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/delay"})
+	assert.ElementsMatch(t, opts.HTTP.Requests, []string{"get:/delay"})
 	assert.Equal(t, 2, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
-	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
+	assert.Equal(t, "/health", opts.Target.ReadinessHTTPPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
 
 	readyFileExists, err := fileExists("ready")
@@ -117,10 +117,10 @@ func TestWarmupSidecarWithServerProbe(t *testing.T) {
 
 	assert.Equal(t, true, opts.FileProbe.Enabled)
 	assert.Equal(t, true, opts.ServerProbe.Enabled)
-	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/delay"})
+	assert.ElementsMatch(t, opts.HTTP.Requests, []string{"get:/delay"})
 	assert.Equal(t, 2, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
-	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
+	assert.Equal(t, "/health", opts.Target.ReadinessHTTPPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
 
 	readyFileExists, err := fileExists("ready")
@@ -147,9 +147,9 @@ func TestWarmupFailReadinessIfTargetIsNeverReady(t *testing.T) {
 	RunCmdRoot()
 
 	assert.Equal(t, true, opts.FileProbe.Enabled)
-	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/delay"})
+	assert.ElementsMatch(t, opts.HTTP.Requests, []string{"get:/delay"})
 	assert.Equal(t, true, opts.ExitAfterWarmup)
-	assert.Equal(t, "/non-existent", opts.Target.ReadinessHttpPath)
+	assert.Equal(t, "/non-existent", opts.Target.ReadinessHTTPPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
 	assert.Equal(t, true, opts.FailReadiness)
 
@@ -177,9 +177,9 @@ func TestWarmupFailReadinessIfNoRequestsAreSentToTarget(t *testing.T) {
 	RunCmdRoot()
 
 	assert.Equal(t, true, opts.FileProbe.Enabled)
-	assert.ElementsMatch(t, opts.Http.Requests, []string{"get:/delay"})
+	assert.ElementsMatch(t, opts.HTTP.Requests, []string{"get:/delay"})
 	assert.Equal(t, true, opts.ExitAfterWarmup)
-	assert.Equal(t, "/health", opts.Target.ReadinessHttpPath)
+	assert.Equal(t, "/health", opts.Target.ReadinessHTTPPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
 	assert.Equal(t, true, opts.FailReadiness)
 

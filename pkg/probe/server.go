@@ -22,12 +22,13 @@ import (
 	"time"
 )
 
-// Http server with addition 'IsAlive' and 'IsReady' methods
+// Server represents an HTTP server with liveness and readiness probes.
 type Server struct {
 	*Handler
 	httpServer *http.Server
 }
 
+// NewServer creates a Server instance with liveness and readiness handlers.
 func NewServer(port int, livenessPath, readinessPath string) *Server {
 
 	handler := new(Handler)
@@ -46,15 +47,15 @@ func NewServer(port int, livenessPath, readinessPath string) *Server {
 	}
 }
 
+// ListenAndServe starts the probe server and enables the liveness probe.
 func (s *Server) ListenAndServe() error {
-
 	s.isAlive(true)
 	log.Print("Starting probe server")
 	return s.httpServer.ListenAndServe()
 }
 
+// Shutdown gracefully shuts down the probe server and disables the liveness and readiness probes.
 func (s *Server) Shutdown() {
-
 	s.IsReady(false)
 	s.isAlive(false)
 	log.Print("Shutting down probe server")
@@ -63,8 +64,8 @@ func (s *Server) Shutdown() {
 	}
 }
 
+// newServer returns an HTTP server.
 func newServer(port int, handler http.Handler) *http.Server {
-
 	return &http.Server{
 		Addr:           fmt.Sprintf(":%d", port),
 		Handler:        handler,

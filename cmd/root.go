@@ -30,6 +30,7 @@ import (
 
 var opts *flags.Root
 
+// CreateConfig creates a flag set and parses the command line arguments.
 func CreateConfig() {
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	opts = &flags.Root{}
@@ -37,11 +38,12 @@ func CreateConfig() {
 	flag.Parse()
 }
 
+// RunCmdRoot runs the main logic.
 func RunCmdRoot() {
 	var probeServer *probe.Server
 
 	if opts.ServerProbe.Enabled {
-		probeServer = start(
+		probeServer = startServerProbe(
 			opts.ServerProbe.Port,
 			opts.ServerProbe.LivenessPath,
 			opts.ServerProbe.ReadinessPath,
@@ -52,33 +54,17 @@ func RunCmdRoot() {
 		probe.WriteFile(opts.FileProbe.LivenessPath)
 	}
 
-	targetOptions, err := opts.GetWarmupTargetOptions()
-	requestsSentCounter := 0
-
-	if err == nil {
-		wp, err1 := createWarmup(targetOptions)
-		if err1 == nil {
+	if targetOptions, err := opts.GetWarmupTargetOptions(); err == nil {
+		requestsSentCounter := 0
+		target := createTarget(targetOptions)
+		if err := target.WaitForReadinessProbe(); err == nil {
+			wp := warmup.Warmup{Target: target, MaxDurationSeconds: opts.GetMaxDurationSeconds(), Concurrency: opts.GetConcurrency()}
 			runWarmup(wp, &requestsSentCounter)
 		} else {
-			log.Print("Target still not ready. Giving up! No requests were sent 🙁")
+			log.Print("Target still not ready. Giving up!")
 		}
 
-		if opts.FailReadiness && requestsSentCounter == 0 {
-			log.Print("🛑 Warmup did not run. Mittens readiness probe will fail")
-		} else {
-			if requestsSentCounter == 0 {
-				log.Print("🛑 Warm up finished but no requests were sent")
-			} else {
-				log.Printf("Warm up finished 😊 Aproximately %d reqs were sent", requestsSentCounter)
-			}
-
-			if opts.ServerProbe.Enabled {
-				probeServer.IsReady(true)
-			}
-			if opts.FileProbe.Enabled {
-				probe.WriteFile(opts.FileProbe.ReadinessPath)
-			}
-		}
+		postProcess(requestsSentCounter, probeServer)
 	}
 
 	// Block forever if we don't want to wait after the warmup finishes
@@ -87,15 +73,36 @@ func RunCmdRoot() {
 	}
 }
 
+// postProcess includes steps that run once the warmup finishes.
+// For now this either announces that the app is ready or fails the readiness probe.
+// The latter only happens if mittens did not send any requests and the user allows the readiness to fail.
+func postProcess(requestsSentCounter int, probeServer *probe.Server) {
+	if opts.FailReadiness && requestsSentCounter == 0 {
+		log.Print("🛑 Warmup did not run. Mittens readiness probe will fail 🙁")
+	} else {
+		if requestsSentCounter == 0 {
+			log.Print("🛑 Warm up finished but no requests were sent 🙁")
+		} else {
+			log.Printf("Warm up finished 😊 Approximately %d reqs were sent", requestsSentCounter)
+		}
+
+		if opts.ServerProbe.Enabled {
+			probeServer.IsReady(true)
+		}
+		if opts.FileProbe.Enabled {
+			probe.WriteFile(opts.FileProbe.ReadinessPath)
+		}
+	}
+}
+
+// runWarmup sends requests to the target using goroutines.
 func runWarmup(wp warmup.Warmup, requestsSentCounter *int) {
 	rand.Seed(time.Now().UnixNano()) // initialize seed only once to prevent deterministic/repeated calls every time we run
 
-	httpHeaders := opts.GetWarmupHttpHeaders()
-	httpRequests, err := opts.GetWarmupHttpRequests()
+	httpRequests, err := opts.GetWarmupHTTPRequests()
 	if err != nil {
-		log.Printf("Http options: %v", err)
+		log.Printf("HTTP options: %v", err)
 	}
-	grpcHeaders := opts.GetWarmupGrpcHeaders()
 	grpcRequests, err := opts.GetWarmupGrpcRequests()
 	if err != nil {
 		log.Printf("Grpc options: %v", err)
@@ -103,40 +110,39 @@ func runWarmup(wp warmup.Warmup, requestsSentCounter *int) {
 
 	var wg sync.WaitGroup
 	for i := 1; i <= opts.Concurrency; i++ {
-		log.Printf("Spawning new go routine for http requests")
+		log.Printf("Spawning new go routine for HTTP requests")
 		wg.Add(1)
-		go wp.HttpWarmupWorker(&wg, httpRequests, httpHeaders, opts.RequestDelayMilliseconds, requestsSentCounter)
+		go wp.HTTPWarmupWorker(&wg, httpRequests, opts.GetWarmupHTTPHeaders(), opts.RequestDelayMilliseconds, requestsSentCounter)
 	}
 
 	for i := 1; i <= opts.Concurrency; i++ {
-		log.Printf("Spawning new go routine for grpc requests")
+		log.Printf("Spawning new go routine for gRPC requests")
 		wg.Add(1)
-		go wp.GrpcWarmupWorker(&wg, grpcHeaders, grpcRequests, opts.RequestDelayMilliseconds, requestsSentCounter)
+		go wp.GrpcWarmupWorker(&wg, grpcRequests, opts.GetWarmupGrpcHeaders(), opts.RequestDelayMilliseconds, requestsSentCounter)
 	}
 
 	wg.Wait()
 }
 
-// TODO: this is doing too many things including waiting for target to become ready. split into smaller blocks.
-func createWarmup(targetOptions warmup.TargetOptions) (warmup.Warmup, error) {
-	wp, err := warmup.NewWarmup(
-		opts.GetReadinessHttpClient(),
+// createTarget creates the target versus which mittens will run.
+func createTarget(targetOptions warmup.TargetOptions) warmup.Target {
+	return warmup.NewTarget(
+		opts.GetReadinessHTTPClient(),
 		opts.GetReadinessGrpcClient(),
-		opts.GetHttpClient(),
+		opts.GetHTTPClient(),
 		opts.GetGrpcClient(),
-		opts.GetWarmupOptions(),
 		targetOptions,
 	)
-	return wp, err
 }
 
-func start(port int, livenessPath, readinessPath string) *probe.Server {
+// startServerProbe starts a web server that can be used for readiness and liveness checks.
+func startServerProbe(port int, livenessPath, readinessPath string) *probe.Server {
 
 	serverErr := make(chan struct{})
 	probeServer := probe.NewServer(port, livenessPath, readinessPath)
 	go func() {
 		if err := probeServer.ListenAndServe(); err != nil {
-			if err.Error() != "Http: Server closed" {
+			if err.Error() != "HTTP: Server closed" {
 				log.Printf("Probe server: %v", err)
 				close(serverErr)
 			}

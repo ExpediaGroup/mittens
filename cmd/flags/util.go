@@ -19,6 +19,7 @@ import (
 	"strings"
 )
 
+// toHeaders converts the headers from the format these are passed by the user to a map.
 func toHeaders(headersFlag []string) map[string]string {
 
 	headers := make(map[string]string)

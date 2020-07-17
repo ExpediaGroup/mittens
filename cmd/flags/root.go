@@ -25,6 +25,7 @@ import (
 	"time"
 )
 
+// Root stores all the flags.
 type Root struct {
 	MaxDurationSeconds       int
 	Concurrency              int
@@ -34,7 +35,7 @@ type Root struct {
 	FileProbe
 	ServerProbe
 	Target
-	Http
+	HTTP
 	Grpc
 }
 
@@ -42,6 +43,7 @@ func (r *Root) String() string {
 	return fmt.Sprintf("%+v", *r)
 }
 
+// InitFlags initialises all the flags.
 func (r *Root) InitFlags() {
 	flag.IntVar(&r.MaxDurationSeconds, "max-duration-seconds", 60, "Max duration in seconds after which warm up will stop making requests")
 	flag.IntVar(&r.Concurrency, "concurrency", 2, "Number of concurrent requests for warm up")
@@ -49,40 +51,46 @@ func (r *Root) InitFlags() {
 	flag.BoolVar(&r.ExitAfterWarmup, "exit-after-warmup", false, "If warm up process should finish after completion. This is useful to prevent container restarts.")
 	flag.BoolVar(&r.FailReadiness, "fail-readiness", false, "If set to true readiness will fail if no requests were sent.")
 
-	r.FileProbe.InitFlags()
-	r.ServerProbe.InitFlags()
-	r.Target.InitFlags()
-	r.Http.InitFlags()
-	r.Grpc.InitFlags()
+	r.FileProbe.initFlags()
+	r.ServerProbe.initFlags()
+	r.Target.initFlags()
+	r.HTTP.initFlags()
+	r.Grpc.initFlags()
 }
 
-func (r *Root) GetWarmupOptions() warmup.Options {
-
-	return warmup.Options{
-		MaxDurationSeconds: r.MaxDurationSeconds,
-		Concurrency:        r.Concurrency,
-	}
+// GetMaxDurationSeconds returns the value of the max-duration-seconds parameter.
+func (r *Root) GetMaxDurationSeconds() int {
+	return r.MaxDurationSeconds
 }
 
-func (r *Root) GetReadinessHttpClient() http.Client {
-	return r.Target.GetReadinessHttpClient()
+// GetConcurrency returns the value of the concurrency parameter.
+func (r *Root) GetConcurrency() int {
+	return r.Concurrency
 }
 
+// GetReadinessHTTPClient creates the HTTP client to be used for the readiness requests.
+func (r *Root) GetReadinessHTTPClient() http.Client {
+	return r.Target.getReadinessHTTPClient()
+}
+
+// GetReadinessGrpcClient creates the gRPC client to be used for the readiness requests.
 func (r *Root) GetReadinessGrpcClient() grpc.Client {
-	return r.Target.GetReadinessGrpcClient()
+	return r.Target.getReadinessGrpcClient()
 }
 
-func (r *Root) GetHttpClient() http.Client {
-	return r.Target.GetHttpClient()
+// GetHTTPClient creates the HTTP client to be used for the actual requests.
+func (r *Root) GetHTTPClient() http.Client {
+	return r.Target.getHTTPClient()
 }
 
+// GetGrpcClient creates the gRPC client to be used for the actual requests.
 func (r *Root) GetGrpcClient() grpc.Client {
-	return r.Target.GetGrpcClient(r.MaxDurationSeconds)
+	return r.Target.getGrpcClient(r.MaxDurationSeconds)
 }
 
+// GetWarmupTargetOptions validates and returns any options that apply to the target.
 func (r *Root) GetWarmupTargetOptions() (warmup.TargetOptions, error) {
-
-	options := r.Target.GetWarmupTargetOptions()
+	options := r.Target.getWarmupTargetOptions()
 	options.ReadinessTimeoutInSeconds = r.MaxDurationSeconds
 	if options.ReadinessProtocol != "http" && options.ReadinessProtocol != "grpc" {
 		err := fmt.Errorf("Readiness protocol %s not supported, please use http or grpc", r.ReadinessProtocol)
@@ -91,12 +99,14 @@ func (r *Root) GetWarmupTargetOptions() (warmup.TargetOptions, error) {
 	return options, nil
 }
 
-func (r *Root) GetWarmupHttpHeaders() map[string]string {
-	return r.Http.GetWarmupHttpHeaders()
+// GetWarmupHTTPHeaders returns the HTTP headers.
+func (r *Root) GetWarmupHTTPHeaders() map[string]string {
+	return r.HTTP.getWarmupHTTPHeaders()
 }
 
-func (r *Root) GetWarmupHttpRequests() (chan http.Request, error) {
-	requests, err := r.Http.GetWarmupHttpRequests()
+// GetWarmupHTTPRequests returns a channel with HTTP requests.
+func (r *Root) GetWarmupHTTPRequests() (chan http.Request, error) {
+	requests, err := r.HTTP.getWarmupHTTPRequests()
 	if err != nil {
 		return nil, err
 	}
@@ -126,8 +136,9 @@ func (r *Root) GetWarmupHttpRequests() (chan http.Request, error) {
 	return requestsChan, nil
 }
 
+// GetWarmupGrpcRequests returns a channel with gRPC requests.
 func (r *Root) GetWarmupGrpcRequests() (chan grpc.Request, error) {
-	requests, err := r.Grpc.GetWarmupGrpcRequests()
+	requests, err := r.Grpc.getWarmupGrpcRequests()
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +148,7 @@ func (r *Root) GetWarmupGrpcRequests() (chan grpc.Request, error) {
 	// create a goroutine that continuously adds requests to a channel for a maximum of MaxDurationSeconds
 	go func() {
 		if len(requests) == 0 {
-			log.Print("No grpc warm up requests specified")
+			log.Print("No gRPC warm up requests specified")
 			close(requestsChan)
 			return
 		}
@@ -157,6 +168,7 @@ func (r *Root) GetWarmupGrpcRequests() (chan grpc.Request, error) {
 	return requestsChan, nil
 }
 
+// GetWarmupGrpcHeaders returns the gRPC headers.
 func (r *Root) GetWarmupGrpcHeaders() []string {
-	return r.Grpc.GetWarmupGrpcHeaders()
+	return r.Grpc.getWarmupGrpcHeaders()
 }

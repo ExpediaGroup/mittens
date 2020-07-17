@@ -16,6 +16,7 @@ package response
 
 import "time"
 
+// Response represents an HTTP or gRPC response.
 type Response struct {
 	Duration   time.Duration
 	Err        error

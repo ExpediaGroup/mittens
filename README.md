@@ -3,6 +3,7 @@
 </h1>
 
 [![Build Status](https://github.com/ExpediaGroup/mittens/workflows/Build/badge.svg)](https://github.com/ExpediaGroup/mittens/actions?query=workflow:"Build")
+[![Go Report Card](https://goreportcard.com/badge/github.com/ExpediaGroup/mittens)](https://goreportcard.com/report/github.com/ExpediaGroup/mittens)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![GitHub site](https://img.shields.io/badge/GitHub-site-blue.svg)](https://expediagroup.github.io/mittens/)
 [![Docker](https://img.shields.io/badge/docker-mittens-blue.svg)](https://hub.docker.com/r/expediagroup/mittens/)
