@@ -54,7 +54,7 @@ To run the integration tests:
 
 To run the binary:
         
-    ./mittens -target-readiness-path=/health -target-grpc-port=6565 -max-duration-seconds=60 -concurrency=3 -http-requests=get:/hotel/potatoes -grpc-requests=service/method:"{\"foo\":\"bar\",\"bar\":\"foo\"}"
+    ./mittens -target-readiness-http-path=/health -target-grpc-port=6565 -max-duration-seconds=60 -concurrency=3 -http-requests=get:/hotel/potatoes -grpc-requests=service/method:"{\"foo\":\"bar\",\"bar\":\"foo\"}"
 
 ### Docker
 #### Build image
@@ -67,7 +67,7 @@ To build a Docker image named `mittens`:
 
 To run the container:
 
-    docker run mittens:latest -target-readiness-path=/health -target-grpc-port=6565 -max-duration-seconds=60 -concurrency=3 -http-requests=get:/hotel/potatoes -grpc-requests=service/method:"{\"foo\":\"bar\",\"bar\":\"foo\"}"
+    docker run mittens:latest -target-readiness-http-path=/health -target-grpc-port=6565 -max-duration-seconds=60 -concurrency=3 -http-requests=get:/hotel/potatoes -grpc-requests=service/method:"{\"foo\":\"bar\",\"bar\":\"foo\"}"
 
 _Note_: If you use Docker for Mac you might need to set the target host (`target-http-host`, `target-grpc-host`) to `docker.for.mac.localhost`, or `docker.for.mac.host.internal`, or `host.docker.internal` (depending on your version of Docker) so that your container can resolve localhost.
 
