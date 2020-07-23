@@ -29,7 +29,7 @@ You can run the binary executable as follows:
           - app
         command: "-target-readiness-http-path=/health -target-grpc-port=6565 -max-duration-seconds=60 -concurrency=3 -http-requests=get:/hotel/potatoes -grpc-requests=service/method:{\"foo\":\"bar\", \"bar\":\"foo\"}"
 
-_Note_: If you use Docker for Mac/Windows you might need to set the target host (`target-http-host`, `target-grpc-host`) to `http://host.docker.internal` so that your container can resolve localhost. If you use an older version of Docker (< 18.03), the value will depend on your Operating System, e.g. `http://docker.for.mac.host.internal` or `http://docker.for.win.host.internal`.
+_Note_: If you use Docker for Mac/Windows you might need to set the target host (`target-http-host`, `target-grpc-host`) to `host.docker.internal` so that your container can resolve localhost. If you use an older version of Docker (< 18.03), the value will depend on your Operating System, e.g. `docker.for.mac.host.internal` or `docker.for.win.host.internal`. For `target-http-host`, you need to prefix the host with the scheme, e.g. `http://host.docker.internal`.
 
 ## Run as a sidecar on Kubernetes
 
