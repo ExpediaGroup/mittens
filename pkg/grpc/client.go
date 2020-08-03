@@ -97,7 +97,7 @@ func (c *Client) SendRequest(serviceMethod string, message string, headers []str
 	in := bytes.NewBufferString(message)
 
 	// TODO - create generic parser and formatter for any request, can we use text parser/formatter?
-	requestParser, formatter, err := grpcurl.RequestParserAndFormatterFor("json", c.descriptorSource, false, false, in)
+	requestParser, formatter, err := grpcurl.RequestParserAndFormatter("json", c.descriptorSource, in, grpcurl.FormatOptions{})
 	if err != nil {
 		log.Printf("Cannot construct request parser and formatter for json")
 		// FIXME FATAL
