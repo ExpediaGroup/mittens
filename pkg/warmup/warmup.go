@@ -16,6 +16,7 @@ package warmup
 
 import (
 	"log"
+	"math/rand"
 	"mittens/pkg/grpc"
 	"mittens/pkg/http"
 	"sync"
@@ -24,9 +25,45 @@ import (
 
 // Warmup holds any information needed for the workers to send requests.
 type Warmup struct {
-	Target             Target
-	MaxDurationSeconds int
-	Concurrency        int
+	Target                   Target
+	MaxDurationSeconds       int
+	Concurrency              int
+	HttpRequests             chan http.Request
+	HttpHeaders              map[string]string
+	GrpcRequests             chan grpc.Request
+	GrpcHeaders              []string
+	RequestDelayMilliseconds int
+}
+
+// Run sends requests to the target using goroutines.
+func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, requestsSentCounter *int) {
+	rand.Seed(time.Now().UnixNano()) // initialize seed only once to prevent deterministic/repeated calls every time we run
+
+	var wg sync.WaitGroup
+
+	if hasGrpcRequests {
+		// connect to gRPC server once and only if there are gRPC requests
+		log.Print("gRPC client connecting...")
+		connErr := w.Target.grpcClient.Connect(w.GrpcHeaders)
+		if connErr != nil {
+			log.Printf("gRPC client connect error: %v", connErr)
+		}
+		for i := 1; i <= w.Concurrency; i++ {
+			log.Printf("Spawning new go routine for gRPC requests")
+			wg.Add(1)
+			go w.GrpcWarmupWorker(&wg, w.GrpcRequests, w.GrpcHeaders, w.RequestDelayMilliseconds, requestsSentCounter)
+		}
+	}
+
+	if hasHttpRequests {
+		for i := 1; i <= w.Concurrency; i++ {
+			log.Printf("Spawning new go routine for HTTP requests")
+			wg.Add(1)
+			go w.HTTPWarmupWorker(&wg, w.HttpRequests, w.HttpHeaders, w.RequestDelayMilliseconds, requestsSentCounter)
+		}
+	}
+
+	wg.Wait()
 }
 
 // HTTPWarmupWorker sends HTTP requests to the target using goroutines.

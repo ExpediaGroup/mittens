@@ -41,7 +41,6 @@ func NewClient(host string, insecure bool) Client {
 	}
 
 	if insecure {
-		log.Printf("HTTP client: insecure")
 		client.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}

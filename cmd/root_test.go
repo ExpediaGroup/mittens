@@ -17,23 +17,30 @@
 package cmd
 
 import (
-	"context"
+	grpcurl_testing "github.com/fullstorydev/grpcurl/testing"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/interop/grpc_testing"
+	"google.golang.org/grpc/reflection"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // this is a hack since Go doesn't support setup/tearDown
-// we use sub-tests so that target server only starts once
+// we use sub-tests so that target servers only start once
 func TestAll(t *testing.T) {
-	shutdown := StartTargetTestServer(t)
-	defer shutdown()
-	result := t.Run("TestWarmupSidecarWithFileProbe", TestWarmupSidecarWithFileProbe)
+	shutdownHttp := StartHttpTargetTestServer(t)
+	shutdownGrpc := StartGrpcTargetTestServer(t)
+	defer shutdownHttp()
+	defer shutdownGrpc()
+
+	result := t.Run("TestGrpcAndHttp", TestGrpcAndHttp)
+	result = result && t.Run("TestWarmupSidecarWithFileProbe", TestWarmupSidecarWithFileProbe)
 	result = result && t.Run("TestWarmupSidecarWithServerProbe", TestWarmupSidecarWithServerProbe)
 	result = result && t.Run("TestWarmupFailReadinessIfTargetIsNeverReady", TestWarmupFailReadinessIfTargetIsNeverReady)
 	result = result && t.Run("TestWarmupFailReadinessIfNoRequestsAreSentToTarget", TestWarmupFailReadinessIfNoRequestsAreSentToTarget)
@@ -188,8 +195,62 @@ func TestWarmupFailReadinessIfNoRequestsAreSentToTarget(t *testing.T) {
 	assert.False(t, readyFileExists)
 }
 
-func StartTargetTestServer(t *testing.T) (shutdown func()) {
+func TestGrpcAndHttp(t *testing.T) {
+	deleteFile("alive")
+	deleteFile("ready")
 
+	os.Args = []string{"mittens",
+		"-file-probe-enabled=true",
+		"-server-probe-enabled=false",
+		"-target-grpc-port=50051",
+		"-http-requests=get:/delay",
+		"-grpc-requests=grpc.testing.TestService/EmptyCall",
+		"-grpc-requests=grpc.testing.TestService/UnaryCall:{\"payload\":{\"body\":\"abcdefghijklmnopqrstuvwxyz01\"}}",
+		"-target-insecure=true",
+		"-concurrency=2",
+		"-exit-after-warmup=true",
+		"-target-readiness-http-path=/health",
+		"-max-duration-seconds=5"}
+
+	CreateConfig()
+	RunCmdRoot()
+
+	assert.Equal(t, true, opts.FileProbe.Enabled)
+	assert.Equal(t, false, opts.ServerProbe.Enabled)
+	assert.ElementsMatch(t, opts.HTTP.Requests, []string{"get:/delay"})
+	assert.ElementsMatch(t, opts.Grpc.Requests, []string{"grpc.testing.TestService/EmptyCall", "grpc.testing.TestService/UnaryCall:{\"payload\":{\"body\":\"abcdefghijklmnopqrstuvwxyz01\"}}"})
+
+	assert.Equal(t, 2, opts.Concurrency)
+	assert.Equal(t, true, opts.ExitAfterWarmup)
+	assert.Equal(t, "/health", opts.Target.ReadinessHTTPPath)
+	assert.Equal(t, 5, opts.MaxDurationSeconds)
+
+	readyFileExists, err := fileExists("ready")
+	require.NoError(t, err)
+	assert.True(t, readyFileExists)
+}
+
+// StartGrpcTargetTestServer starts a gRPC server in port 50051
+// It uses the test.proto from grpc-testing: https://github.com/grpc/grpc-go/blob/40a879c23a0dc77234d17e0699d074d5fd151bd0/test/grpc_testing/test.proto
+func StartGrpcTargetTestServer(t *testing.T) (shutdown func()) {
+	svr := grpc.NewServer()
+
+	grpc_testing.RegisterTestServiceServer(svr, grpcurl_testing.TestServer{})
+	reflection.Register(svr)
+	l, _ := net.Listen("tcp", ":50051")
+
+	var serverErr error
+	go func() {
+		serverErr = svr.Serve(l)
+	}()
+
+	time.Sleep(100 * time.Millisecond)
+	require.NoError(t, serverErr)
+
+	return shutdown
+}
+
+func StartHttpTargetTestServer(t *testing.T) (shutdown func()) {
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
@@ -200,10 +261,6 @@ func StartTargetTestServer(t *testing.T) (shutdown func()) {
 	})
 
 	server := &http.Server{Addr: ":8080"}
-	shutdown = func() {
-		err := server.Shutdown(context.Background())
-		assert.NoError(t, err)
-	}
 
 	var serverErr error
 	go func() {
@@ -213,6 +270,7 @@ func StartTargetTestServer(t *testing.T) (shutdown func()) {
 	// wait for server to star up
 	time.Sleep(100 * time.Millisecond)
 	require.NoError(t, serverErr)
+
 	return shutdown
 }
 

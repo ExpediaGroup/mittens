@@ -16,16 +16,14 @@ package cmd
 
 import (
 	"flag"
+	"fmt"
 	"log"
-	"math/rand"
 	"mittens/cmd/flags"
 	"mittens/pkg/probe"
 	"mittens/pkg/warmup"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
-	"time"
 )
 
 var opts *flags.Root
@@ -54,12 +52,51 @@ func RunCmdRoot() {
 		probe.WriteFile(opts.FileProbe.LivenessPath)
 	}
 
-	if targetOptions, err := opts.GetWarmupTargetOptions(); err == nil {
+	var validationError bool
+	httpRequests, err := opts.GetWarmupHTTPRequests()
+	if err != nil {
+		fmt.Errorf("invalid HTTP options: %v", err)
+		validationError = true
+	}
+	grpcRequests, err := opts.GetWarmupGrpcRequests()
+	if err != nil {
+		fmt.Errorf("invalid grpc options: %v", err)
+		validationError = true
+	}
+	targetOptions, err := opts.GetWarmupTargetOptions()
+	if err != nil {
+		fmt.Errorf("invalid target options: %v", err)
+		validationError = true
+	}
+
+	// this is used to decide on whether we should create goroutines for HTTP and/or gRPC requests
+	// since requests are passed to a channel after that point we need to store that info and pass it
+	var hasHttpRequests bool
+	if len(opts.HTTP.Requests) > 0 {
+		hasHttpRequests = true
+	}
+	var hasGrpcRequests bool
+	if len(opts.Grpc.Requests) > 0 {
+		hasGrpcRequests = true
+	}
+
+	if !validationError {
 		requestsSentCounter := 0
 		target := createTarget(targetOptions)
 		if err := target.WaitForReadinessProbe(); err == nil {
-			wp := warmup.Warmup{Target: target, MaxDurationSeconds: opts.GetMaxDurationSeconds(), Concurrency: opts.GetConcurrency()}
-			runWarmup(wp, &requestsSentCounter)
+			log.Print("💚 Target is ready")
+
+			wp := warmup.Warmup{
+				Target:                   target,
+				MaxDurationSeconds:       opts.GetMaxDurationSeconds(),
+				Concurrency:              opts.GetConcurrency(),
+				HttpRequests:             httpRequests,
+				GrpcRequests:             grpcRequests,
+				HttpHeaders:              opts.GetWarmupHTTPHeaders(),
+				GrpcHeaders:              opts.GetWarmupGrpcHeaders(),
+				RequestDelayMilliseconds: opts.RequestDelayMilliseconds,
+			}
+			wp.Run(hasHttpRequests, hasGrpcRequests, &requestsSentCounter)
 		} else {
 			log.Print("Target still not ready. Giving up!")
 		}
@@ -93,35 +130,6 @@ func postProcess(requestsSentCounter int, probeServer *probe.Server) {
 			probe.WriteFile(opts.FileProbe.ReadinessPath)
 		}
 	}
-}
-
-// runWarmup sends requests to the target using goroutines.
-func runWarmup(wp warmup.Warmup, requestsSentCounter *int) {
-	rand.Seed(time.Now().UnixNano()) // initialize seed only once to prevent deterministic/repeated calls every time we run
-
-	httpRequests, err := opts.GetWarmupHTTPRequests()
-	if err != nil {
-		log.Printf("HTTP options: %v", err)
-	}
-	grpcRequests, err := opts.GetWarmupGrpcRequests()
-	if err != nil {
-		log.Printf("Grpc options: %v", err)
-	}
-
-	var wg sync.WaitGroup
-	for i := 1; i <= opts.Concurrency; i++ {
-		log.Printf("Spawning new go routine for HTTP requests")
-		wg.Add(1)
-		go wp.HTTPWarmupWorker(&wg, httpRequests, opts.GetWarmupHTTPHeaders(), opts.RequestDelayMilliseconds, requestsSentCounter)
-	}
-
-	for i := 1; i <= opts.Concurrency; i++ {
-		log.Printf("Spawning new go routine for gRPC requests")
-		wg.Add(1)
-		go wp.GrpcWarmupWorker(&wg, grpcRequests, opts.GetWarmupGrpcHeaders(), opts.RequestDelayMilliseconds, requestsSentCounter)
-	}
-
-	wg.Wait()
 }
 
 // createTarget creates the target versus which mittens will run.
