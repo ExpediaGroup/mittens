@@ -20,7 +20,6 @@ import (
 	"log"
 	"mittens/pkg/response"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/fullstorydev/grpcurl"
@@ -36,7 +35,6 @@ type Client struct {
 	host             string
 	timeoutSeconds   int
 	insecure         bool
-	grpcConnectOnce  *sync.Once
 	connClose        func() error
 	conn             *grpc.ClientConn
 	descriptorSource grpcurl.DescriptorSource
@@ -44,28 +42,22 @@ type Client struct {
 
 // NewClient returns a gRPC client.
 func NewClient(host string, insecure bool, timeoutSeconds int) Client {
-	return Client{host: host, timeoutSeconds: timeoutSeconds, grpcConnectOnce: new(sync.Once), insecure: insecure, connClose: func() error { return nil }}
+	return Client{host: host, timeoutSeconds: timeoutSeconds, insecure: insecure, connClose: func() error { return nil }}
 }
 
 // connect attempts to establish a connection with a gRPC server.
-func (c *Client) connect(headers []string) error {
-
-	dialTime := 10 * time.Second
-
+func (c *Client) Connect(headers []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.timeoutSeconds)*time.Second)
-	connCtx, _ := context.WithTimeout(context.Background(), dialTime)
 
 	headersMetadata := grpcurl.MetadataFromHeaders(headers)
 	contextWithMetadata := metadata.NewOutgoingContext(ctx, headersMetadata)
 
 	dialOptions := []grpc.DialOption{grpc.WithBlock()}
 	if c.insecure {
-		log.Print("gRPC client: insecure")
 		dialOptions = append(dialOptions, grpc.WithInsecure())
 	}
 
-	log.Printf("gRPC client connecting to %s", c.host)
-	conn, err := grpc.DialContext(connCtx, c.host, dialOptions...)
+	conn, err := grpc.DialContext(ctx, c.host, dialOptions...)
 	if err != nil {
 		return fmt.Errorf("gRPC dial: %v", err)
 	}
@@ -84,16 +76,6 @@ func (c *Client) connect(headers []string) error {
 // Note that the message cannot be null. Even if there is no message to be sent this needs to be set to an empty string.
 func (c *Client) SendRequest(serviceMethod string, message string, headers []string) response.Response {
 	const respType = "grpc"
-	var connErr error
-	c.grpcConnectOnce.Do(func() {
-		connErr = c.connect(headers)
-	})
-
-	if connErr != nil {
-		log.Printf("gRPC client connect: %v", connErr)
-		return response.Response{Duration: time.Duration(0), Err: connErr, Type: respType}
-	}
-
 	in := bytes.NewBufferString(message)
 
 	// TODO - create generic parser and formatter for any request, can we use text parser/formatter?

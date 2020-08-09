@@ -57,9 +57,10 @@ func NewTarget(readinessHTTPClient whttp.Client, readinessGrpcClient grpc.Client
 // It returns an error if the timeout is exceeded.
 // It supports both HTTP and gRPC health-checks.
 func (t Target) WaitForReadinessProbe() error {
-	log.Printf("Waiting for target to be ready for a max of %ds", t.options.ReadinessTimeoutInSeconds)
+	log.Printf("Waiting for %s target to be ready for a max of %ds", t.options.ReadinessProtocol, t.options.ReadinessTimeoutInSeconds)
 
 	timeout := time.After(time.Duration(t.options.ReadinessTimeoutInSeconds) * time.Second)
+
 	for {
 		select {
 		case <-timeout:
@@ -77,6 +78,11 @@ func (t Target) WaitForReadinessProbe() error {
 			} else {
 				request, err := grpc.ToGrpcRequest(t.options.ReadinessGrpcMethod)
 				if err == nil {
+					log.Print("gRPC readiness client connecting...")
+					connErr := t.readinessGrpcClient.Connect(nil)
+					if connErr != nil {
+						log.Printf("gRPC readiness client connect error: %v", connErr)
+					}
 					err1 := t.readinessGrpcClient.SendRequest(request.ServiceMethod, "", nil)
 					if err1.Err != nil {
 						log.Printf("gRPC target not ready yet...")

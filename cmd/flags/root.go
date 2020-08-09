@@ -17,7 +17,6 @@ package flags
 import (
 	"flag"
 	"fmt"
-	"log"
 	"math/rand"
 	"mittens/pkg/grpc"
 	"mittens/pkg/http"
@@ -75,7 +74,7 @@ func (r *Root) GetReadinessHTTPClient() http.Client {
 
 // GetReadinessGrpcClient creates the gRPC client to be used for the readiness requests.
 func (r *Root) GetReadinessGrpcClient() grpc.Client {
-	return r.Target.getReadinessGrpcClient()
+	return r.Target.getReadinessGrpcClient(r.MaxDurationSeconds)
 }
 
 // GetHTTPClient creates the HTTP client to be used for the actual requests.
@@ -116,7 +115,6 @@ func (r *Root) GetWarmupHTTPRequests() (chan http.Request, error) {
 	// create a goroutine that continuously adds requests to a channel for a maximum of MaxDurationSeconds
 	go func() {
 		if len(requests) == 0 {
-			log.Print("No http warm up requests specified")
 			close(requestsChan)
 			return
 		}
@@ -136,7 +134,7 @@ func (r *Root) GetWarmupHTTPRequests() (chan http.Request, error) {
 	return requestsChan, nil
 }
 
-// GetWarmupGrpcRequests returns a channel with gRPC requests.
+// getWarmupGrpcRequests returns a channel with gRPC requests.
 func (r *Root) GetWarmupGrpcRequests() (chan grpc.Request, error) {
 	requests, err := r.Grpc.getWarmupGrpcRequests()
 	if err != nil {
@@ -148,7 +146,6 @@ func (r *Root) GetWarmupGrpcRequests() (chan grpc.Request, error) {
 	// create a goroutine that continuously adds requests to a channel for a maximum of MaxDurationSeconds
 	go func() {
 		if len(requests) == 0 {
-			log.Print("No gRPC warm up requests specified")
 			close(requestsChan)
 			return
 		}
