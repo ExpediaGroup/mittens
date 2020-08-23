@@ -46,12 +46,12 @@ func TestHttp_FlagWithoutBodyToHttpRequest(t *testing.T) {
 }
 
 func TestHttp_DateInterpolation(t *testing.T) {
-	requestFlag := `post:/db_{$currentDate}:{"date": "{$currentDate|days+5,months+2,years-1}"}`
+	requestFlag := `post:/db_{$currentDate}:{"date": "{$currentDate|days+5,months+2,years-1,format=yyyy-MM-dd}"}`
 	request, err := ToHTTPRequest(requestFlag)
 	require.NoError(t, err)
 
 	assert.Equal(t, http.MethodPost, request.Method)
-	dateToday := time.Now().Format("2006-01-02")                        // today + 5
+	dateToday := time.Now().Format("2006-01-02")                        // today
 	dateWithOffset := time.Now().AddDate(-1, 2, 5).Format("2006-01-02") // today -1 year, +2 months, +5 days
 	assert.Equal(t, "/db_"+dateToday, request.Path)
 	assert.Equal(t, fmt.Sprintf(`{"date": "%s"}`, dateWithOffset), *request.Body)
