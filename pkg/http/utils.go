@@ -47,8 +47,9 @@ var allowedHTTPMethods = map[string]interface{}{
 var templatePlaceholderRegex = regexp.MustCompile("{\\$(\\w+(?:[\\|(?:[\\w+-=,]+)]*)}")
 var templateRangeRegex = regexp.MustCompile("{\\$range\\|min=(?P<Min>\\d+),max=(?P<Max>\\d+)}")
 var templateElementsRegex = regexp.MustCompile("{\\$random\\|(?P<Elements>[,\\w-]+)}")
-var templateDatesRegex = regexp.MustCompile("{\\$currentDate(?:\\|(?:days(?P<Days>[+-]\\d+))*(?:[,]*months(?P<Months>[+-]\\d+))*(?:[,]*years(?P<Years>[+-]\\d+))*)*}")
+var templateDatesRegex = regexp.MustCompile("{\\$currentDate(?:\\|(?:days(?P<Days>[+-]\\d+))*(?:[,]*months(?P<Months>[+-]\\d+))*(?:[,]*years(?P<Years>[+-]\\d+))*(?:[,]*format=(?P<Format>[yMd|,/-]+))*)*}")
 
+//
 // ToHTTPRequest parses an HTTP request which is in a string format and stores it in a struct.
 func ToHTTPRequest(requestString string) (Request, error) {
 	parts := strings.SplitN(requestString, ":", 3)
@@ -93,13 +94,26 @@ func dateElements(source string) string {
 	days := r[1]
 	months := r[2]
 	years := r[3]
+	format := r[4]
 
 	offsetDays, _ := strconv.Atoi(days)
 	offsetMonths, _ := strconv.Atoi(months)
 	offsetYears, _ := strconv.Atoi(years)
 
+	if format == "" {
+		// If no format override is specified, we default to ISO 8601, or YYYY MM DD
+		format = "2006-01-02"
+	} else {
+		format = strings.ReplaceAll(format, "yyyy", "2006")
+		format = strings.ReplaceAll(format, "yy", "06")
+		format = strings.ReplaceAll(format, "MMM", "Jan")
+		format = strings.ReplaceAll(format, "MM", "01")
+		format = strings.ReplaceAll(format, "dd", "02")
+		format = strings.ReplaceAll(format, "d", "2")
+	}
+
 	// the date below is how the golang date formatter works. it's used for the formatting. it's not what is actually going to be displayed
-	return time.Now().AddDate(offsetYears, offsetMonths, offsetDays).Format("2006-01-02")
+	return time.Now().AddDate(offsetYears, offsetMonths, offsetDays).Format(format)
 }
 
 // timestampElements returns the current time from Unix epoch in milliseconds.
