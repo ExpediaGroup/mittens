@@ -110,7 +110,7 @@ optional). Host and port are taken from <code>target-grpc-host</code> and
 <p>Mittens allows you to use special keywords if you need to generate randomized urls.
 The following are available:</p>
 <ul>
-<li><code>{$currentDate|days+x,months+y,years+z}</code>: you can adjust the temporal offset by adding or subtracting days, months, or years. The offsets are optional and can be removed.</li>
+<li><code>{$currentDate|days+x,months+y,years+z,format=yyyy-MM-dd}</code>: you can adjust the temporal offset by adding or subtracting days, months, or years. The offsets are optional and can be removed, but their order cannot change (i.e. <code>days</code> is always first, or <code>years</code> always last). You can optionally specify a custom format using yyyy or yy to represent the year, MM or MMM for the month and dd or d for the day.</li>
 <li><code>{$currentTimestamp}</code>: Time from Unix epoch in milliseconds.</li>
 <li><code>{$random|foo,bar,baz}</code>: Mittens will randomly select an element from the provided list, eg: one of foo, bar or baz. Special chars are not supported. Valid: [0-9A-Za-z_]</li>
 <li><code>{$range|min=x,max=y}</code>: both min and max are required arguments. Range is inclusive.</li>
