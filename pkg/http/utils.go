@@ -101,7 +101,7 @@ func dateElements(source string) string {
 	offsetYears, _ := strconv.Atoi(years)
 
 	if format == "" {
-		// If no format override is specifie, we default to ISO 8601, or YYYY MM DD
+		// If no format override is specified, we default to ISO 8601, or YYYY MM DD
 		format = "2006-01-02"
 	} else {
 		format = strings.ReplaceAll(format, "yyyy", "2006")
