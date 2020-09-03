@@ -15,11 +15,9 @@
 package http
 
 import (
-	"fmt"
 	"net/http"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -45,18 +43,6 @@ func TestHttp_FlagWithoutBodyToHttpRequest(t *testing.T) {
 	assert.Nil(t, request.Body)
 }
 
-func TestHttp_DateInterpolation(t *testing.T) {
-	requestFlag := `post:/db_{$currentDate}:{"date": "{$currentDate|days+5,months+2,years-1,format=yyyy-MM-dd}"}`
-	request, err := ToHTTPRequest(requestFlag)
-	require.NoError(t, err)
-
-	assert.Equal(t, http.MethodPost, request.Method)
-	dateToday := time.Now().Format("2006-01-02")                        // today
-	dateWithOffset := time.Now().AddDate(-1, 2, 5).Format("2006-01-02") // today -1 year, +2 months, +5 days
-	assert.Equal(t, "/db_"+dateToday, request.Path)
-	assert.Equal(t, fmt.Sprintf(`{"date": "%s"}`, dateWithOffset), *request.Body)
-}
-
 func TestHttp_FlagWithInvalidMethodToHttpRequest(t *testing.T) {
 	requestFlag := `hmm:/ping:all=true`
 	_, err := ToHTTPRequest(requestFlag)
@@ -80,7 +66,7 @@ func TestHttp_TimestampInterpolation(t *testing.T) {
 	assert.Equal(t, len(*request.Body), 25) // { "body": 13 numbers for timestamp
 }
 
-func TestHttp_MultipleInterpolation(t *testing.T) {
+func TestHttp_Interpolation(t *testing.T) {
 	requestFlag := `post:/path_{$range|min=1,max=2}_{$random|foo,bar}:{"body": "{$random|foo,bar} {$range|min=1,max=2}"}`
 	request, err := ToHTTPRequest(requestFlag)
 	require.NoError(t, err)
@@ -92,50 +78,6 @@ func TestHttp_MultipleInterpolation(t *testing.T) {
 
 	var bodyRegex = regexp.MustCompile("{\"body\": \"(foo|bar) \\d\"}")
 	matchBody := bodyRegex.MatchString(*request.Body)
-
-	assert.True(t, matchPath)
-	assert.True(t, matchBody)
-}
-
-func TestHttp_RangeInterpolation(t *testing.T) {
-	requestFlag := `post:/path_{$range|min=1,max=2}:{"body": "{$range|min=1,max=2}"}`
-	request, err := ToHTTPRequest(requestFlag)
-	require.NoError(t, err)
-
-	assert.Equal(t, http.MethodPost, request.Method)
-
-	var pathRegex = regexp.MustCompile("/path_\\d")
-	matchPath := pathRegex.MatchString(request.Path)
-
-	var bodyRegex = regexp.MustCompile("{\"body\": \"\\d\"}")
-	matchBody := bodyRegex.MatchString(*request.Body)
-
-	assert.True(t, matchPath)
-	assert.True(t, matchBody)
-}
-
-func TestHttp_InvalidRangeInterpolation(t *testing.T) {
-	requestFlag := `post:/path_{$range|min=2,max=1}:{"body": "{$range|min=2,max=1}"}`
-	request, err := ToHTTPRequest(requestFlag)
-	require.NoError(t, err)
-
-	assert.Equal(t, http.MethodPost, request.Method)
-
-	// will not action on invalid ranges
-	assert.Equal(t, request.Path, "/path_{$range|min=2,max=1}")
-	assert.Equal(t, *request.Body, "{\"body\": \"{$range|min=2,max=1}\"}")
-}
-
-func TestHttp_RandomElementInterpolation(t *testing.T) {
-	requestFlag := `post:/path_{$random|fo-o,b_ar}:{"body": "{$random|fo-o,b_ar}"}`
-	request, err := ToHTTPRequest(requestFlag)
-	require.NoError(t, err)
-
-	assert.Equal(t, http.MethodPost, request.Method)
-
-	var elementsRegex = regexp.MustCompile("(fo-o|b_ar)")
-	matchPath := elementsRegex.MatchString(request.Path)
-	matchBody := elementsRegex.MatchString(*request.Body)
 
 	assert.True(t, matchPath)
 	assert.True(t, matchBody)
