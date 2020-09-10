@@ -45,13 +45,15 @@ func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, requestsSentCoun
 		// connect to gRPC server once and only if there are gRPC requests
 		log.Print("gRPC client connecting...")
 		connErr := w.Target.grpcClient.Connect(w.GrpcHeaders)
+
 		if connErr != nil {
 			log.Printf("gRPC client connect error: %v", connErr)
-		}
-		for i := 1; i <= w.Concurrency; i++ {
-			log.Printf("Spawning new go routine for gRPC requests")
-			wg.Add(1)
-			go w.GrpcWarmupWorker(&wg, w.GrpcRequests, w.GrpcHeaders, w.RequestDelayMilliseconds, requestsSentCounter)
+		} else {
+			for i := 1; i <= w.Concurrency; i++ {
+				log.Printf("Spawning new go routine for gRPC requests")
+				wg.Add(1)
+				go w.GrpcWarmupWorker(&wg, w.GrpcRequests, w.GrpcHeaders, w.RequestDelayMilliseconds, requestsSentCounter)
+			}
 		}
 	}
 

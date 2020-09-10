@@ -16,6 +16,7 @@ package grpc
 
 import (
 	"fmt"
+	"mittens/pkg/placeholders"
 	"strings"
 )
 
@@ -36,7 +37,7 @@ func ToGrpcRequest(requestFlag string) (Request, error) {
 
 	request := Request{ServiceMethod: parts[0]}
 	if len(parts) == 2 {
-		request.Message = parts[1]
+		request.Message = placeholders.InterpolatePlaceholders(parts[1])
 	} else {
 		request.Message = ""
 	}
