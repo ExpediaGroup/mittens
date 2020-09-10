@@ -15,9 +15,11 @@
 package grpc
 
 import (
+	"regexp"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestGrpc_FlagToGrpcRequest(t *testing.T) {
@@ -45,4 +47,15 @@ func TestGrpc_InvalidFlagToGrpcRequest(t *testing.T) {
 	requestFlag := `health:ping`
 	_, err := ToGrpcRequest(requestFlag)
 	require.Error(t, err)
+}
+
+func TestGrpc_Interpolation(t *testing.T) {
+	requestFlag := `health/ping:{"lorem": "{$random|foo}", "ipsum":"{$random|foo}"}"}`
+	request, err := ToGrpcRequest(requestFlag)
+	require.NoError(t, err)
+
+	var pathRegex = regexp.MustCompile(`{"lorem": "(foo|bar)", "ipsum":"(foo|bar)"}`)
+	matchRequest := pathRegex.MatchString(request.Message)
+
+	assert.True(t, matchRequest)
 }
