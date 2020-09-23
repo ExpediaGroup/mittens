@@ -23,10 +23,6 @@ The application receives a number of command-line flags including the requests t
 | -file-probe-enabled               | bool    | true                        | If set to true writes files to be used as readiness/liveness probes                                                                                                                |
 | -file-probe-liveness-path         | string  | alive                       | File to be used for liveness probe                                                                                                                                                 |
 | -file-probe-readiness-path        | string  | ready                       | File to be used for readiness probe                                                                                                                                                |
-| -server-probe-enabled             | bool    | false                       | If set to true runs a web server that exposes endpoints to be used as readiness/liveness probes                                                                                    |
-| -server-probe-port                | int     | 8000                        | Port on which probe server is running                                                                                                                                              |
-| -server-probe-liveness-path       | string  | /alive                      | Probe server endpoint used as liveness probe                                                                                                                                       |
-| -server-probe-readiness-path      | string  | /ready                      | Probe server endpoint used as readiness probe                                                                                                                                      |
 | -request-delay-milliseconds       | int     | 500                         | Delay in milliseconds between requests                                                                                                                                             |
 | -target-grpc-host                 | string  | localhost                   | gRPC host to warm up                                                                                                                                                               |
 | -target-grpc-port                 | int     | 50051                       | gRPC port for warm up requests                                                                                                                                                     |
@@ -71,19 +67,21 @@ E.g.:
  - `get:/some-path?date="{$currentDate|days+1,months+1,years+1}"` 
  - `post:/some-path:{"id": "{$range|min=1,max=5}", "currentDate": "{$currentDate|days+2,months+1}"}`
 
-### Liveness/readiness probes
+### File probes
+Mittens writes files that can be used as liveness and readiness probes. These files are written to disk as `live` and `ready` respectively.
+If you run mittens as a sidecar you can then define a [liveness command](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-command) as follows:
 
-#### File probes
-By default Mittens writes files that can be used as liveness/readiness probes. Using files is the suggested way for such probes and is preferred over server probes for the following reasons:
-- Running a web server for probes increases memory/cpu consumed by Mittens. This needs to be taken into consideration when setting the resources for this container in Kubernetes.
-- Using files is less error-prone; a file is persisted on disk and will be there whenever Kubernetes does a liveness check against the pod. On the other hand, an endpoint could at any point be unavailable for all sorts of reasons.
+```
+...
+livenessProbe:
+  exec:
+    command:
+    - cat
+    - /tmp/healthy
+    ...
+```
 
 In case such probes are not needed you can disable this feature by setting `file-probe-enabled` to `false`. 
-
-#### Server probes
-
-Setting `server-probe-enabled` to `true` will start a web server that exposes liveness/readiness endpoints. 
-Note that running this web server instead of or in addition to having file probes increases memory and cpu consumption.
 
 #### Fail Mittens readiness
 
