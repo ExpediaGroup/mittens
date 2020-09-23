@@ -76,8 +76,8 @@ If you run mittens as a sidecar you can then define a [liveness command](https:/
 livenessProbe:
   exec:
     command:
-    - cat
-    - /tmp/healthy
+    - "cat"
+    - "ready"
     ...
 ```
 
