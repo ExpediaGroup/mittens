@@ -58,7 +58,7 @@ gRPC requests are in the form `service/method[:message]` (`message` is
 optional). Host and port are taken from `target-grpc-host` and
 `target-grpc-port` flags.
 
-#### Placeholders for random elements
+### Placeholders for random elements
 
 Mittens allows you to use special keywords if you need to generate randomized urls.
 The following are available:
