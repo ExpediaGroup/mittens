@@ -109,17 +109,17 @@ services:
             <span class="hljs-attr">memory:</span> <span class="hljs-string">50Mi</span>
             <span class="hljs-attr">cpu:</span> <span class="hljs-string">50m</span>
         <span class="hljs-attr">readinessProbe:</span>
-          <span class="hljs-attr">httpGet:</span>
-            <span class="hljs-attr">path:</span> <span class="hljs-string">/ready</span>
-            <span class="hljs-attr">port:</span> <span class="hljs-number">8080</span>
-            <span class="hljs-attr">scheme:</span> <span class="hljs-string">HTTP</span>
+          <span class="hljs-attr">exec:</span>
+            <span class="hljs-attr">command:</span>
+            <span class="hljs-bullet">-</span> <span class="hljs-string">"cat"</span>
+            <span class="hljs-bullet">-</span> <span class="hljs-string">"ready"</span>
           <span class="hljs-attr">initialDelaySeconds:</span> <span class="hljs-number">10</span>
           <span class="hljs-attr">periodSeconds:</span> <span class="hljs-number">30</span>
-        <span class="hljs-attr">livenessProbe:</span> 
-          <span class="hljs-attr">httpGet:</span>
-            <span class="hljs-attr">path:</span> <span class="hljs-string">/live</span>
-            <span class="hljs-attr">port:</span> <span class="hljs-number">8080</span>
-            <span class="hljs-attr">scheme:</span> <span class="hljs-string">HTTP</span>
+        <span class="hljs-attr">livenessProbe:</span>
+          <span class="hljs-attr">exec:</span>
+            <span class="hljs-attr">command:</span>
+            <span class="hljs-bullet">-</span> <span class="hljs-string">"cat"</span>
+            <span class="hljs-bullet">-</span> <span class="hljs-string">"ready"</span>
           <span class="hljs-attr">initialDelaySeconds:</span> <span class="hljs-number">10</span>
           <span class="hljs-attr">periodSeconds:</span> <span class="hljs-number">30</span>
         <span class="hljs-attr">args:</span>
