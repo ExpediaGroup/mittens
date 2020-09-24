@@ -22,8 +22,6 @@ import (
 	"mittens/pkg/probe"
 	"mittens/pkg/warmup"
 	"os"
-	"os/signal"
-	"syscall"
 )
 
 var opts *flags.Root
@@ -38,16 +36,6 @@ func CreateConfig() {
 
 // RunCmdRoot runs the main logic.
 func RunCmdRoot() {
-	var probeServer *probe.Server
-
-	if opts.ServerProbe.Enabled {
-		probeServer = startServerProbe(
-			opts.ServerProbe.Port,
-			opts.ServerProbe.LivenessPath,
-			opts.ServerProbe.ReadinessPath,
-		)
-	}
-
 	if opts.FileProbe.Enabled {
 		probe.WriteFile(opts.FileProbe.LivenessPath)
 	}
@@ -101,7 +89,7 @@ func RunCmdRoot() {
 			log.Print("Target still not ready. Giving up!")
 		}
 
-		postProcess(requestsSentCounter, probeServer)
+		postProcess(requestsSentCounter)
 	}
 
 	// Block forever if we don't want to wait after the warmup finishes
@@ -113,7 +101,7 @@ func RunCmdRoot() {
 // postProcess includes steps that run once the warmup finishes.
 // For now this either announces that the app is ready or fails the readiness probe.
 // The latter only happens if mittens did not send any requests and the user allows the readiness to fail.
-func postProcess(requestsSentCounter int, probeServer *probe.Server) {
+func postProcess(requestsSentCounter int) {
 	if opts.FailReadiness && requestsSentCounter == 0 {
 		log.Print("🛑 Warmup did not run. Mittens readiness probe will fail 🙁")
 	} else {
@@ -123,9 +111,6 @@ func postProcess(requestsSentCounter int, probeServer *probe.Server) {
 			log.Printf("Warm up finished 😊 Approximately %d reqs were sent", requestsSentCounter)
 		}
 
-		if opts.ServerProbe.Enabled {
-			probeServer.IsReady(true)
-		}
 		if opts.FileProbe.Enabled {
 			probe.WriteFile(opts.FileProbe.ReadinessPath)
 		}
@@ -141,32 +126,4 @@ func createTarget(targetOptions warmup.TargetOptions) warmup.Target {
 		opts.GetGrpcClient(),
 		targetOptions,
 	)
-}
-
-// startServerProbe starts a web server that can be used for readiness and liveness checks.
-func startServerProbe(port int, livenessPath, readinessPath string) *probe.Server {
-
-	serverErr := make(chan struct{})
-	probeServer := probe.NewServer(port, livenessPath, readinessPath)
-	go func() {
-		if err := probeServer.ListenAndServe(); err != nil {
-			if err.Error() != "HTTP: Server closed" {
-				log.Printf("Probe server: %v", err)
-				close(serverErr)
-			}
-		}
-	}()
-
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		select {
-		case <-serverErr:
-			log.Print("Received probe server error")
-		case sig := <-sigs:
-			log.Printf("Received %s signal", sig)
-			probeServer.Shutdown()
-		}
-	}()
-	return probeServer
 }

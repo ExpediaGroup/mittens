@@ -41,7 +41,6 @@ func TestAll(t *testing.T) {
 
 	result := t.Run("TestGrpcAndHttp", TestGrpcAndHttp)
 	result = result && t.Run("TestWarmupSidecarWithFileProbe", TestWarmupSidecarWithFileProbe)
-	result = result && t.Run("TestWarmupSidecarWithServerProbe", TestWarmupSidecarWithServerProbe)
 	result = result && t.Run("TestWarmupFailReadinessIfTargetIsNeverReady", TestWarmupFailReadinessIfTargetIsNeverReady)
 	result = result && t.Run("TestWarmupFailReadinessIfNoRequestsAreSentToTarget", TestWarmupFailReadinessIfNoRequestsAreSentToTarget)
 	result = result && t.Run("TestShouldBeReadyRegardlessIfWarmupRan", TestShouldBeReadyRegardlessIfWarmupRan)
@@ -54,7 +53,6 @@ func TestShouldBeReadyRegardlessIfWarmupRan(t *testing.T) {
 
 	os.Args = []string{"mittens",
 		"-file-probe-enabled=true",
-		"-server-probe-enabled=false",
 		"-http-requests=get:/non-existent",
 		"-concurrency=2",
 		"-exit-after-warmup=true",
@@ -65,7 +63,6 @@ func TestShouldBeReadyRegardlessIfWarmupRan(t *testing.T) {
 	RunCmdRoot()
 
 	assert.Equal(t, true, opts.FileProbe.Enabled)
-	assert.Equal(t, false, opts.ServerProbe.Enabled)
 	assert.ElementsMatch(t, opts.HTTP.Requests, []string{"get:/non-existent"})
 	assert.Equal(t, 2, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
@@ -83,7 +80,6 @@ func TestWarmupSidecarWithFileProbe(t *testing.T) {
 
 	os.Args = []string{"mittens",
 		"-file-probe-enabled=true",
-		"-server-probe-enabled=false",
 		"-http-requests=get:/delay",
 		"-concurrency=2",
 		"-exit-after-warmup=true",
@@ -94,36 +90,6 @@ func TestWarmupSidecarWithFileProbe(t *testing.T) {
 	RunCmdRoot()
 
 	assert.Equal(t, true, opts.FileProbe.Enabled)
-	assert.Equal(t, false, opts.ServerProbe.Enabled)
-	assert.ElementsMatch(t, opts.HTTP.Requests, []string{"get:/delay"})
-	assert.Equal(t, 2, opts.Concurrency)
-	assert.Equal(t, true, opts.ExitAfterWarmup)
-	assert.Equal(t, "/health", opts.Target.ReadinessHTTPPath)
-	assert.Equal(t, 5, opts.MaxDurationSeconds)
-
-	readyFileExists, err := fileExists("ready")
-	require.NoError(t, err)
-	assert.True(t, readyFileExists)
-}
-
-func TestWarmupSidecarWithServerProbe(t *testing.T) {
-	deleteFile("alive")
-	deleteFile("ready")
-
-	os.Args = []string{"mittens",
-		"-file-probe-enabled=true",
-		"-server-probe-enabled=true",
-		"-http-requests=get:/delay",
-		"-concurrency=2",
-		"-exit-after-warmup=true",
-		"-target-readiness-http-path=/health",
-		"-max-duration-seconds=5"}
-
-	CreateConfig()
-	RunCmdRoot()
-
-	assert.Equal(t, true, opts.FileProbe.Enabled)
-	assert.Equal(t, true, opts.ServerProbe.Enabled)
 	assert.ElementsMatch(t, opts.HTTP.Requests, []string{"get:/delay"})
 	assert.Equal(t, 2, opts.Concurrency)
 	assert.Equal(t, true, opts.ExitAfterWarmup)
@@ -201,7 +167,6 @@ func TestGrpcAndHttp(t *testing.T) {
 
 	os.Args = []string{"mittens",
 		"-file-probe-enabled=true",
-		"-server-probe-enabled=false",
 		"-target-grpc-port=50051",
 		"-http-requests=get:/delay",
 		"-grpc-requests=grpc.testing.TestService/EmptyCall",
@@ -216,7 +181,6 @@ func TestGrpcAndHttp(t *testing.T) {
 	RunCmdRoot()
 
 	assert.Equal(t, true, opts.FileProbe.Enabled)
-	assert.Equal(t, false, opts.ServerProbe.Enabled)
 	assert.ElementsMatch(t, opts.HTTP.Requests, []string{"get:/delay"})
 	assert.ElementsMatch(t, opts.Grpc.Requests, []string{"grpc.testing.TestService/EmptyCall", "grpc.testing.TestService/UnaryCall:{\"payload\":{\"body\":\"abcdefghijklmnopqrstuvwxyz01\"}}"})
 

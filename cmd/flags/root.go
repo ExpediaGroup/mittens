@@ -32,7 +32,6 @@ type Root struct {
 	ExitAfterWarmup          bool
 	FailReadiness            bool
 	FileProbe
-	ServerProbe
 	Target
 	HTTP
 	Grpc
@@ -51,7 +50,6 @@ func (r *Root) InitFlags() {
 	flag.BoolVar(&r.FailReadiness, "fail-readiness", false, "If set to true readiness will fail if no requests were sent.")
 
 	r.FileProbe.initFlags()
-	r.ServerProbe.initFlags()
 	r.Target.initFlags()
 	r.HTTP.initFlags()
 	r.Grpc.initFlags()

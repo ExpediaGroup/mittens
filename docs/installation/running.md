@@ -65,17 +65,17 @@ spec:
             memory: 50Mi
             cpu: 50m
         readinessProbe:
-          httpGet:
-            path: /ready
-            port: 8080
-            scheme: HTTP
+          exec:
+            command:
+            - "cat"
+            - "ready"
           initialDelaySeconds: 10
           periodSeconds: 30
-        livenessProbe: 
-          httpGet:
-            path: /live
-            port: 8080
-            scheme: HTTP
+        livenessProbe:
+          exec:
+            command:
+            - "cat"
+            - "ready"
           initialDelaySeconds: 10
           periodSeconds: 30
         args:
