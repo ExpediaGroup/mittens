@@ -21,8 +21,6 @@ The application receives a number of command-line flags including the requests t
 | -http-requests                    | string  | N/A                         | Http request to be sent. Request is in `<http-method>:<path>[:body]` format. E.g. `post:/ping:{"key": "value"}`. To send multiple requests define this flag for each request       |
 | -fail-readiness                   | bool    | false                       | If set to true readiness will fail if the target did not became ready in time                                                                                                      |
 | -file-probe-enabled               | bool    | true                        | If set to true writes files to be used as readiness/liveness probes                                                                                                                |
-| -file-probe-liveness-path         | string  | alive                       | File to be used for liveness probe                                                                                                                                                 |
-| -file-probe-readiness-path        | string  | ready                       | File to be used for readiness probe                                                                                                                                                |
 | -request-delay-milliseconds       | int     | 500                         | Delay in milliseconds between requests                                                                                                                                             |
 | -target-grpc-host                 | string  | localhost                   | gRPC host to warm up                                                                                                                                                               |
 | -target-grpc-port                 | int     | 50051                       | gRPC port for warm up requests                                                                                                                                                     |
@@ -68,7 +66,7 @@ E.g.:
  - `post:/some-path:{"id": "{$range|min=1,max=5}", "currentDate": "{$currentDate|days+2,months+1}"}`
 
 ### File probes
-Mittens writes files that can be used as liveness and readiness probes. These files are written to disk as `live` and `ready` respectively.
+Mittens writes files that can be used as liveness and readiness probes. These files are written to disk as `alive` and `ready` respectively.
 If you run mittens as a sidecar you can then define a [liveness command](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-command) as follows:
 
 ```

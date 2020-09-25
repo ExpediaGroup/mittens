@@ -37,7 +37,7 @@ func CreateConfig() {
 // RunCmdRoot runs the main logic.
 func RunCmdRoot() {
 	if opts.FileProbe.Enabled {
-		probe.WriteFile(opts.FileProbe.LivenessPath)
+		probe.WriteFile("alive")
 	}
 
 	var validationError bool
@@ -112,7 +112,7 @@ func postProcess(requestsSentCounter int) {
 		}
 
 		if opts.FileProbe.Enabled {
-			probe.WriteFile(opts.FileProbe.ReadinessPath)
+			probe.WriteFile("ready")
 		}
 	}
 }
