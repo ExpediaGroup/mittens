@@ -12,16 +12,18 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-package main
+package safe
 
 import (
-	"mittens/cmd"
-	"mittens/pkg/safe"
+	"log"
 )
 
-func main() {
-	safe.Do(func() {
-		cmd.CreateConfig()
-		cmd.RunCmdRoot()
-	})
+// Wraps a function with recover logic to catch unexpected panics.
+func Do(f func()) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("Unexpected panic was caught:", err)
+		}
+	}()
+	f()
 }
