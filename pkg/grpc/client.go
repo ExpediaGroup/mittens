@@ -90,6 +90,7 @@ func (c *Client) SendRequest(serviceMethod string, message string, headers []str
 	err = grpcurl.InvokeRPC(context.Background(), c.descriptorSource, c.conn, serviceMethod, headers, loggingEventHandler, requestParser.Next)
 	endTime := time.Now()
 	if err != nil {
+		log.Printf("grpc response error: %s", err)
 		return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: respType}
 	}
 	return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: respType}
