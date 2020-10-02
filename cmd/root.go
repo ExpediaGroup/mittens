@@ -20,6 +20,7 @@ import (
 	"log"
 	"mittens/cmd/flags"
 	"mittens/pkg/probe"
+	"mittens/pkg/safe"
 	"mittens/pkg/warmup"
 	"os"
 )
@@ -34,8 +35,14 @@ func CreateConfig() {
 	flag.Parse()
 }
 
-// RunCmdRoot runs the main logic.
+// RunCmdRoot runs the main logic and blocks forever.
 func RunCmdRoot() {
+	safe.Do(func() { run() })
+	block()
+}
+
+// Runs the main logic.
+func run() {
 	if opts.FileProbe.Enabled {
 		probe.WriteFile("alive")
 	}
@@ -91,8 +98,10 @@ func RunCmdRoot() {
 
 		postProcess(requestsSentCounter)
 	}
+}
 
-	// Block forever if we don't want to wait after the warmup finishes
+// Block forever if we don't want to exit after the warmup finishes
+func block() {
 	if !opts.ExitAfterWarmup {
 		select {}
 	}

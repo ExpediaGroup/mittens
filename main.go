@@ -16,12 +16,9 @@ package main
 
 import (
 	"mittens/cmd"
-	"mittens/pkg/safe"
 )
 
 func main() {
-	safe.Do(func() {
-		cmd.CreateConfig()
-		cmd.RunCmdRoot()
-	})
+	cmd.CreateConfig()
+	cmd.RunCmdRoot()
 }
