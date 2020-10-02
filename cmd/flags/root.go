@@ -20,6 +20,7 @@ import (
 	"math/rand"
 	"mittens/pkg/grpc"
 	"mittens/pkg/http"
+	"mittens/pkg/safe"
 	"mittens/pkg/warmup"
 	"time"
 )
@@ -111,7 +112,7 @@ func (r *Root) GetWarmupHTTPRequests() (chan http.Request, error) {
 	requestsChan := make(chan http.Request)
 
 	// create a goroutine that continuously adds requests to a channel for a maximum of MaxDurationSeconds
-	go func() {
+	go safe.Do(func() {
 		if len(requests) == 0 {
 			close(requestsChan)
 			return
@@ -128,7 +129,7 @@ func (r *Root) GetWarmupHTTPRequests() (chan http.Request, error) {
 				requestsChan <- requests[number]
 			}
 		}
-	}()
+	})
 	return requestsChan, nil
 }
 
@@ -142,7 +143,7 @@ func (r *Root) GetWarmupGrpcRequests() (chan grpc.Request, error) {
 	requestsChan := make(chan grpc.Request)
 
 	// create a goroutine that continuously adds requests to a channel for a maximum of MaxDurationSeconds
-	go func() {
+	go safe.Do(func() {
 		if len(requests) == 0 {
 			close(requestsChan)
 			return
@@ -159,7 +160,7 @@ func (r *Root) GetWarmupGrpcRequests() (chan grpc.Request, error) {
 				requestsChan <- requests[number]
 			}
 		}
-	}()
+	})
 	return requestsChan, nil
 }
 
