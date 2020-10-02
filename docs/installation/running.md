@@ -94,6 +94,13 @@ Kubernetes does not natively support gRPC health checks.
 
 This leaves you with a couple of options which are documented [here](https://kubernetes.io/blog/2018/10/01/health-checking-grpc-servers-on-kubernetes/).
 
+## gRPC Server Reflection is needed
+
+Mittens uses `grpcurl` to call the gRPC target server, which needs gRPC reflection to be enabled on the server.
+
+gRPC Server Reflection assists clients in runtime construction of requests without having stub information precompiled into the client.
+For more info see [here](https://github.com/grpc/grpc/blob/master/doc/server-reflection.md).
+
 ## Note about warm-up duration
 
 `-max-duration-seconds` includes the time needed for your application to start.
