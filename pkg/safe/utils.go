@@ -22,8 +22,33 @@ import (
 func Do(f func()) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println("Unexpected panic was caught:", err)
+			logPanic(err)
 		}
 	}()
 	f()
+}
+
+// Wraps a function with recover logic to catch unexpected panics.
+// Return the result of the function if no panic occurred, otherwise
+// return the fallback result.
+func DoAndReturn(f func() int, fallback int) (result int) {
+	defer func() {
+		if err := recover(); err != nil {
+			logPanic(err)
+			result = fallback
+		}
+	}()
+	return f()
+}
+
+// Checks whether a panic was ever caught during the execution of the program.
+func HasPanicked() bool {
+	return panicCaught
+}
+
+var panicCaught = false
+
+func logPanic(err interface{}) {
+	log.Println("Unexpected panic was caught:", err)
+	panicCaught = true
 }

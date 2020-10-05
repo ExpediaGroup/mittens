@@ -37,12 +37,13 @@ func CreateConfig() {
 
 // RunCmdRoot runs the main logic and blocks forever.
 func RunCmdRoot() {
-	safe.Do(func() { run() })
+	requestsSent := safe.DoAndReturn(run, 0)
+	postProcess(requestsSent)
 	block()
 }
 
-// Runs the main logic.
-func run() {
+// Runs the main logic and returns the number of warmup requests actually sent.
+func run() int {
 	if opts.FileProbe.Enabled {
 		probe.WriteFile("alive")
 	}
@@ -75,8 +76,8 @@ func run() {
 		hasGrpcRequests = true
 	}
 
+	requestsSentCounter := 0
 	if !validationError {
-		requestsSentCounter := 0
 		target := createTarget(targetOptions)
 		if err := target.WaitForReadinessProbe(); err == nil {
 			log.Print("💚 Target is ready")
@@ -95,9 +96,8 @@ func run() {
 		} else {
 			log.Print("Target still not ready. Giving up!")
 		}
-
-		postProcess(requestsSentCounter)
 	}
+	return requestsSentCounter
 }
 
 // Block forever if we don't want to exit after the warmup finishes
