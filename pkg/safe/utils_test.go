@@ -53,3 +53,9 @@ func TestFallbackResultReturnedWhenPanic(t *testing.T) {
 
 	assert.Equal(t, FALLBACK, actual)
 }
+
+func TestHasPanicked(t *testing.T) {
+	Do(func() { panic("test panic") })
+
+	assert.True(t, HasPanicked())
+}
