@@ -35,14 +35,15 @@ func CreateConfig() {
 	flag.Parse()
 }
 
-// RunCmdRoot runs the main logic and blocks forever.
+// RunCmdRoot runs the main logic
+//  It blocks forever unless `-exit-after-warmup` is set to true
 func RunCmdRoot() {
 	requestsSent := safe.DoAndReturn(run, 0)
 	postProcess(requestsSent)
 	block()
 }
 
-// Runs the main logic and returns the number of warmup requests actually sent.
+// run runs the main logic and returns the number of warmup requests actually sent.
 func run() int {
 	if opts.FileProbe.Enabled {
 		probe.WriteFile("alive")
@@ -100,7 +101,7 @@ func run() int {
 	return requestsSentCounter
 }
 
-// Block forever if we don't want to exit after the warmup finishes
+// block blocks forever unless `-exit-after-warmup` is set to true
 func block() {
 	if !opts.ExitAfterWarmup {
 		select {}

@@ -18,7 +18,7 @@ import (
 	"log"
 )
 
-// Wraps a function with recover logic to catch unexpected panics.
+// Do wraps a function with recover logic to catch unexpected panics.
 func Do(f func()) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -28,9 +28,8 @@ func Do(f func()) {
 	f()
 }
 
-// Wraps a function with recover logic to catch unexpected panics.
-// Return the result of the function if no panic occurred, otherwise
-// return the fallback result.
+// DoAndReturn wraps a function with recover logic to catch unexpected panics.
+// It returns the result of the function if no panic occurred, or the fallback result otherwise.
 func DoAndReturn(f func() int, fallback int) (result int) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -41,7 +40,7 @@ func DoAndReturn(f func() int, fallback int) (result int) {
 	return f()
 }
 
-// Checks whether a panic was ever caught during the execution of the program.
+// HasPanicked checks whether a panic was ever caught during the execution of the program.
 func HasPanicked() bool {
 	return panicCaught
 }

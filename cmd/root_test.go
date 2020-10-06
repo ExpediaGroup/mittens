@@ -79,8 +79,7 @@ func TestShouldBeReadyRegardlessIfWarmupRan(t *testing.T) {
 func TestShouldBeReadyRegardlessIfHasPanicked(t *testing.T) {
 	deleteFile("ready")
 
-	// we trigger a panic scenario by setting a grpc readiness
-	// even if the target does not support grpc health check
+	// we trigger a panic scenario by using a non-existent gRPC readiness probe
 	os.Args = []string{"mittens",
 		"-file-probe-enabled=true",
 		"-exit-after-warmup=true",
