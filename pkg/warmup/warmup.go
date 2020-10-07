@@ -19,6 +19,7 @@ import (
 	"math/rand"
 	"mittens/pkg/grpc"
 	"mittens/pkg/http"
+	"mittens/pkg/safe"
 	"sync"
 	"time"
 )
@@ -52,7 +53,9 @@ func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, requestsSentCoun
 			for i := 1; i <= w.Concurrency; i++ {
 				log.Printf("Spawning new go routine for gRPC requests")
 				wg.Add(1)
-				go w.GrpcWarmupWorker(&wg, w.GrpcRequests, w.GrpcHeaders, w.RequestDelayMilliseconds, requestsSentCounter)
+				go safe.Do(func() {
+					w.GrpcWarmupWorker(&wg, w.GrpcRequests, w.GrpcHeaders, w.RequestDelayMilliseconds, requestsSentCounter)
+				})
 			}
 		}
 	}
@@ -61,7 +64,9 @@ func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, requestsSentCoun
 		for i := 1; i <= w.Concurrency; i++ {
 			log.Printf("Spawning new go routine for HTTP requests")
 			wg.Add(1)
-			go w.HTTPWarmupWorker(&wg, w.HttpRequests, w.HttpHeaders, w.RequestDelayMilliseconds, requestsSentCounter)
+			go safe.Do(func() {
+				w.HTTPWarmupWorker(&wg, w.HttpRequests, w.HttpHeaders, w.RequestDelayMilliseconds, requestsSentCounter)
+			})
 		}
 	}
 

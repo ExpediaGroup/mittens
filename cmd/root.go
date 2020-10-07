@@ -20,6 +20,7 @@ import (
 	"log"
 	"mittens/cmd/flags"
 	"mittens/pkg/probe"
+	"mittens/pkg/safe"
 	"mittens/pkg/warmup"
 	"os"
 )
@@ -34,8 +35,16 @@ func CreateConfig() {
 	flag.Parse()
 }
 
-// RunCmdRoot runs the main logic.
+// RunCmdRoot runs the main logic
+//  It blocks forever unless `-exit-after-warmup` is set to true
 func RunCmdRoot() {
+	requestsSent := safe.DoAndReturn(run, 0)
+	postProcess(requestsSent)
+	block()
+}
+
+// run runs the main logic and returns the number of warmup requests actually sent.
+func run() int {
 	if opts.FileProbe.Enabled {
 		probe.WriteFile("alive")
 	}
@@ -68,8 +77,8 @@ func RunCmdRoot() {
 		hasGrpcRequests = true
 	}
 
+	requestsSentCounter := 0
 	if !validationError {
-		requestsSentCounter := 0
 		target := createTarget(targetOptions)
 		if err := target.WaitForReadinessProbe(); err == nil {
 			log.Print("💚 Target is ready")
@@ -88,11 +97,12 @@ func RunCmdRoot() {
 		} else {
 			log.Print("Target still not ready. Giving up!")
 		}
-
-		postProcess(requestsSentCounter)
 	}
+	return requestsSentCounter
+}
 
-	// Block forever if we don't want to wait after the warmup finishes
+// block blocks forever unless `-exit-after-warmup` is set to true
+func block() {
 	if !opts.ExitAfterWarmup {
 		select {}
 	}

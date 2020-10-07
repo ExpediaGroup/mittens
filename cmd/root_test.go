@@ -24,6 +24,7 @@ import (
 	"google.golang.org/grpc/interop/grpc_testing"
 	"google.golang.org/grpc/reflection"
 	"log"
+	"mittens/pkg/safe"
 	"net"
 	"net/http"
 	"os"
@@ -44,6 +45,7 @@ func TestAll(t *testing.T) {
 	result = result && t.Run("TestWarmupFailReadinessIfTargetIsNeverReady", TestWarmupFailReadinessIfTargetIsNeverReady)
 	result = result && t.Run("TestWarmupFailReadinessIfNoRequestsAreSentToTarget", TestWarmupFailReadinessIfNoRequestsAreSentToTarget)
 	result = result && t.Run("TestShouldBeReadyRegardlessIfWarmupRan", TestShouldBeReadyRegardlessIfWarmupRan)
+	result = result && t.Run("TestShouldBeReadyRegardlessIfHasPanicked", TestShouldBeReadyRegardlessIfHasPanicked)
 	os.Exit(bool2int(!result))
 }
 
@@ -69,6 +71,29 @@ func TestShouldBeReadyRegardlessIfWarmupRan(t *testing.T) {
 	assert.Equal(t, "/health", opts.Target.ReadinessHTTPPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
 
+	readyFileExists, err := fileExists("ready")
+	require.NoError(t, err)
+	assert.True(t, readyFileExists)
+}
+
+func TestShouldBeReadyRegardlessIfHasPanicked(t *testing.T) {
+	deleteFile("ready")
+
+	// we trigger a panic scenario by using a non-existent gRPC readiness probe
+	os.Args = []string{"mittens",
+		"-file-probe-enabled=true",
+		"-exit-after-warmup=true",
+		"-fail-readiness=false",
+		"-target-readiness-protocol=grpc",
+		"-target-grpc-port=50051",
+		"-target-readiness-grpc-method=non.existent/NonExistent",
+		"-target-insecure=true",
+		"-max-duration-seconds=5"}
+
+	CreateConfig()
+	RunCmdRoot()
+
+	assert.True(t, safe.HasPanicked())
 	readyFileExists, err := fileExists("ready")
 	require.NoError(t, err)
 	assert.True(t, readyFileExists)

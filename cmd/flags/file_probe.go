@@ -21,7 +21,7 @@ import (
 
 // FileProbe stores flags related to the file probe.
 type FileProbe struct {
-	Enabled       bool
+	Enabled bool
 }
 
 func (p *FileProbe) String() string {
