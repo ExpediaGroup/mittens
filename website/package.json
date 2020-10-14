@@ -11,7 +11,8 @@
     "rename-version": "docusaurus-rename-version"
   },
   "devDependencies": {
-    "docusaurus": "^1.14.6",
-    "minimist": "1.2.5"
+    "docusaurus": "1.14.6",
+    "minimist": "1.2.5",
+    "bl": "1.2.3"
   }
 }
