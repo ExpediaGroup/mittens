@@ -15,22 +15,23 @@
 package flags
 
 import (
-	"log"
-	"strings"
+	"flag"
+	"fmt"
 )
 
-// toHeaders converts the headers from the format these are passed by the user to a map.
-func toHeaders(headersFlag []string) map[string]string {
+// HTTP stores flags related to HTTP requests.
+type HTTPHeaders struct {
+	Headers stringArray
+}
 
-	headers := make(map[string]string)
-	for _, h := range headersFlag {
-		kv := strings.SplitN(h, ":", 2)
-		if len(kv) == 1 {
-			log.Printf("cannot find ':' separator in supplied header %s", h)
-			headers[strings.TrimSpace(kv[0])] = ""
-			continue
-		}
-		headers[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
-	}
-	return headers
+func (h *HTTPHeaders) String() string {
+	return fmt.Sprintf("%+v", *h)
+}
+
+func (h *HTTPHeaders) initFlags() {
+	flag.Var(&h.Headers, "http-headers", "HTTP header to be sent with warm up requests.")
+}
+
+func (h *HTTPHeaders) getWarmupHTTPHeaders() []string {
+	return h.Headers
 }
