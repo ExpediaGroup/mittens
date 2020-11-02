@@ -1,4 +1,4 @@
-//Copyright 2019 Expedia, Inc.
+//Copyright 2020 Expedia, Inc.
 //
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
@@ -12,15 +12,15 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-package flags
+package util
 
 import (
 	"log"
 	"strings"
 )
 
-// toHeaders converts the headers from the format these are passed by the user to a map.
-func toHeaders(headersFlag []string) map[string]string {
+// ToHeaders converts the headers from the format these are passed by the user to a map.
+func ToHeaders(headersFlag []string) map[string]string {
 
 	headers := make(map[string]string)
 	for _, h := range headersFlag {

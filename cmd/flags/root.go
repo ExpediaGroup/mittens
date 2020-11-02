@@ -35,6 +35,7 @@ type Root struct {
 	FileProbe
 	Target
 	HTTP
+	HTTPHeaders
 	Grpc
 }
 
@@ -52,6 +53,7 @@ func (r *Root) InitFlags() {
 
 	r.FileProbe.initFlags()
 	r.Target.initFlags()
+	r.HTTPHeaders.initFlags()
 	r.HTTP.initFlags()
 	r.Grpc.initFlags()
 }
@@ -98,8 +100,8 @@ func (r *Root) GetWarmupTargetOptions() (warmup.TargetOptions, error) {
 }
 
 // GetWarmupHTTPHeaders returns the HTTP headers.
-func (r *Root) GetWarmupHTTPHeaders() map[string]string {
-	return r.HTTP.getWarmupHTTPHeaders()
+func (r *Root) GetWarmupHTTPHeaders() []string {
+	return r.HTTPHeaders.getWarmupHTTPHeaders()
 }
 
 // GetWarmupHTTPRequests returns a channel with HTTP requests.
@@ -162,9 +164,4 @@ func (r *Root) GetWarmupGrpcRequests() (chan grpc.Request, error) {
 		}
 	})
 	return requestsChan, nil
-}
-
-// GetWarmupGrpcHeaders returns the gRPC headers.
-func (r *Root) GetWarmupGrpcHeaders() []string {
-	return r.Grpc.getWarmupGrpcHeaders()
 }
