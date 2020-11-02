@@ -97,7 +97,7 @@ class Index extends React.Component {
                     <ul>
                         <li>Sends requests continuously for X seconds</li>
                         <li>Supports REST and gRPC</li>
-                        <li>Supports HTTP and gRPC headers</li>
+                        <li>Supports custom HTTP headers</li>
                         <li>Supports concurrent requests</li>
                         <li>Supports placeholders for random elements in requests</li>
                         <li>Provides files or/and endpoints that can be used as liveness/readiness probes in Kubernetes</li>

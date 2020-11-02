@@ -90,7 +90,6 @@ func run() int {
 				HttpRequests:             httpRequests,
 				GrpcRequests:             grpcRequests,
 				HttpHeaders:              opts.GetWarmupHTTPHeaders(),
-				GrpcHeaders:              opts.GetWarmupGrpcHeaders(),
 				RequestDelayMilliseconds: opts.RequestDelayMilliseconds,
 			}
 			wp.Run(hasHttpRequests, hasGrpcRequests, &requestsSentCounter)
