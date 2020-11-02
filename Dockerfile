@@ -6,6 +6,6 @@ WORKDIR /mittens
 # Run unit tests & build app
 RUN make unit-tests
 
-FROM alpine:3.7
+FROM scratch
 COPY --from=0 /mittens/mittens /app/mittens
 ENTRYPOINT ["/app/mittens"]
