@@ -17,36 +17,26 @@
 package cmd
 
 import (
-	grpcurl_testing "github.com/fullstorydev/grpcurl/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/interop/grpc_testing"
-	"google.golang.org/grpc/reflection"
 	"log"
+	"mittens/fixture"
 	"mittens/pkg/safe"
-	"net"
 	"net/http"
 	"os"
 	"testing"
-	"time"
 )
+
+var mockServer *http.Server
+var mockGrpcServer *grpc.Server
 
 // this is a hack since Go doesn't support setup/tearDown
 // we use sub-tests so that target servers only start once
-func TestAll(t *testing.T) {
-	shutdownHttp := StartHttpTargetTestServer(t)
-	shutdownGrpc := StartGrpcTargetTestServer(t)
-	defer shutdownHttp()
-	defer shutdownGrpc()
-
-	result := t.Run("TestGrpcAndHttp", TestGrpcAndHttp)
-	result = result && t.Run("TestWarmupSidecarWithFileProbe", TestWarmupSidecarWithFileProbe)
-	result = result && t.Run("TestWarmupFailReadinessIfTargetIsNeverReady", TestWarmupFailReadinessIfTargetIsNeverReady)
-	result = result && t.Run("TestWarmupFailReadinessIfNoRequestsAreSentToTarget", TestWarmupFailReadinessIfNoRequestsAreSentToTarget)
-	result = result && t.Run("TestShouldBeReadyRegardlessIfWarmupRan", TestShouldBeReadyRegardlessIfWarmupRan)
-	result = result && t.Run("TestShouldBeReadyRegardlessIfHasPanicked", TestShouldBeReadyRegardlessIfHasPanicked)
-	os.Exit(bool2int(!result))
+func TestMain(m *testing.M) {
+	setup()
+	m.Run()	
+	teardown()
 }
 
 func TestShouldBeReadyRegardlessIfWarmupRan(t *testing.T) {
@@ -219,50 +209,6 @@ func TestGrpcAndHttp(t *testing.T) {
 	assert.True(t, readyFileExists)
 }
 
-// StartGrpcTargetTestServer starts a gRPC server in port 50051
-// It uses the test.proto from grpc-testing: https://github.com/grpc/grpc-go/blob/40a879c23a0dc77234d17e0699d074d5fd151bd0/test/grpc_testing/test.proto
-func StartGrpcTargetTestServer(t *testing.T) (shutdown func()) {
-	svr := grpc.NewServer()
-
-	grpc_testing.RegisterTestServiceServer(svr, grpcurl_testing.TestServer{})
-	reflection.Register(svr)
-	l, _ := net.Listen("tcp", ":50051")
-
-	var serverErr error
-	go func() {
-		serverErr = svr.Serve(l)
-	}()
-
-	time.Sleep(100 * time.Millisecond)
-	require.NoError(t, serverErr)
-
-	return shutdown
-}
-
-func StartHttpTargetTestServer(t *testing.T) (shutdown func()) {
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNoContent)
-	})
-
-	http.HandleFunc("/delay", func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(time.Millisecond * 100)
-		w.WriteHeader(http.StatusNoContent)
-	})
-
-	server := &http.Server{Addr: ":8080"}
-
-	var serverErr error
-	go func() {
-		serverErr = server.ListenAndServe()
-	}()
-
-	// wait for server to star up
-	time.Sleep(100 * time.Millisecond)
-	require.NoError(t, serverErr)
-
-	return shutdown
-}
-
 func bool2int(b bool) int {
 	if b {
 		return 1
@@ -285,4 +231,14 @@ func fileExists(name string) (bool, error) {
 	} else {
 		return false, err
 	}
+}
+
+func setup(){
+	mockServer = fixture.StartHttpTargetTestServer(80,[]fixture.PathResponseHandler{},false)
+	mockGrpcServer = fixture.StartGrpcTargetTestServer(50051)
+}
+
+func teardown(){
+	mockServer.Close()
+	mockGrpcServer.Stop()
 }
