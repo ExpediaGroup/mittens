@@ -31,8 +31,6 @@ import (
 var mockServer *http.Server
 var mockGrpcServer *grpc.Server
 
-// this is a hack since Go doesn't support setup/tearDown
-// we use sub-tests so that target servers only start once
 func TestMain(m *testing.M) {
 	setup()
 	m.Run()	
@@ -234,7 +232,7 @@ func fileExists(name string) (bool, error) {
 }
 
 func setup(){
-	mockServer = fixture.StartHttpTargetTestServer(80,[]fixture.PathResponseHandler{},false)
+	mockServer = fixture.StartHttpTargetTestServer(8080,[]fixture.PathResponseHandler{},false)
 	mockGrpcServer = fixture.StartGrpcTargetTestServer(50051)
 }
 
