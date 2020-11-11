@@ -25,7 +25,7 @@ import (
 var mock_server *http.Server
 
 const WorkingPath  = "/path"
-const Port int     = 80
+const Port int     = 8080
 var ServerUrl      = "http://localhost:"+fmt.Sprint(Port)
 
 func TestMain(m *testing.M) {
@@ -63,7 +63,7 @@ func setup(){
 		}
 	}
 	path_handler := fixture.PathResponseHandler { WorkingPath, path_reposnse_handler_func}
-	mock_server = fixture.StartHttpTargetTestServer(80,[]fixture.PathResponseHandler{path_handler},false)
+	mock_server = fixture.StartHttpTargetTestServer(Port,[]fixture.PathResponseHandler{path_handler},false)
 }
 
 func teardown(){
