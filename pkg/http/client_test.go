@@ -22,7 +22,7 @@ import (
 	"testing"
 )
 
-var mock_server *http.Server
+var mockServer *http.Server
 
 const WorkingPath  = "/path"
 const Port int     = 8090
