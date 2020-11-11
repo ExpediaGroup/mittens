@@ -57,15 +57,15 @@ func TestConnectionError(t *testing.T) {
 }
 
 func setup(){
-	path_reposnse_handler_func := func(rw http.ResponseWriter, r *http.Request) {
+	pathReposnseHandlerFunc := func(rw http.ResponseWriter, r *http.Request) {
 		if want, have := "/path", r.URL.Path; want != have {
 			rw.WriteHeader(404)
 		}
 	}
-	path_handler := fixture.PathResponseHandler { WorkingPath, path_reposnse_handler_func}
-	mock_server = fixture.StartHttpTargetTestServer(Port,[]fixture.PathResponseHandler{path_handler},false)
+	pathHandler := fixture.PathResponseHandler { WorkingPath, pathReposnseHandlerFunc}
+	mockServer = fixture.StartHttpTargetTestServer(Port,[]fixture.PathResponseHandler{path_handler},false)
 }
 
 func teardown(){
-	mock_server.Close()
+	mockServer.Close()
 }
