@@ -25,7 +25,7 @@ import (
 var mock_server *http.Server
 
 const WorkingPath  = "/path"
-const Port int     = 8080
+const Port int     = 8090
 var ServerUrl      = "http://localhost:"+fmt.Sprint(Port)
 
 func TestMain(m *testing.M) {
