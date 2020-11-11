@@ -13,8 +13,8 @@ import (
 )
 
 type PathResponseHandler struct {
-	Path string
-	PathHandlerFunc func(rw http.ResponseWriter, r *http.Request) 
+	Path            string
+	PathHandlerFunc func(rw http.ResponseWriter, r *http.Request)
 }
 
 // StartGrpcTargetTestServer starts a gRPC server on provided port
@@ -25,10 +25,10 @@ func StartGrpcTargetTestServer(port int) *grpc.Server {
 	reflection.Register(svr)
 	uri := ":" + fmt.Sprint(port)
 	l, _ := net.Listen("tcp", uri)
-	go func(){
+	go func() {
 		err := svr.Serve(l)
-		if(err != nil ){
-			log.Fatal("Server failed : " ,err)
+		if err != nil {
+			log.Fatal("Server failed : ", err)
 		}
 	}()
 
@@ -36,7 +36,7 @@ func StartGrpcTargetTestServer(port int) *grpc.Server {
 }
 
 func StartHttpTargetTestServer(port int, pathHandlers []PathResponseHandler, disableDefaultPath bool) *http.Server {
-	if(!disableDefaultPath) {
+	if !disableDefaultPath {
 		http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNoContent)
 		})
@@ -54,10 +54,10 @@ func StartHttpTargetTestServer(port int, pathHandlers []PathResponseHandler, dis
 	baseUrl := ":" + fmt.Sprint(port)
 	server := &http.Server{Addr: baseUrl}
 
-	go func(){
+	go func() {
 		err := server.ListenAndServe()
-		if(err != nil ){
-			log.Fatal("Server failed : " ,err)
+		if err != nil {
+			log.Fatal("Server failed : ", err)
 		}
 	}()
 	return server

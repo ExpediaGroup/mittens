@@ -15,8 +15,8 @@
 package http
 
 import (
-	"github.com/stretchr/testify/assert"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"mittens/fixture"
 	"net/http"
 	"testing"
@@ -24,13 +24,14 @@ import (
 
 var mockServer *http.Server
 
-const WorkingPath  = "/path"
-const Port int     = 8090
-var ServerUrl      = "http://localhost:"+fmt.Sprint(Port)
+const WorkingPath = "/path"
+const Port int = 8090
+
+var ServerUrl = "http://localhost:" + fmt.Sprint(Port)
 
 func TestMain(m *testing.M) {
 	setup()
-	m.Run()	
+	m.Run()
 	teardown()
 }
 
@@ -56,16 +57,16 @@ func TestConnectionError(t *testing.T) {
 	assert.NotNil(t, resp.Err)
 }
 
-func setup(){
+func setup() {
 	pathReposnseHandlerFunc := func(rw http.ResponseWriter, r *http.Request) {
 		if want, have := "/path", r.URL.Path; want != have {
 			rw.WriteHeader(404)
 		}
 	}
-	pathHandler := fixture.PathResponseHandler { WorkingPath, pathReposnseHandlerFunc}
-	mockServer = fixture.StartHttpTargetTestServer(Port,[]fixture.PathResponseHandler{path_handler},false)
+	pathHandler := fixture.PathResponseHandler{WorkingPath, pathReposnseHandlerFunc}
+	mockServer = fixture.StartHttpTargetTestServer(Port, []fixture.PathResponseHandler{pathHandler}, false)
 }
 
-func teardown(){
+func teardown() {
 	mockServer.Close()
 }

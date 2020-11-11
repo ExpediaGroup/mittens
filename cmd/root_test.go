@@ -33,7 +33,7 @@ var mockGrpcServer *grpc.Server
 
 func TestMain(m *testing.M) {
 	setup()
-	m.Run()	
+	m.Run()
 	teardown()
 }
 
@@ -231,12 +231,12 @@ func fileExists(name string) (bool, error) {
 	}
 }
 
-func setup(){
-	mockServer = fixture.StartHttpTargetTestServer(8080,[]fixture.PathResponseHandler{},false)
+func setup() {
+	mockServer = fixture.StartHttpTargetTestServer(8080, []fixture.PathResponseHandler{}, false)
 	mockGrpcServer = fixture.StartGrpcTargetTestServer(50051)
 }
 
-func teardown(){
+func teardown() {
 	mockServer.Close()
 	mockGrpcServer.Stop()
 }
