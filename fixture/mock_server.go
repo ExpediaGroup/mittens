@@ -35,8 +35,8 @@ func StartGrpcTargetTestServer(port int) *grpc.Server {
 	return svr
 }
 
-func StartHttpTargetTestServer(port int, path_handlers []PathResponseHandler, disable_default_path bool) *http.Server {
-	if(!disable_default_path) {
+func StartHttpTargetTestServer(port int, pathHandlers []PathResponseHandler, disableDefaultPath bool) *http.Server {
+	if(!disableDefaultPath) {
 		http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNoContent)
 		})
@@ -47,12 +47,12 @@ func StartHttpTargetTestServer(port int, path_handlers []PathResponseHandler, di
 		})
 	}
 
-	for _, path_handler := range path_handlers {
-		http.HandleFunc(path_handler.Path, path_handler.PathHandlerFunc)
+	for _, pathHandler := range pathHandlers {
+		http.HandleFunc(pathHandler.Path, pathHandler.PathHandlerFunc)
 	}
 
-	base_url := ":" + fmt.Sprint(port)
-	server := &http.Server{Addr: base_url}
+	baseUrl := ":" + fmt.Sprint(port)
+	server := &http.Server{Addr: baseUrl}
 
 	go func(){
 		err := server.ListenAndServe()
