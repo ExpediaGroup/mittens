@@ -28,7 +28,7 @@ import (
 	"testing"
 )
 
-var mockServer *http.Server
+var mockHttpServer *http.Server
 var mockGrpcServer *grpc.Server
 
 func TestMain(m *testing.M) {
@@ -232,11 +232,11 @@ func fileExists(name string) (bool, error) {
 }
 
 func setup() {
-	mockServer = fixture.StartHttpTargetTestServer(8080, []fixture.PathResponseHandler{}, false)
+	mockHttpServer = fixture.StartHttpTargetTestServer(8080, []fixture.PathResponseHandler{}, false)
 	mockGrpcServer = fixture.StartGrpcTargetTestServer(50051)
 }
 
 func teardown() {
-	mockServer.Close()
+	mockHttpServer.Close()
 	mockGrpcServer.Stop()
 }
