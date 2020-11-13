@@ -15,39 +15,39 @@
 package http
 
 import (
-	"net/http"
-	"net/http/httptest"
-	"testing"
-
+	"fmt"
 	"github.com/stretchr/testify/assert"
+	"mittens/fixture"
+	"net/http"
+	"testing"
 )
 
-func TestRequestSuccess(t *testing.T) {
-	path := "/path"
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		if want, have := path, r.URL.Path; want != have {
-			t.Errorf("unexpected path, want: %q, have %q", want, have)
-		}
-	}))
-	defer server.Close()
+var mockServer *http.Server
 
-	c := NewClient(server.URL, false)
+const WorkingPath = "/path"
+const Port int = 8090
+
+var ServerUrl = "http://localhost:" + fmt.Sprint(Port)
+
+func TestMain(m *testing.M) {
+	setup()
+	m.Run()
+	teardown()
+}
+
+func TestRequestSuccess(t *testing.T) {
+	c := NewClient(ServerUrl, false)
 	reqBody := ""
-	resp := c.SendRequest("GET", path, map[string]string{}, &reqBody)
+	resp := c.SendRequest("GET", WorkingPath, map[string]string{}, &reqBody)
 	assert.Nil(t, resp.Err)
 }
 
 func TestHttpError(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		rw.WriteHeader(400)
-	}))
-	defer server.Close()
-
-	c := NewClient(server.URL, false)
+	c := NewClient(ServerUrl, false)
 	reqBody := ""
 	resp := c.SendRequest("GET", "/", map[string]string{}, &reqBody)
 	assert.Nil(t, resp.Err)
-	assert.Equal(t, resp.StatusCode, 400)
+	assert.Equal(t, resp.StatusCode, 404)
 }
 
 func TestConnectionError(t *testing.T) {
@@ -55,4 +55,18 @@ func TestConnectionError(t *testing.T) {
 	reqBody := ""
 	resp := c.SendRequest("GET", "/potato", map[string]string{}, &reqBody)
 	assert.NotNil(t, resp.Err)
+}
+
+func setup() {
+	pathResponseHandlerFunc := func(rw http.ResponseWriter, r *http.Request) {
+		if want, have := "/path", r.URL.Path; want != have {
+			rw.WriteHeader(404)
+		}
+	}
+	pathHandler := fixture.PathResponseHandler{WorkingPath, pathResponseHandlerFunc}
+	mockServer = fixture.StartHttpTargetTestServer(Port, []fixture.PathResponseHandler{pathHandler}, false)
+}
+
+func teardown() {
+	mockServer.Close()
 }
