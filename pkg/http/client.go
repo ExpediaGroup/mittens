@@ -40,12 +40,10 @@ func NewClient(host string, insecure bool) Client {
 		Timeout: 10 * time.Second,
 	}
 
-	if insecure {
-		client.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
+	client.Transport = &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
 	}
-	return Client{httpClient: client, host: strings.TrimRight(host, "/")}
+	return Client{httpClient: client, host: strings.TrimRight(host, "/")} //nolint:wsl
 }
 
 // SendRequest sends a request to the HTTP server and wraps useful information into a Response object.

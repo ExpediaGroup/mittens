@@ -29,7 +29,7 @@ func TestGrpc_FlagToGrpcRequest(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "health/ping", request.ServiceMethod)
-	assert.Equal(t, `{"db": "true"}`, string(request.Message))
+	assert.Equal(t, `{"db": "true"}`, request.Message)
 }
 
 func TestGrpc_FlagWithoutBodyToGrpcRequest(t *testing.T) {
@@ -39,7 +39,7 @@ func TestGrpc_FlagWithoutBodyToGrpcRequest(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "health/ping", request.ServiceMethod)
-	assert.Equal(t, "", string(request.Message))
+	assert.Equal(t, "", request.Message)
 }
 
 func TestGrpc_InvalidFlagToGrpcRequest(t *testing.T) {

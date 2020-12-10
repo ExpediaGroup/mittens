@@ -63,8 +63,8 @@ func setup() {
 			rw.WriteHeader(404)
 		}
 	}
-	pathHandler := fixture.PathResponseHandler{WorkingPath, pathResponseHandlerFunc}
-	mockServer = fixture.StartHttpTargetTestServer(Port, []fixture.PathResponseHandler{pathHandler}, false)
+	pathHandler := fixture.PathResponseHandler{Path: WorkingPath, PathHandlerFunc: pathResponseHandlerFunc}
+	mockServer = fixture.StartHttpTargetTestServer(Port, []fixture.PathResponseHandler{pathHandler})
 }
 
 func teardown() {

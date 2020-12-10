@@ -64,7 +64,7 @@ func (t Target) WaitForReadinessProbe() error {
 	for {
 		select {
 		case <-timeout:
-			return fmt.Errorf("Giving up! Target not ready after %d seconds 🙁", t.options.ReadinessTimeoutInSeconds)
+			return fmt.Errorf("giving up; target not ready after %d seconds 🙁", t.options.ReadinessTimeoutInSeconds)
 		default:
 			// Wait one second between attempts. This is not configurable
 			time.Sleep(time.Second * 1)

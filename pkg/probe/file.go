@@ -19,6 +19,7 @@ package probe
 import (
 	"io/ioutil"
 	"log"
+	"os"
 )
 
 // WriteFile writes sample content to a file. This file can be used as a liveness/readiness check e.g. in Kubernetes.
@@ -32,4 +33,24 @@ func WriteFile(file string) {
 		return
 	}
 	log.Printf("Wrote file: %s", file)
+}
+
+// DeleteFile removes the named file and logs an error in case of issues.
+func DeleteFile(path string) {
+	var err = os.Remove(path)
+	if err != nil {
+		log.Printf("File not deleted")
+	}
+}
+
+// FileExists returns true if a file exists and false otherwise.
+// Note that if os.Stat returns an error this function returns false since we don't know if the file exists
+func FileExists(name string) (bool, error) {
+	if _, err := os.Stat(name); err == nil {
+		return true, nil
+	} else if os.IsNotExist(err) {
+		return false, nil
+	} else {
+		return false, err
+	}
 }
