@@ -43,7 +43,7 @@ func NewClient(host string, insecure bool) Client {
 	client.Transport = &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
 	}
-	return Client{httpClient: client, host: strings.TrimRight(host, "/")} //nolint:wsl
+	return Client{httpClient: client, host: strings.TrimRight(host, "/")}
 }
 
 // SendRequest sends a request to the HTTP server and wraps useful information into a Response object.
