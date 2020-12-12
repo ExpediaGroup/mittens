@@ -45,7 +45,7 @@ func NewClient(host string, insecure bool, timeoutSeconds int) Client {
 	return Client{host: host, timeoutSeconds: timeoutSeconds, insecure: insecure, connClose: func() error { return nil }}
 }
 
-// connect attempts to establish a connection with a gRPC server.
+// Connect attempts to establish a connection with a gRPC server.
 func (c *Client) Connect(headers []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.timeoutSeconds)*time.Second)
 
