@@ -21,7 +21,6 @@ import (
 )
 
 func TestHttp_ToHttpRequests(t *testing.T) {
-
 	requestFlags := []string{
 		"get:/health",
 		"get:/ping",

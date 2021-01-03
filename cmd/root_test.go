@@ -20,8 +20,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
-	"log"
 	"mittens/fixture"
+	"mittens/pkg/probe"
 	"mittens/pkg/safe"
 	"net/http"
 	"os"
@@ -38,8 +38,8 @@ func TestMain(m *testing.M) {
 }
 
 func TestShouldBeReadyRegardlessIfWarmupRan(t *testing.T) {
-	deleteFile("alive")
-	deleteFile("ready")
+	probe.DeleteFile("alive")
+	probe.DeleteFile("ready")
 
 	os.Args = []string{"mittens",
 		"-file-probe-enabled=true",
@@ -59,13 +59,13 @@ func TestShouldBeReadyRegardlessIfWarmupRan(t *testing.T) {
 	assert.Equal(t, "/health", opts.Target.ReadinessHTTPPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
 
-	readyFileExists, err := fileExists("ready")
+	readyFileExists, err := probe.FileExists("ready")
 	require.NoError(t, err)
 	assert.True(t, readyFileExists)
 }
 
 func TestShouldBeReadyRegardlessIfHasPanicked(t *testing.T) {
-	deleteFile("ready")
+	probe.DeleteFile("ready")
 
 	// we trigger a panic scenario by using a non-existent gRPC readiness probe
 	os.Args = []string{"mittens",
@@ -82,14 +82,14 @@ func TestShouldBeReadyRegardlessIfHasPanicked(t *testing.T) {
 	RunCmdRoot()
 
 	assert.True(t, safe.HasPanicked())
-	readyFileExists, err := fileExists("ready")
+	readyFileExists, err := probe.FileExists("ready")
 	require.NoError(t, err)
 	assert.True(t, readyFileExists)
 }
 
 func TestWarmupSidecarWithFileProbe(t *testing.T) {
-	deleteFile("alive")
-	deleteFile("ready")
+	probe.DeleteFile("alive")
+	probe.DeleteFile("ready")
 
 	os.Args = []string{"mittens",
 		"-file-probe-enabled=true",
@@ -109,14 +109,14 @@ func TestWarmupSidecarWithFileProbe(t *testing.T) {
 	assert.Equal(t, "/health", opts.Target.ReadinessHTTPPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
 
-	readyFileExists, err := fileExists("ready")
+	readyFileExists, err := probe.FileExists("ready")
 	require.NoError(t, err)
 	assert.True(t, readyFileExists)
 }
 
 func TestWarmupFailReadinessIfTargetIsNeverReady(t *testing.T) {
-	deleteFile("alive")
-	deleteFile("ready")
+	probe.DeleteFile("alive")
+	probe.DeleteFile("ready")
 
 	// we simulate a failure in the target by setting the readiness path to a non existent one so that
 	// the target never becomes ready and the warmup does not run
@@ -139,14 +139,14 @@ func TestWarmupFailReadinessIfTargetIsNeverReady(t *testing.T) {
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
 	assert.Equal(t, true, opts.FailReadiness)
 
-	readyFileExists, err := fileExists("ready")
+	readyFileExists, err := probe.FileExists("ready")
 	require.NoError(t, err)
 	assert.False(t, readyFileExists)
 }
 
 func TestWarmupFailReadinessIfNoRequestsAreSentToTarget(t *testing.T) {
-	deleteFile("alive")
-	deleteFile("ready")
+	probe.DeleteFile("alive")
+	probe.FileExists("ready")
 
 	// we simulate a failure by using a port that doesnt exist (9999)
 	os.Args = []string{"mittens",
@@ -169,14 +169,14 @@ func TestWarmupFailReadinessIfNoRequestsAreSentToTarget(t *testing.T) {
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
 	assert.Equal(t, true, opts.FailReadiness)
 
-	readyFileExists, err := fileExists("ready")
+	readyFileExists, err := probe.FileExists("ready")
 	require.NoError(t, err)
 	assert.False(t, readyFileExists)
 }
 
 func TestGrpcAndHttp(t *testing.T) {
-	deleteFile("alive")
-	deleteFile("ready")
+	probe.DeleteFile("alive")
+	probe.DeleteFile("ready")
 
 	os.Args = []string{"mittens",
 		"-file-probe-enabled=true",
@@ -202,37 +202,13 @@ func TestGrpcAndHttp(t *testing.T) {
 	assert.Equal(t, "/health", opts.Target.ReadinessHTTPPath)
 	assert.Equal(t, 5, opts.MaxDurationSeconds)
 
-	readyFileExists, err := fileExists("ready")
+	readyFileExists, err := probe.FileExists("ready")
 	require.NoError(t, err)
 	assert.True(t, readyFileExists)
 }
 
-func bool2int(b bool) int {
-	if b {
-		return 1
-	}
-	return 0
-}
-
-func deleteFile(path string) {
-	var err = os.Remove(path)
-	if err != nil {
-		log.Printf("File not deleted")
-	}
-}
-
-func fileExists(name string) (bool, error) {
-	if _, err := os.Stat(name); err == nil {
-		return true, nil
-	} else if os.IsNotExist(err) {
-		return false, nil
-	} else {
-		return false, err
-	}
-}
-
 func setup() {
-	mockHttpServer = fixture.StartHttpTargetTestServer(8080, []fixture.PathResponseHandler{}, false)
+	mockHttpServer = fixture.StartHttpTargetTestServer(8080, []fixture.PathResponseHandler{})
 	mockGrpcServer = fixture.StartGrpcTargetTestServer(50051)
 }
 

@@ -93,7 +93,7 @@ func (r *Root) GetWarmupTargetOptions() (warmup.TargetOptions, error) {
 	options := r.Target.getWarmupTargetOptions()
 	options.ReadinessTimeoutInSeconds = r.MaxDurationSeconds
 	if options.ReadinessProtocol != "http" && options.ReadinessProtocol != "grpc" {
-		err := fmt.Errorf("Readiness protocol %s not supported, please use http or grpc", r.ReadinessProtocol)
+		err := fmt.Errorf("readiness protocol %s not supported, please use http or grpc", r.ReadinessProtocol)
 		return options, err
 	}
 	return options, nil
@@ -135,7 +135,7 @@ func (r *Root) GetWarmupHTTPRequests() (chan http.Request, error) {
 	return requestsChan, nil
 }
 
-// getWarmupGrpcRequests returns a channel with gRPC requests.
+// GetWarmupGrpcRequests returns a channel with gRPC requests.
 func (r *Root) GetWarmupGrpcRequests() (chan grpc.Request, error) {
 	requests, err := r.Grpc.getWarmupGrpcRequests()
 	if err != nil {

@@ -102,7 +102,7 @@ func rangeElements(source string) string {
 	return strconv.Itoa(number)
 }
 
-// interpolatePlaceholders scans a string and replaces placeholders with actual values.
+// InterpolatePlaceholders scans a string and replaces placeholders with actual values.
 // At the moment this supports; dates, timestamps, random values from a list, and random integers.
 func InterpolatePlaceholders(source string) string {
 	return templatePlaceholderRegex.ReplaceAllStringFunc(source, func(templateString string) string {

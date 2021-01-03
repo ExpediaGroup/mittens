@@ -40,10 +40,8 @@ func NewClient(host string, insecure bool) Client {
 		Timeout: 10 * time.Second,
 	}
 
-	if insecure {
-		client.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
+	client.Transport = &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
 	}
 	return Client{httpClient: client, host: strings.TrimRight(host, "/")}
 }

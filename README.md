@@ -78,6 +78,7 @@ Please refer to our [CONTRIBUTING](./CONTRIBUTING.md) file.
 ## Use Cases
 
 * [Hotels.com](https://www.hotels.com/) - Used in the production environment as a [linked Docker container](https://expediagroup.github.io/mittens/docs/installation/running#run-as-a-linked-docker-container) and as a [Kubernetes sidecar](https://expediagroup.github.io/mittens/docs/installation/running#run-as-a-sidecar-on-kubernetes) to eliminate cold starts. 
+* [Expedia Group](https://www.expediagroup.com/) - Used in the production environment as a [Kubernetes sidecar](https://expediagroup.github.io/mittens/docs/installation/running#run-as-a-sidecar-on-kubernetes) to eliminate cold starts. 
 
 ## References
 
@@ -88,4 +89,4 @@ Please refer to our [CONTRIBUTING](./CONTRIBUTING.md) file.
 
 This project is available under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
 
-Copyright 2019 Expedia, Inc.
+Copyright 2020 Expedia, Inc.
