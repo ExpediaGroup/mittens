@@ -4,7 +4,7 @@ title: How to Build
 ---
 
 Mittens is written in Go and uses [Go Modules](https://github.com/golang/go/wiki/Modules). 
-We provide a [Makefile](https://github.com/ExpediaGroup/mittens/blob/master/Makefile) which can be used to generate an executable binary and a Dockerfile if you prefer to run using Docker.
+We provide a [Makefile](https://github.com/ExpediaGroup/mittens/blob/main/Makefile) which can be used to generate an executable binary and a Dockerfile if you prefer to run using Docker.
 
 ### Binary
 
