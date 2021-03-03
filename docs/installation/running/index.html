@@ -100,7 +100,7 @@ services:
       <span class="hljs-comment">#   image: lorem/ipsum:1.0</span>
       <span class="hljs-comment"># sidecar follows</span>
       <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">mittens</span>
-        <span class="hljs-attr">image:</span> <span class="hljs-string">mittens:latest</span>
+        <span class="hljs-attr">image:</span> <span class="hljs-string">expediagroup/mittens:latest</span>
         <span class="hljs-attr">resources:</span>
           <span class="hljs-attr">limits:</span>
             <span class="hljs-attr">memory:</span> <span class="hljs-string">50Mi</span>
@@ -119,7 +119,7 @@ services:
           <span class="hljs-attr">exec:</span>
             <span class="hljs-attr">command:</span>
             <span class="hljs-bullet">-</span> <span class="hljs-string">"cat"</span>
-            <span class="hljs-bullet">-</span> <span class="hljs-string">"ready"</span>
+            <span class="hljs-bullet">-</span> <span class="hljs-string">"alive"</span>
           <span class="hljs-attr">initialDelaySeconds:</span> <span class="hljs-number">10</span>
           <span class="hljs-attr">periodSeconds:</span> <span class="hljs-number">30</span>
         <span class="hljs-attr">args:</span>
