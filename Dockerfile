@@ -16,7 +16,7 @@ RUN addgroup -g 1000 mittens && \
 RUN mkdir /app && chown -R mittens:mittens /app
 
 # Run as not root
-USER $APP_USER
+USER mittens
 
 # Set workdir
 WORKDIR /app
