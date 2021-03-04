@@ -56,7 +56,7 @@ spec:
       #   image: lorem/ipsum:1.0
       # sidecar follows
       - name: mittens
-        image: mittens:latest
+        image: expediagroup/mittens:latest
         resources:
           limits:
             memory: 50Mi
@@ -75,7 +75,7 @@ spec:
           exec:
             command:
             - "cat"
-            - "ready"
+            - "alive"
           initialDelaySeconds: 10
           periodSeconds: 30
         args:
