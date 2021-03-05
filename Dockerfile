@@ -6,7 +6,7 @@ WORKDIR /mittens
 # Run unit tests & build app
 RUN make unit-tests
 
-FROM alpine:3.7
+FROM alpine:3.12
 
 # Create a group and user
 RUN addgroup -g 1000 mittens && \
