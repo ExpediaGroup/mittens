@@ -34,7 +34,7 @@ We provide a [Makefile](Makefile) which can be used to generate an executable bi
 
 ### Binary
 
-To build the binary make sure you've installed [Go 1.14](https://golang.org/dl/).
+To build the binary make sure you've installed [Go 1.16](https://golang.org/dl/).
 
 #### Build binary executable & run unit tests
 

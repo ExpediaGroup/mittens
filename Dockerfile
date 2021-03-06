@@ -1,4 +1,4 @@
-FROM golang:1.14
+FROM golang:1.16
 # Create required dirs and copy files
 RUN mkdir -p /mittens
 COPY ./ /mittens/
@@ -6,7 +6,7 @@ WORKDIR /mittens
 # Run unit tests & build app
 RUN make unit-tests
 
-FROM alpine:3.7
+FROM alpine:3.12
 
 # Create a group and user
 RUN addgroup -g 1000 mittens && \
