@@ -16,7 +16,6 @@ package cmd
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"mittens/cmd/flags"
 	"mittens/pkg/probe"
@@ -52,17 +51,17 @@ func run() int {
 	var validationError bool
 	httpRequests, err := opts.GetWarmupHTTPRequests()
 	if err != nil {
-		fmt.Errorf("invalid HTTP options: %v", err)
+		log.Printf("invalid HTTP options: %v", err)
 		validationError = true
 	}
 	grpcRequests, err := opts.GetWarmupGrpcRequests()
 	if err != nil {
-		fmt.Errorf("invalid grpc options: %v", err)
+		log.Printf("invalid grpc options: %v", err)
 		validationError = true
 	}
 	targetOptions, err := opts.GetWarmupTargetOptions()
 	if err != nil {
-		fmt.Errorf("invalid target options: %v", err)
+		log.Printf("invalid target options: %v", err)
 		validationError = true
 	}
 
