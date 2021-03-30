@@ -34,14 +34,12 @@ _Note_: If you use Docker for Mac/Windows you might need to set the target host 
 ## Run as a sidecar on Kubernetes
 
 ```yaml
-# for versions before 1.9.0 use apps/v1beta1
-# for versions before 1.6.0 use extensions/v1beta1
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: foo
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: foo

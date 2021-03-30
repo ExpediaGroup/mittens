@@ -65,7 +65,12 @@ func ToHTTPRequest(requestString string) (Request, error) {
 	}
 
 	path := placeholders.InterpolatePlaceholders(parts[1])
-	var body = placeholders.InterpolatePlaceholders(parts[2])
+	// the body of the request can either be inlined, or come from a file
+	rawBody, err := placeholders.GetBodyFromFileOrInlined(parts[2])
+	if err != nil {
+		return Request{}, fmt.Errorf("unable to parse body for request: %s", parts[2])
+	}
+	var body = placeholders.InterpolatePlaceholders(rawBody)
 
 	return Request{
 		Method: method,

@@ -15,7 +15,10 @@
 package http
 
 import (
+	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"testing"
 
@@ -31,6 +34,21 @@ func TestHttp_FlagToHttpRequest(t *testing.T) {
 	assert.Equal(t, http.MethodPost, request.Method)
 	assert.Equal(t, "/db", request.Path)
 	assert.Equal(t, `{"db": "true"}`, *request.Body)
+}
+
+func TestBodyFromFile(t *testing.T) {
+	file := createTempTile(`{"foo": "bar"}`)
+
+	// clean up the file at the end
+	defer os.Remove(file)
+
+	requestFlag := `post:/db:file:` + file
+	request, err := ToHTTPRequest(requestFlag)
+	require.NoError(t, err)
+
+	assert.Equal(t, http.MethodPost, request.Method)
+	assert.Equal(t, "/db", request.Path)
+	assert.Equal(t, `{"foo": "bar"}`, *request.Body)
 }
 
 func TestHttp_FlagWithoutBodyToHttpRequest(t *testing.T) {
@@ -81,4 +99,21 @@ func TestHttp_Interpolation(t *testing.T) {
 
 	assert.True(t, matchPath)
 	assert.True(t, matchBody)
+}
+
+func createTempTile(content string) string {
+	temporaryFile, err := ioutil.TempFile(os.TempDir(), "prefix-")
+	if err != nil {
+		log.Fatal("Cannot create temporary file", err)
+	}
+
+	if _, err = temporaryFile.Write([]byte(content)); err != nil {
+		log.Fatal("Unable to write file", err)
+	}
+
+	if err := temporaryFile.Close(); err != nil {
+		log.Fatal(err)
+	}
+
+	return temporaryFile.Name()
 }

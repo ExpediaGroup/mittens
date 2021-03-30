@@ -15,6 +15,7 @@
 package placeholders
 
 import (
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"regexp"
@@ -105,6 +106,7 @@ func rangeElements(source string) string {
 // InterpolatePlaceholders scans a string and replaces placeholders with actual values.
 // At the moment this supports; dates, timestamps, random values from a list, and random integers.
 func InterpolatePlaceholders(source string) string {
+
 	return templatePlaceholderRegex.ReplaceAllStringFunc(source, func(templateString string) string {
 
 		if strings.Contains(templateString, "currentDate") {
@@ -119,4 +121,21 @@ func InterpolatePlaceholders(source string) string {
 			return source
 		}
 	})
+}
+
+// GetBodyFromFileOrInlined returns the correct content for the body of a request.
+// the body of the request can either be inlined, or come from a file
+func GetBodyFromFileOrInlined(source string) (string, error) {
+
+	if strings.HasPrefix(source, "file:") {
+		path := source[len("file:"):]
+		fileContent, err := ioutil.ReadFile(path)
+		if err != nil {
+			return "", err
+		}
+
+		return string(fileContent), nil
+	} else {
+		return source, nil
+	}
 }
