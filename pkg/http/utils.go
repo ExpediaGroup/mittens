@@ -70,7 +70,7 @@ func ToHTTPRequest(requestString string) (Request, error) {
 	if err != nil {
 		return Request{}, fmt.Errorf("unable to parse body for request: %s", parts[2])
 	}
-	var body = placeholders.InterpolatePlaceholders(rawBody)
+	var body = placeholders.InterpolatePlaceholders(*rawBody)
 
 	return Request{
 		Method: method,
