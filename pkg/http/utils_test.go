@@ -91,7 +91,7 @@ func TestHttp_Interpolation(t *testing.T) {
 
 	assert.Equal(t, http.MethodPost, request.Method)
 
-	var pathRegex = regexp.MustCompile("/path_\\d_(foo|bar)")
+	var pathRegex = regexp.MustCompile(`/path_\d_(foo|bar)`)
 	matchPath := pathRegex.MatchString(request.Path)
 
 	var bodyRegex = regexp.MustCompile("{\"body\": \"(foo|bar) \\d\"}")
@@ -102,7 +102,7 @@ func TestHttp_Interpolation(t *testing.T) {
 }
 
 func createTempTile(content string) string {
-	temporaryFile, err := ioutil.TempFile(os.TempDir(), "prefix-")
+	temporaryFile, err := ioutil.TempFile(os.TempDir(), "mittens-")
 	if err != nil {
 		log.Fatal("Cannot create temporary file", err)
 	}

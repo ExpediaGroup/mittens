@@ -16,12 +16,43 @@ package placeholders
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
 	"regexp"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestGetBodyFromFileOrInlinedShouldFailForInvalidFiles(t *testing.T) {
+	input := `file:/this_file_does_not_exist.json`
+	_, err := GetBodyFromFileOrInlined(input)
+
+	assert.Error(t, err)
+}
+
+func TestGetBodyFromFileOrInlinedShouldReturnInlineData(t *testing.T) {
+	input := `abc`
+	data, err := GetBodyFromFileOrInlined(input)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "abc", *data)
+}
+
+func TestGetBodyFromFileOrInlinedShouldReturnFileContents(t *testing.T) {
+	file := createTempTile(`{"foo": "bar"}`)
+
+	// clean up the file at the end
+	defer os.Remove(file)
+
+	input := file
+	data, err := GetBodyFromFileOrInlined("file:/" + input)
+
+	assert.NoError(t, err)
+	assert.Equal(t, `{"foo": "bar"}`, *data)
+}
 
 func TestHttp_DateInterpolation(t *testing.T) {
 	input := `post:/db_{$currentDate}:{"date": "{$currentDate|days+5,months+2,years-1,format=yyyy-MM-dd}"}`
@@ -75,4 +106,21 @@ func TestHttp_RandomElementInterpolation(t *testing.T) {
 	matchOutput := elementsRegex.MatchString(output)
 
 	assert.True(t, matchOutput)
+}
+
+func createTempTile(content string) string {
+	temporaryFile, err := ioutil.TempFile(os.TempDir(), "mittens-")
+	if err != nil {
+		log.Fatal("Cannot create temporary file", err)
+	}
+
+	if _, err = temporaryFile.Write([]byte(content)); err != nil {
+		log.Fatal("Unable to write file", err)
+	}
+
+	if err := temporaryFile.Close(); err != nil {
+		log.Fatal(err)
+	}
+
+	return temporaryFile.Name()
 }

@@ -15,6 +15,9 @@
 package grpc
 
 import (
+	"io/ioutil"
+	"log"
+	"os"
 	"regexp"
 	"testing"
 
@@ -22,8 +25,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGrpc_FlagToGrpcRequest(t *testing.T) {
+func TestBodyFromFile(t *testing.T) {
+	file := createTempTile(`{"foo": "bar"}`)
 
+	// clean up the file at the end
+	defer os.Remove(file)
+
+	requestFlag := `health/ping:file:/` + file
+	request, err := ToGrpcRequest(requestFlag)
+	require.NoError(t, err)
+
+	assert.Equal(t, "health/ping", request.ServiceMethod)
+	assert.Equal(t, `{"foo": "bar"}`, request.Message)
+}
+
+func TestGrpc_FlagToGrpcRequest(t *testing.T) {
 	requestFlag := `health/ping:{"db": "true"}`
 	request, err := ToGrpcRequest(requestFlag)
 	require.NoError(t, err)
@@ -58,4 +74,21 @@ func TestGrpc_Interpolation(t *testing.T) {
 	matchRequest := pathRegex.MatchString(request.Message)
 
 	assert.True(t, matchRequest)
+}
+
+func createTempTile(content string) string {
+	temporaryFile, err := ioutil.TempFile(os.TempDir(), "mittens-")
+	if err != nil {
+		log.Fatal("Cannot create temporary file", err)
+	}
+
+	if _, err = temporaryFile.Write([]byte(content)); err != nil {
+		log.Fatal("Unable to write file", err)
+	}
+
+	if err := temporaryFile.Close(); err != nil {
+		log.Fatal(err)
+	}
+
+	return temporaryFile.Name()
 }
