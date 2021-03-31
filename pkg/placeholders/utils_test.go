@@ -16,12 +16,12 @@ package placeholders
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
 	"regexp"
 	"testing"
 	"time"
+
+	"mittens/pkg/placeholders/internal"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -42,7 +42,7 @@ func TestGetBodyFromFileOrInlinedShouldReturnInlineData(t *testing.T) {
 }
 
 func TestGetBodyFromFileOrInlinedShouldReturnFileContents(t *testing.T) {
-	file := createTempTile(`{"foo": "bar"}`)
+	file := internal.CreateTempFile(`{"foo": "bar"}`)
 
 	// clean up the file at the end
 	defer os.Remove(file)
@@ -106,21 +106,4 @@ func TestHttp_RandomElementInterpolation(t *testing.T) {
 	matchOutput := elementsRegex.MatchString(output)
 
 	assert.True(t, matchOutput)
-}
-
-func createTempTile(content string) string {
-	temporaryFile, err := ioutil.TempFile(os.TempDir(), "mittens-")
-	if err != nil {
-		log.Fatal("Cannot create temporary file", err)
-	}
-
-	if _, err = temporaryFile.Write([]byte(content)); err != nil {
-		log.Fatal("Unable to write file", err)
-	}
-
-	if err := temporaryFile.Close(); err != nil {
-		log.Fatal(err)
-	}
-
-	return temporaryFile.Name()
 }

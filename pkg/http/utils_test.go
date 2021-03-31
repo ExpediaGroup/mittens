@@ -15,12 +15,12 @@
 package http
 
 import (
-	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"regexp"
 	"testing"
+
+	"mittens/pkg/placeholders/internal"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -37,7 +37,7 @@ func TestHttp_FlagToHttpRequest(t *testing.T) {
 }
 
 func TestBodyFromFile(t *testing.T) {
-	file := createTempTile(`{"foo": "bar"}`)
+	file := internal.CreateTempFile(`{"foo": "bar"}`)
 
 	// clean up the file at the end
 	defer os.Remove(file)
@@ -99,21 +99,4 @@ func TestHttp_Interpolation(t *testing.T) {
 
 	assert.True(t, matchPath)
 	assert.True(t, matchBody)
-}
-
-func createTempTile(content string) string {
-	temporaryFile, err := ioutil.TempFile(os.TempDir(), "mittens-")
-	if err != nil {
-		log.Fatal("Cannot create temporary file", err)
-	}
-
-	if _, err = temporaryFile.Write([]byte(content)); err != nil {
-		log.Fatal("Unable to write file", err)
-	}
-
-	if err := temporaryFile.Close(); err != nil {
-		log.Fatal(err)
-	}
-
-	return temporaryFile.Name()
 }

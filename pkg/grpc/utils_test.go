@@ -15,8 +15,7 @@
 package grpc
 
 import (
-	"io/ioutil"
-	"log"
+	"mittens/pkg/placeholders/internal"
 	"os"
 	"regexp"
 	"testing"
@@ -26,7 +25,7 @@ import (
 )
 
 func TestBodyFromFile(t *testing.T) {
-	file := createTempTile(`{"foo": "bar"}`)
+	file := internal.CreateTempFile(`{"foo": "bar"}`)
 
 	// clean up the file at the end
 	defer os.Remove(file)
@@ -74,21 +73,4 @@ func TestGrpc_Interpolation(t *testing.T) {
 	matchRequest := pathRegex.MatchString(request.Message)
 
 	assert.True(t, matchRequest)
-}
-
-func createTempTile(content string) string {
-	temporaryFile, err := ioutil.TempFile(os.TempDir(), "mittens-")
-	if err != nil {
-		log.Fatal("Cannot create temporary file", err)
-	}
-
-	if _, err = temporaryFile.Write([]byte(content)); err != nil {
-		log.Fatal("Unable to write file", err)
-	}
-
-	if err := temporaryFile.Close(); err != nil {
-		log.Fatal(err)
-	}
-
-	return temporaryFile.Name()
 }
