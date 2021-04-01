@@ -37,7 +37,12 @@ func ToGrpcRequest(requestFlag string) (Request, error) {
 
 	request := Request{ServiceMethod: parts[0]}
 	if len(parts) == 2 {
-		request.Message = placeholders.InterpolatePlaceholders(parts[1])
+		// the body of the request can either be inlined, or come from a file
+		rawBody, err := placeholders.GetBodyFromFileOrInlined(parts[1])
+		if err != nil {
+			return Request{}, fmt.Errorf("unable to parse body for request: %s", parts[1])
+		}
+		request.Message = placeholders.InterpolatePlaceholders(*rawBody)
 	} else {
 		request.Message = ""
 	}
