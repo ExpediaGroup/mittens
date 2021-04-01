@@ -16,8 +16,11 @@ package http
 
 import (
 	"net/http"
+	"os"
 	"regexp"
 	"testing"
+
+	"mittens/pkg/internal"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -31,6 +34,21 @@ func TestHttp_FlagToHttpRequest(t *testing.T) {
 	assert.Equal(t, http.MethodPost, request.Method)
 	assert.Equal(t, "/db", request.Path)
 	assert.Equal(t, `{"db": "true"}`, *request.Body)
+}
+
+func TestBodyFromFile(t *testing.T) {
+	file := internal.CreateTempFile(`{"foo": "bar"}`)
+
+	// clean up the file at the end
+	defer os.Remove(file)
+
+	requestFlag := `post:/db:file:` + file
+	request, err := ToHTTPRequest(requestFlag)
+	require.NoError(t, err)
+
+	assert.Equal(t, http.MethodPost, request.Method)
+	assert.Equal(t, "/db", request.Path)
+	assert.Equal(t, `{"foo": "bar"}`, *request.Body)
 }
 
 func TestHttp_FlagWithoutBodyToHttpRequest(t *testing.T) {
@@ -73,7 +91,7 @@ func TestHttp_Interpolation(t *testing.T) {
 
 	assert.Equal(t, http.MethodPost, request.Method)
 
-	var pathRegex = regexp.MustCompile("/path_\\d_(foo|bar)")
+	var pathRegex = regexp.MustCompile(`/path_\d_(foo|bar)`)
 	matchPath := pathRegex.MatchString(request.Path)
 
 	var bodyRegex = regexp.MustCompile("{\"body\": \"(foo|bar) \\d\"}")
