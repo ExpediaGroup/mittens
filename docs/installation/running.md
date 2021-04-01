@@ -77,13 +77,91 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 30
         args:
-        - "-concurrency=3"
-        - "-max-duration-seconds=60"
-        - "-target-readiness-http-path=/health"
-        - "-target-grpc-port=6565"
-        - "-http-requests=get:/health"
-        - "-http-requests=post:/hotel/aubergines:{\"foo\":\"bar\"}"
-        - "-grpc-requests=service/method:{\"foo\":\"bar\",\"bar\":\"foo\"}"
+        - "--concurrency=3"
+        - "--max-duration-seconds=60"
+        - "--target-readiness-http-path=/health"
+        - "--target-grpc-port=6565"
+        - "--http-requests=get:/health"
+        - "--http-requests=post:/hotel/aubergines:{\"foo\":\"bar\"}"
+        - "--grpc-requests=service/method:{\"foo\":\"bar\",\"bar\":\"foo\"}"
+```
+
+#### Using Config Maps for complex POST queries
+
+If your aplication is using complex POST requests, you can move them to a separate file.
+To do that in Kubernetes, you can make use of ConfigMaps and define the body of your requests there, and then use a volume mount to make them accessible to Mittens.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: foo
+  template:
+    metadata:
+      labels:
+        app: foo
+    spec:
+      containers:
+      # primary container goes here
+      # - name: foo
+      #   image: lorem/ipsum:1.0
+      # sidecar follows
+      - name: mittens
+        image: expediagroup/mittens:latest
+        resources:
+          limits:
+            memory: 50Mi
+            cpu: 50m
+          requests:
+            memory: 50Mi
+            cpu: 50m
+        readinessProbe:
+          exec:
+            command:
+            - "cat"
+            - "ready"
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        livenessProbe:
+          exec:
+            command:
+            - "cat"
+            - "alive"
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        args:
+        - "--concurrency=3"
+        - "--max-duration-seconds=60"
+        - "--target-readiness-http-path=/health"
+        - "--target-grpc-port=6565"
+        - "--http-requests=get:/health"
+        - "--http-requests=post:/hotel/aubergines:{\"foo\":\"bar\"}"
+        - "--http-requests=post:/hotel/aubergines:file:/mittens/req_1.json"
+        - "--http-headers=content-type:application/json"
+        volumeMounts:
+          - name: mittens-config
+            mountPath: /mittens
+    volumes:
+        - name: mittens-config
+          configMap:
+            name: mittens-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mittens-config
+data:
+  req_1.json: |
+    {
+      "name": "foo",
+      "age": 123
+    }
+
 ```
 
 ### gRPC health checks on Kubernetes
