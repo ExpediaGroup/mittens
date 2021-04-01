@@ -140,7 +140,9 @@ spec:
         - "--target-readiness-http-path=/health"
         - "--target-grpc-port=6565"
         - "--http-requests=get:/health"
+        # Inlined request body
         - "--http-requests=post:/hotel/aubergines:{\"foo\":\"bar\"}"
+        # Request body comes from a json file (defined in a config map)
         - "--http-requests=post:/hotel/aubergines:file:/mittens/req_1.json"
         - "--http-headers=content-type:application/json"
         volumeMounts:
