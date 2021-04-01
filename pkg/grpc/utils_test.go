@@ -15,6 +15,8 @@
 package grpc
 
 import (
+	"mittens/pkg/internal"
+	"os"
 	"regexp"
 	"testing"
 
@@ -22,8 +24,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGrpc_FlagToGrpcRequest(t *testing.T) {
+func TestBodyFromFile(t *testing.T) {
+	file := internal.CreateTempFile(`{"foo": "bar"}`)
 
+	// clean up the file at the end
+	defer os.Remove(file)
+
+	requestFlag := `health/ping:file:/` + file
+	request, err := ToGrpcRequest(requestFlag)
+	require.NoError(t, err)
+
+	assert.Equal(t, "health/ping", request.ServiceMethod)
+	assert.Equal(t, `{"foo": "bar"}`, request.Message)
+}
+
+func TestGrpc_FlagToGrpcRequest(t *testing.T) {
 	requestFlag := `health/ping:{"db": "true"}`
 	request, err := ToGrpcRequest(requestFlag)
 	require.NoError(t, err)

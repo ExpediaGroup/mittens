@@ -15,6 +15,7 @@
 package placeholders
 
 import (
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"regexp"
@@ -23,11 +24,13 @@ import (
 	"time"
 )
 
+const filePrefix = "file:"
+
 // anything that starts with {$, followed by any word character, and optionally followed by a modifier identifier | and the modifiers that can contain word chars + - = and ,
-var templatePlaceholderRegex = regexp.MustCompile("{\\$(\\w+(?:[\\|(?:[\\w+-=,]+)]*)}")
-var templateRangeRegex = regexp.MustCompile("{\\$range\\|min=(?P<Min>\\d+),max=(?P<Max>\\d+)}")
-var templateElementsRegex = regexp.MustCompile("{\\$random\\|(?P<Elements>[,\\w-]+)}")
-var templateDatesRegex = regexp.MustCompile("{\\$currentDate(?:\\|(?:days(?P<Days>[+-]\\d+))*(?:[,]*months(?P<Months>[+-]\\d+))*(?:[,]*years(?P<Years>[+-]\\d+))*(?:[,]*format=(?P<Format>[yMd|,/-]+))*)*}")
+var templatePlaceholderRegex = regexp.MustCompile(`{\$(\w+(?:[\|(?:[\w+-=,]+)]*)}`)
+var templateRangeRegex = regexp.MustCompile(`{\$range\|min=(?P<Min>\d+),max=(?P<Max>\d+)}`)
+var templateElementsRegex = regexp.MustCompile(`{\$random\|(?P<Elements>[,\w-]+)}`)
+var templateDatesRegex = regexp.MustCompile(`{\$currentDate(?:\|(?:days(?P<Days>[+-]\d+))*(?:[,]*months(?P<Months>[+-]\d+))*(?:[,]*years(?P<Years>[+-]\d+))*(?:[,]*format=(?P<Format>[yMd|,/-]+))*)*}`)
 
 // dateElements replaces date placeholders with the actual dates. It supports offsets for days, months, and years.
 func dateElements(source string) string {
@@ -105,6 +108,7 @@ func rangeElements(source string) string {
 // InterpolatePlaceholders scans a string and replaces placeholders with actual values.
 // At the moment this supports; dates, timestamps, random values from a list, and random integers.
 func InterpolatePlaceholders(source string) string {
+
 	return templatePlaceholderRegex.ReplaceAllStringFunc(source, func(templateString string) string {
 
 		if strings.Contains(templateString, "currentDate") {
@@ -119,4 +123,22 @@ func InterpolatePlaceholders(source string) string {
 			return source
 		}
 	})
+}
+
+// GetBodyFromFileOrInlined returns the correct content for the body of a request.
+// the body of the request can either be inlined, or come from a file
+func GetBodyFromFileOrInlined(source string) (*string, error) {
+
+	if strings.HasPrefix(source, filePrefix) {
+		path := source[len(filePrefix):]
+		fileContent, err := ioutil.ReadFile(path)
+		if err != nil {
+			return nil, err
+		}
+
+		body := string(fileContent)
+		return &body, nil
+	} else {
+		return &source, nil
+	}
 }
