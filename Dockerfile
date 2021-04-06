@@ -1,4 +1,4 @@
-FROM golang:1.16
+FROM golang:1.14
 # Create required dirs and copy files
 RUN mkdir -p /mittens
 COPY ./ /mittens/
