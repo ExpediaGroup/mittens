@@ -4,7 +4,7 @@ RUN mkdir -p /mittens
 COPY ./ /mittens/
 WORKDIR /mittens
 # Build app
-RUN go build
+RUN CGO_ENABLED=0 go build
 
 FROM alpine:3.12
 
