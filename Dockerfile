@@ -1,10 +1,10 @@
-FROM golang:1.14
+FROM golang:1.14 as builder
 # Create required dirs and copy files
 RUN mkdir -p /mittens
 COPY ./ /mittens/
 WORKDIR /mittens
-# Run unit tests & build app
-RUN make unit-tests
+# Build app
+RUN CGO_ENABLED=0 go build
 
 FROM alpine:3.12
 
@@ -21,5 +21,5 @@ USER mittens
 # Set workdir
 WORKDIR /app
 
-COPY --from=0 /mittens/mittens /app/mittens
+COPY --from=builder /mittens/mittens /app/mittens
 ENTRYPOINT ["/app/mittens"]

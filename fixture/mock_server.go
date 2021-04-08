@@ -5,7 +5,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -40,12 +39,7 @@ func StartGrpcTargetTestServer(port int) *grpc.Server {
 // Optionally, it receives a list of handler functions
 func StartHttpTargetTestServer(port int, pathHandlers []PathResponseHandler) *http.Server {
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNoContent)
-	})
-
-	http.HandleFunc("/delay", func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(time.Millisecond * 100)
-		w.WriteHeader(http.StatusNoContent)
+		w.WriteHeader(http.StatusOK)
 	})
 
 	for _, pathHandler := range pathHandlers {
@@ -57,8 +51,8 @@ func StartHttpTargetTestServer(port int, pathHandlers []PathResponseHandler) *ht
 
 	go func() {
 		err := server.ListenAndServe()
-		if err != nil {
-			log.Fatal("Server failed : ", err)
+		if err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server failed. Err: %v", err)
 		}
 	}()
 	return server
