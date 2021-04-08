@@ -57,7 +57,7 @@ func StartHttpTargetTestServer(pathHandlers []PathResponseHandler) (*http.Server
 
 	go func() {
 		err = server.Serve(listener)
-		// err := server.ListenAndServe()
+
 		if err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server failed. Err: %v", err)
 		}
