@@ -36,20 +36,14 @@ We provide a [Makefile](Makefile) which can be used to generate an executable bi
 
 To build the binary make sure you've installed [Go 1.16](https://golang.org/dl/).
 
-#### Build binary executable & run unit tests
+#### Build binary executable & run tests
 
 To build the project run the following:
 
-    make unit-tests
+    make test
 
 This will run the unit tests and generate a binary executable.
 
-#### Run integration tests
-
-To run the integration tests:
-
-    make integration-tests
-   
 #### Run the executable
 
 To run the binary:
