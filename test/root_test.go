@@ -31,6 +31,7 @@ import (
 	"google.golang.org/grpc"
 )
 
+var mockHttpServerPort int
 var mockHttpServer *http.Server
 var mockGrpcServer *grpc.Server
 var httpInvocations = 0
@@ -105,7 +106,8 @@ func TestWarmupFailReadinessIfTargetIsNeverReady(t *testing.T) {
 		"mittens",
 		"-file-probe-enabled=true",
 		"-http-requests=get:/hello-world",
-		"-target-readiness-port=8080",
+		fmt.Sprintf("-target-http-port=%d", mockHttpServerPort),
+		fmt.Sprintf("-target-readiness-port=%d", mockHttpServerPort),
 		"-target-readiness-http-path=/non-existent",
 		"-max-duration-seconds=2",
 		"-exit-after-warmup=true",
@@ -133,7 +135,7 @@ func TestWarmupFailReadinessIfNoRequestsAreSentToTarget(t *testing.T) {
 		"-file-probe-enabled=true",
 		"-http-requests=get:/hello-world",
 		"-target-http-port=9999",
-		"-target-readiness-port=8080",
+		fmt.Sprintf("-target-readiness-port=%d", mockHttpServerPort),
 		"-target-readiness-http-path=/health",
 		"-max-duration-seconds=2",
 		"-exit-after-warmup=true",
@@ -159,6 +161,9 @@ func TestGrpcAndHttp(t *testing.T) {
 		"mittens",
 		"-file-probe-enabled=true",
 		"-target-grpc-port=50051",
+		// FIXME: for some reason we need to set both ports?
+		fmt.Sprintf("-target-http-port=%d", mockHttpServerPort),
+		fmt.Sprintf("-target-readiness-port=%d", mockHttpServerPort),
 		"-http-requests=get:/hello-world",
 		"-grpc-requests=grpc.testing.TestService/EmptyCall",
 		"-grpc-requests=grpc.testing.TestService/UnaryCall:{\"payload\":{\"body\":\"abcdefghijklmnopqrstuvwxyz01\"}}",
@@ -181,8 +186,7 @@ func TestGrpcAndHttp(t *testing.T) {
 }
 
 func setup() {
-	// FIXME: should run on a random/free port
-	mockHttpServer = fixture.StartHttpTargetTestServer(8080, []fixture.PathResponseHandler{
+	mockHttpServer, mockHttpServerPort = fixture.StartHttpTargetTestServer([]fixture.PathResponseHandler{
 		{
 			Path: "/hello-world",
 			PathHandlerFunc: func(w http.ResponseWriter, r *http.Request) {
@@ -194,6 +198,8 @@ func setup() {
 			},
 		},
 	})
+
+	// FIXME: should run on a random/free port
 	mockGrpcServer = fixture.StartGrpcTargetTestServer(50051)
 }
 

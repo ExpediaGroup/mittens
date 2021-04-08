@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"log"
 	"mittens/pkg/response"
-	"os"
 	"time"
 
 	"github.com/fullstorydev/grpcurl"
@@ -79,13 +78,17 @@ func (c *Client) SendRequest(serviceMethod string, message string, headers []str
 	in := bytes.NewBufferString(message)
 
 	// TODO - create generic parser and formatter for any request, can we use text parser/formatter?
-	requestParser, formatter, err := grpcurl.RequestParserAndFormatter("json", c.descriptorSource, in, grpcurl.FormatOptions{})
+	requestParser, _, err := grpcurl.RequestParserAndFormatter("json", c.descriptorSource, in, grpcurl.FormatOptions{})
 	if err != nil {
 		log.Printf("Cannot construct request parser and formatter for json")
 		// FIXME FATAL
 		return response.Response{Duration: time.Duration(0), Err: err, Type: respType}
 	}
-	loggingEventHandler := grpcurl.NewDefaultEventHandler(os.Stdout, c.descriptorSource, formatter, false)
+
+	var loggingEventHandler *grpcurl.DefaultEventHandler = &grpcurl.DefaultEventHandler{
+		VerbosityLevel: -1,
+	}
+
 	startTime := time.Now()
 	err = grpcurl.InvokeRPC(context.Background(), c.descriptorSource, c.conn, serviceMethod, headers, loggingEventHandler, requestParser.Next)
 	endTime := time.Now()
