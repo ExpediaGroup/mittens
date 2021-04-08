@@ -86,6 +86,7 @@ func (c *Client) SendRequest(serviceMethod string, message string, headers []str
 		return response.Response{Duration: time.Duration(0), Err: err, Type: respType}
 	}
 	loggingEventHandler := grpcurl.NewDefaultEventHandler(os.Stdout, c.descriptorSource, formatter, false)
+
 	startTime := time.Now()
 	err = grpcurl.InvokeRPC(context.Background(), c.descriptorSource, c.conn, serviceMethod, headers, loggingEventHandler, requestParser.Next)
 	endTime := time.Now()

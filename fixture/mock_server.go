@@ -37,7 +37,7 @@ func StartGrpcTargetTestServer(port int) *grpc.Server {
 
 // StartHttpTargetTestServer starts a HTTP server on the provided port
 // Optionally, it receives a list of handler functions
-func StartHttpTargetTestServer(port int, pathHandlers []PathResponseHandler) *http.Server {
+func StartHttpTargetTestServer(pathHandlers []PathResponseHandler) (*http.Server, int) {
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -46,14 +46,20 @@ func StartHttpTargetTestServer(port int, pathHandlers []PathResponseHandler) *ht
 		http.HandleFunc(pathHandler.Path, pathHandler.PathHandlerFunc)
 	}
 
-	baseURL := ":" + fmt.Sprint(port)
-	server := &http.Server{Addr: baseURL}
+	server := &http.Server{}
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		panic(err)
+	}
+
+	port := listener.Addr().(*net.TCPAddr).Port
 
 	go func() {
-		err := server.ListenAndServe()
+		err = server.Serve(listener)
+
 		if err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server failed. Err: %v", err)
 		}
 	}()
-	return server
+	return server, port
 }
