@@ -53,7 +53,6 @@ func StartHttpTargetTestServer(pathHandlers []PathResponseHandler) (*http.Server
 	}
 
 	port := listener.Addr().(*net.TCPAddr).Port
-	fmt.Println("Using port:", port)
 
 	go func() {
 		err = server.Serve(listener)
