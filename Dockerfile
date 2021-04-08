@@ -1,4 +1,4 @@
-FROM golang:1.14
+FROM golang:1.14 as builder
 # Create required dirs and copy files
 RUN mkdir -p /mittens
 COPY ./ /mittens/
@@ -21,5 +21,5 @@ USER mittens
 # Set workdir
 WORKDIR /app
 
-COPY --from=0 /mittens/mittens /app/mittens
+COPY --from=builder /mittens/mittens /app/mittens
 ENTRYPOINT ["/app/mittens"]
