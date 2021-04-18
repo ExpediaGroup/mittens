@@ -32,6 +32,7 @@ type Root struct {
 	RequestDelayMilliseconds int
 	ExitAfterWarmup          bool
 	FailReadiness            bool
+	EnableResponseLogging 	 bool
 	FileProbe
 	Target
 	HTTP
@@ -50,6 +51,7 @@ func (r *Root) InitFlags() {
 	flag.IntVar(&r.RequestDelayMilliseconds, "request-delay-milliseconds", 500, "Delay in milliseconds between requests")
 	flag.BoolVar(&r.ExitAfterWarmup, "exit-after-warmup", false, "If warm up process should finish after completion. This is useful to prevent container restarts.")
 	flag.BoolVar(&r.FailReadiness, "fail-readiness", false, "If set to true readiness will fail if no requests were sent.")
+	flag.BoolVar(&r.EnableResponseLogging, "enable-response-logging", false, "If set to true warmup responses will be logged.")
 
 	r.FileProbe.initFlags()
 	r.Target.initFlags()
