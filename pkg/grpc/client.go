@@ -74,7 +74,7 @@ func (c *Client) Connect(headers []string) error {
 
 // SendRequest sends a request to the gRPC server and wraps useful information into a Response object.
 // Note that the message cannot be null. Even if there is no message to be sent this needs to be set to an empty string.
-func (c *Client) SendRequest(serviceMethod string, message string, headers []string) response.Response {
+func (c *Client) SendRequest(serviceMethod string, message string, headers []string, enableResponseLogging bool) response.Response {
 	const respType = "grpc"
 	in := bytes.NewBufferString(message)
 
@@ -85,7 +85,7 @@ func (c *Client) SendRequest(serviceMethod string, message string, headers []str
 		// FIXME FATAL
 		return response.Response{Duration: time.Duration(0), Err: err, Type: respType}
 	}
-	loggingEventHandler := grpcurl.NewDefaultEventHandler(os.Stdout, c.descriptorSource, formatter, false)
+	loggingEventHandler := grpcurl.NewDefaultEventHandler(os.Stdout, c.descriptorSource, formatter, enableResponseLogging)
 
 	startTime := time.Now()
 	err = grpcurl.InvokeRPC(context.Background(), c.descriptorSource, c.conn, serviceMethod, headers, loggingEventHandler, requestParser.Next)

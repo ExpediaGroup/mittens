@@ -87,13 +87,9 @@ func (w Warmup) HTTPWarmupWorker(wg *sync.WaitGroup, requests <-chan http.Reques
 			*requestsSentCounter++
 
 			if resp.StatusCode/100 == 2 {
-				if (w.EnableResponseLogging) {
-					log.Printf("🟢 %s response\t%d ms\t%v\t%s\t%s", resp.Type, resp.Duration/time.Millisecond, resp.StatusCode, request.Method, request.Path)
-				}
+				log.Printf("🟢 %s response\t%d ms\t%v\t%s\t%s", resp.Type, resp.Duration/time.Millisecond, resp.StatusCode, request.Method, request.Path)
 			} else {
-				if (w.EnableResponseLogging) {
-					log.Printf("🔴 %s response\t%d ms\t%v\t%s\t%s", resp.Type, resp.Duration/time.Millisecond, resp.StatusCode, request.Method, request.Path)
-				}
+				log.Printf("🔴 %s response\t%d ms\t%v\t%s\t%s", resp.Type, resp.Duration/time.Millisecond, resp.StatusCode, request.Method, request.Path)
 			}
 		}
 	}
@@ -105,17 +101,13 @@ func (w Warmup) GrpcWarmupWorker(wg *sync.WaitGroup, requests <-chan grpc.Reques
 	for request := range requests {
 		time.Sleep(time.Duration(requestDelayMilliseconds) * time.Millisecond)
 
-		resp := w.Target.grpcClient.SendRequest(request.ServiceMethod, request.Message, headers)
+		resp := w.Target.grpcClient.SendRequest(request.ServiceMethod, request.Message, headers, w.EnableResponseLogging)
 
 		if resp.Err != nil {
-			if (w.EnableResponseLogging) {
-				log.Printf("🔴 Error in request for %s: %v", request.ServiceMethod, resp.Err)
-			}
+			log.Printf("🔴 Error in request for %s: %v", request.ServiceMethod, resp.Err)
 		} else {
 			*requestsSentCounter++
-			if (w.EnableResponseLogging) {
-				log.Printf("🟢 %s response\t%d ms %s", resp.Type, resp.Duration/time.Millisecond, request.ServiceMethod)
-			}
+			log.Printf("🟢 %s response\t%d ms %s", resp.Type, resp.Duration/time.Millisecond, request.ServiceMethod)
 		}
 
 	}
