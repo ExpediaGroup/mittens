@@ -31,6 +31,7 @@ The application receives a number of command-line flags including the requests t
 | -target-readiness-port            | int     | same as -target-http-port   | The port used for target readiness probe                                                                                                                                                                                                                                                |
 | -target-readiness-protocol        | string  | http                        | Protocol to be used for readiness check. One of [`http`, `grpc`]                                                                                                                                                                                                                        |
 | -max-duration-seconds             | int     | 60                          | Maximum duration in seconds after which warm up will stop making requests                                                                                                                                                                                                               |
+| -enable-response-logging          | bool    | false                       | Whether to log HTTP/gRPC responses                                                                          |
 
 ### Warmup request
 A warmup request can be an HTTP one (over REST) or a gRPC one.
