@@ -34,7 +34,6 @@ type Warmup struct {
 	HttpHeaders              []string
 	GrpcRequests             chan grpc.Request
 	RequestDelayMilliseconds int
-	LogResponses             bool
 }
 
 // Run sends requests to the target using goroutines.
@@ -101,7 +100,7 @@ func (w Warmup) GrpcWarmupWorker(wg *sync.WaitGroup, requests <-chan grpc.Reques
 	for request := range requests {
 		time.Sleep(time.Duration(requestDelayMilliseconds) * time.Millisecond)
 
-		resp := w.Target.grpcClient.SendRequest(request.ServiceMethod, request.Message, headers, w.LogResponses)
+		resp := w.Target.grpcClient.SendRequest(request.ServiceMethod, request.Message, headers, false)
 
 		if resp.Err != nil {
 			log.Printf("🔴 Error in request for %s: %v", request.ServiceMethod, resp.Err)
