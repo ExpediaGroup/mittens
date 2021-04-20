@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/fullstorydev/grpcurl"
+	"github.com/golang/protobuf/proto"
 	"github.com/jhump/protoreflect/grpcreflect"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -38,6 +39,12 @@ type Client struct {
 	connClose        func() error
 	conn             *grpc.ClientConn
 	descriptorSource grpcurl.DescriptorSource
+}
+
+// then define eventHandler like so
+type eventHandler struct {
+	grpcurl.InvocationEventHandler
+	logResponses bool
 }
 
 // NewClient returns a gRPC client.
@@ -74,7 +81,7 @@ func (c *Client) Connect(headers []string) error {
 
 // SendRequest sends a request to the gRPC server and wraps useful information into a Response object.
 // Note that the message cannot be null. Even if there is no message to be sent this needs to be set to an empty string.
-func (c *Client) SendRequest(serviceMethod string, message string, headers []string, enableResponseLogging bool) response.Response {
+func (c *Client) SendRequest(serviceMethod string, message string, headers []string, logResponses bool) response.Response {
 	const respType = "grpc"
 	in := bytes.NewBufferString(message)
 
@@ -85,8 +92,14 @@ func (c *Client) SendRequest(serviceMethod string, message string, headers []str
 		// FIXME FATAL
 		return response.Response{Duration: time.Duration(0), Err: err, Type: respType}
 	}
-	loggingEventHandler := grpcurl.NewDefaultEventHandler(os.Stdout, c.descriptorSource, formatter, enableResponseLogging)
 
+	//  use this to create your handler
+	delegate := &grpcurl.DefaultEventHandler{
+		Out:       os.Stdout,
+		Formatter: formatter,
+	}
+
+	loggingEventHandler := eventHandler{InvocationEventHandler: delegate, logResponses: logResponses}
 	startTime := time.Now()
 	err = grpcurl.InvokeRPC(context.Background(), c.descriptorSource, c.conn, serviceMethod, headers, loggingEventHandler, requestParser.Next)
 	endTime := time.Now()
@@ -95,6 +108,13 @@ func (c *Client) SendRequest(serviceMethod string, message string, headers []str
 		return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: respType}
 	}
 	return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: respType}
+}
+
+// override just the method for logging responses, to do so conditionally
+func (h eventHandler) OnReceiveResponse(msg proto.Message) {
+	if h.logResponses {
+		h.InvocationEventHandler.OnReceiveResponse(msg)
+	}
 }
 
 // Close calling close on a client that has not established connection does not return an error.
