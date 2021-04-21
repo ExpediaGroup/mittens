@@ -93,7 +93,6 @@ func (c *Client) SendRequest(serviceMethod string, message string, headers []str
 		return response.Response{Duration: time.Duration(0), Err: err, Type: respType}
 	}
 
-	//  use this to create your handler
 	delegate := &grpcurl.DefaultEventHandler{
 		Out:       os.Stdout,
 		Formatter: formatter,
