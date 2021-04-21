@@ -41,7 +41,7 @@ type Client struct {
 	descriptorSource grpcurl.DescriptorSource
 }
 
-// then define eventHandler like so
+// eventHandler is a custom event handler with the option to enable/disable logging of responses.
 type eventHandler struct {
 	grpcurl.InvocationEventHandler
 	logResponses bool
