@@ -100,13 +100,12 @@ func (w Warmup) GrpcWarmupWorker(wg *sync.WaitGroup, requests <-chan grpc.Reques
 	for request := range requests {
 		time.Sleep(time.Duration(requestDelayMilliseconds) * time.Millisecond)
 
-		resp := w.Target.grpcClient.SendRequest(request.ServiceMethod, request.Message, headers)
+		resp := w.Target.grpcClient.SendRequest(request.ServiceMethod, request.Message, headers, false)
 
 		if resp.Err != nil {
 			log.Printf("🔴 Error in request for %s: %v", request.ServiceMethod, resp.Err)
 		} else {
 			*requestsSentCounter++
-
 			log.Printf("🟢 %s response\t%d ms %s", resp.Type, resp.Duration/time.Millisecond, request.ServiceMethod)
 		}
 
