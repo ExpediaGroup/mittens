@@ -18,10 +18,10 @@ import (
 	"flag"
 	"fmt"
 	"math/rand"
-	"mittens/pkg/grpc"
-	"mittens/pkg/http"
-	"mittens/pkg/safe"
-	"mittens/pkg/warmup"
+	"mittens/internal/pkg/app/grpc"
+	"mittens/internal/pkg/app/http"
+	"mittens/internal/pkg/app/safe"
+	"mittens/internal/pkg/app/warmup"
 	"time"
 )
 

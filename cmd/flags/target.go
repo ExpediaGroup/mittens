@@ -17,9 +17,9 @@ package flags
 import (
 	"flag"
 	"fmt"
-	"mittens/pkg/grpc"
-	"mittens/pkg/http"
-	"mittens/pkg/warmup"
+	"mittens/internal/pkg/app/grpc"
+	"mittens/internal/pkg/app/http"
+	"mittens/internal/pkg/app/warmup"
 )
 
 // Target stores flags related to the target.

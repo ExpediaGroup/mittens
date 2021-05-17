@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"mittens/cmd"
 	"mittens/fixture"
-	"mittens/pkg/probe"
-	"mittens/pkg/safe"
+	"mittens/internal/pkg/app/probe"
+	"mittens/internal/pkg/app/safe"
 	"net/http"
 	"os"
 	"testing"
@@ -30,7 +30,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 )
-
 
 var mockHttpServerPort int
 var mockHttpServer *http.Server

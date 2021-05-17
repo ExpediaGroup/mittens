@@ -21,7 +21,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"mittens/pkg/response"
+	"mittens/internal/pkg/app/response"
 	"net/http"
 	"strings"
 	"time"

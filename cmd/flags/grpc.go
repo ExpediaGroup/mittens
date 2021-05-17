@@ -18,7 +18,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"mittens/pkg/grpc"
+	"mittens/internal/pkg/app/grpc"
 )
 
 // Grpc stores flags related to gRPC requests.

@@ -20,7 +20,7 @@ import (
 	"regexp"
 	"testing"
 
-	"mittens/pkg/internal"
+	"mittens/internal/pkg/app/internal"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

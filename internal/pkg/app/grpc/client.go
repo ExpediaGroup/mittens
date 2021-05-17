@@ -18,7 +18,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"mittens/pkg/response"
+	"mittens/internal/pkg/app/response"
 	"os"
 	"time"
 
@@ -109,7 +109,7 @@ func (c *Client) SendRequest(serviceMethod string, message string, headers []str
 	return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: respType}
 }
 
-// OnReceiveResponse overrides the default method and allows enabling/disabling logging of responses. 
+// OnReceiveResponse overrides the default method and allows enabling/disabling logging of responses.
 func (h eventHandler) OnReceiveResponse(msg proto.Message) {
 	if h.logResponses {
 		h.InvocationEventHandler.OnReceiveResponse(msg)

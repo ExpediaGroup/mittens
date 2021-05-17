@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"mittens/pkg/internal"
+	"mittens/internal/pkg/app/internal"
 
 	"github.com/stretchr/testify/assert"
 )
