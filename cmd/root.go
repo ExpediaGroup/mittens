@@ -18,9 +18,9 @@ import (
 	"flag"
 	"log"
 	"mittens/cmd/flags"
-	"mittens/internal/pkg/app/probe"
-	"mittens/internal/pkg/app/safe"
-	"mittens/internal/pkg/app/warmup"
+	"mittens/internal/pkg/probe"
+	"mittens/internal/pkg/safe"
+	"mittens/internal/pkg/warmup"
 	"os"
 )
 

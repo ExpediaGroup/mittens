@@ -15,7 +15,7 @@
 package grpc
 
 import (
-	"mittens/internal/pkg/app/internal"
+	"mittens/internal/pkg/internal"
 	"os"
 	"regexp"
 	"testing"

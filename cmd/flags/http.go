@@ -17,7 +17,7 @@ package flags
 import (
 	"flag"
 	"fmt"
-	"mittens/internal/pkg/app/http"
+	"mittens/internal/pkg/http"
 )
 
 var allowedHTTPMethods = map[string]interface{}{

@@ -18,7 +18,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"mittens/internal/pkg/app/response"
+	"mittens/internal/pkg/response"
 	"os"
 	"time"
 

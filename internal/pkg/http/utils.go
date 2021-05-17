@@ -16,7 +16,7 @@ package http
 
 import (
 	"fmt"
-	"mittens/internal/pkg/app/placeholders"
+	"mittens/internal/pkg/placeholders"
 	"strings"
 )
 
