@@ -17,10 +17,10 @@ package warmup
 import (
 	"log"
 	"math/rand"
-	"mittens/pkg/grpc"
-	"mittens/pkg/http"
-	"mittens/pkg/safe"
-	"mittens/pkg/util"
+	"mittens/internal/pkg/grpc"
+	"mittens/internal/pkg/http"
+	"mittens/internal/pkg/safe"
+	"mittens/internal/pkg/util"
 	"sync"
 	"time"
 )
