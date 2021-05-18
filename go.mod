@@ -6,7 +6,7 @@ require (
 	github.com/jhump/protoreflect v1.8.2
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/net v0.0.0-20200625001655-4c5254603344
-	google.golang.org/grpc v1.37.0
+	google.golang.org/grpc v1.37.1
 )
 
 go 1.14
