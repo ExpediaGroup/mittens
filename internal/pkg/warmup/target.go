@@ -17,8 +17,8 @@ package warmup
 import (
 	"fmt"
 	"log"
-	"mittens/pkg/grpc"
-	whttp "mittens/pkg/http"
+	"mittens/internal/pkg/grpc"
+	whttp "mittens/internal/pkg/http"
 	"net/http"
 	"time"
 )

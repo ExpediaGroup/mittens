@@ -16,7 +16,7 @@ package grpc
 
 import (
 	"fmt"
-	"mittens/pkg/placeholders"
+	"mittens/internal/pkg/placeholders"
 	"strings"
 )
 
