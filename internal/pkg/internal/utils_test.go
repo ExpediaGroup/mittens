@@ -16,8 +16,8 @@ func TestCreateTempFile(t *testing.T) {
 	var expected bool = true
 	fileCheckBool, err := probe.FileExists(generatedFile)
 	require.NoError(t, err)
+	assert.Equal(t, expected, fileCheckBool)
 
 	// clean up test file
 	probe.DeleteFile(generatedFile)
-	assert.Equal(t, expected, fileCheckBool)
 }

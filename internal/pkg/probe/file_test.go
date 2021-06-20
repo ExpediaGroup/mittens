@@ -16,11 +16,11 @@ func TestWriteFile(t *testing.T) {
 	// check is file exist
 	result, err := FileExists(fileName)
 	require.NoError(t, err)
+	assert.Equal(t, expected, result)
 
 	// delete file afterwards
 	DeleteFile(fileName)
 
-	assert.Equal(t, expected, result)
 }
 
 func TestDeleteFile(t *testing.T) {
