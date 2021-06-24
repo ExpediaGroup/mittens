@@ -15,9 +15,11 @@
 package flags
 
 import (
+	"mittens/internal/pkg/http"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestHttp_ToHttpRequests(t *testing.T) {
@@ -32,4 +34,46 @@ func TestHttp_ToHttpRequests(t *testing.T) {
 	require.Equal(t, 2, len(requests))
 	assert.Equal(t, "/health", requests[0].Path)
 	assert.Equal(t, "/ping", requests[1].Path)
+}
+
+func TestHttp_ToHttpRequestsWrongMethod(t *testing.T) {
+	requestFlags := []string{
+		"gets:/ping",
+	}
+
+	requests, err := toHTTPRequests(requestFlags)
+
+	// it should return empty array of http.Request
+	var expected []http.Request
+	require.Error(t, err)
+	require.Equal(t, "invalid request flag: gets:/ping, method GETS is not supported", err.Error())
+	require.Equal(t, expected, requests)
+}
+
+func TestHttp_ToHttpRequestsWrongFormat(t *testing.T) {
+	requestFlags := []string{
+		"get/ping",
+	}
+
+	requests, err := toHTTPRequests(requestFlags)
+
+	// it should return empty array of http.Request
+	var expected []http.Request
+	require.Error(t, err)
+	require.Equal(t, "invalid request flag: get/ping, expected format <http-method>:<path>[:body]", err.Error())
+	require.Equal(t, expected, requests)
+}
+
+func TestHttp_ToHttpRequestsWrongBodyFile(t *testing.T) {
+	requestFlags := []string{
+		"get:/ping:file:test",
+	}
+
+	requests, err := toHTTPRequests(requestFlags)
+
+	// it should return empty array of http.Request
+	var expected []http.Request
+	require.Error(t, err)
+	require.Equal(t, "unable to parse body for request: file:test", err.Error())
+	require.Equal(t, expected, requests)
 }
