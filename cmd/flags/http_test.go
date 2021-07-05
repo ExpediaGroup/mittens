@@ -70,8 +70,7 @@ func TestHttp_ToHttpRequestsInvalidBody(t *testing.T) {
 		"get:/test:file:test",
 	}
 
-	requests, err :=
-		toHTTPRequests(requestFlags)
+	requests, err := toHTTPRequests(requestFlags)
 
 	var expected []http.Request
 	require.Error(t, err)
