@@ -17,6 +17,7 @@ package flags
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"mittens/internal/pkg/http"
 	"testing"
 )
 
@@ -32,4 +33,49 @@ func TestHttp_ToHttpRequests(t *testing.T) {
 	require.Equal(t, 2, len(requests))
 	assert.Equal(t, "/health", requests[0].Path)
 	assert.Equal(t, "/ping", requests[1].Path)
+}
+
+func TestHttp_ToHttpRequestsInvalidFormat(t *testing.T) {
+
+	requestFlags := []string{
+		"get/health",
+	}
+
+	requests, err :=
+		toHTTPRequests(requestFlags)
+
+	var expected []http.Request
+	require.Error(t, err)
+	require.Equal(t, "invalid request flag: get/health, expected format <http-method>:<path>[:body]", err.Error())
+	require.Equal(t, expected, requests)
+}
+
+func TestHttp_ToHttpRequestsInvalidMethod(t *testing.T) {
+
+	requestFlags := []string{
+		"invalidMethod:/health",
+	}
+
+	requests, err :=
+		toHTTPRequests(requestFlags)
+
+	var expected []http.Request
+	require.Error(t, err)
+	require.Equal(t, "invalid request flag: invalidMethod:/health, method INVALIDMETHOD is not supported", err.Error())
+	require.Equal(t, expected, requests)
+}
+
+func TestHttp_ToHttpRequestsInvalidBody(t *testing.T) {
+
+	requestFlags := []string{
+		"get:/test:file:test",
+	}
+
+	requests, err :=
+		toHTTPRequests(requestFlags)
+
+	var expected []http.Request
+	require.Error(t, err)
+	require.Equal(t, "unable to parse body for request: file:test", err.Error())
+	require.Equal(t, expected, requests)
 }
