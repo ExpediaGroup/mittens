@@ -41,8 +41,7 @@ func TestHttp_ToHttpRequestsInvalidFormat(t *testing.T) {
 		"get/health",
 	}
 
-	requests, err :=
-		toHTTPRequests(requestFlags)
+	requests, err := toHTTPRequests(requestFlags)
 
 	var expected []http.Request
 	require.Error(t, err)
