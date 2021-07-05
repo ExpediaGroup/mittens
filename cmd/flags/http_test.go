@@ -55,8 +55,7 @@ func TestHttp_ToHttpRequestsInvalidMethod(t *testing.T) {
 		"invalidMethod:/health",
 	}
 
-	requests, err :=
-		toHTTPRequests(requestFlags)
+	requests, err := toHTTPRequests(requestFlags)
 
 	var expected []http.Request
 	require.Error(t, err)
