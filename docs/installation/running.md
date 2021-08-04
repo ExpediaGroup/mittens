@@ -88,7 +88,7 @@ spec:
 
 #### Using Config Maps for complex POST queries
 
-If your aplication is using complex POST requests, you can move them to a separate file.
+If your application is using complex POST requests, you can move them to a separate file.
 To do that in Kubernetes, you can make use of ConfigMaps and define the body of your requests there, and then use a volume mount to make them accessible to Mittens.
 
 ```yaml
