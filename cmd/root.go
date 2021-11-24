@@ -79,7 +79,7 @@ func run() int {
 	requestsSentCounter := 0
 	if !validationError {
 		target := createTarget(targetOptions)
-		if err := target.WaitForReadinessProbe(); err == nil {
+		if err := target.WaitForReadinessProbe(opts.GetWarmupHTTPHeaders()); err == nil {
 			log.Print("💚 Target is ready")
 
 			wp := warmup.Warmup{

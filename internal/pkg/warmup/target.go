@@ -19,6 +19,7 @@ import (
 	"log"
 	"mittens/internal/pkg/grpc"
 	whttp "mittens/internal/pkg/http"
+	"mittens/internal/pkg/util"
 	"net/http"
 	"time"
 )
@@ -56,7 +57,7 @@ func NewTarget(readinessHTTPClient whttp.Client, readinessGrpcClient grpc.Client
 // WaitForReadinessProbe sends health-check requests to the target and waits until it becomes ready.
 // It returns an error if the timeout is exceeded.
 // It supports both HTTP and gRPC health-checks.
-func (t Target) WaitForReadinessProbe() error {
+func (t Target) WaitForReadinessProbe(headers []string) error {
 	log.Printf("Waiting for %s target to be ready for a max of %ds", t.options.ReadinessProtocol, t.options.ReadinessTimeoutInSeconds)
 
 	timeout := time.After(time.Duration(t.options.ReadinessTimeoutInSeconds) * time.Second)
@@ -71,7 +72,7 @@ func (t Target) WaitForReadinessProbe() error {
 
 			if t.options.ReadinessProtocol == "http" {
 				// error if error in the response or status code not in the 200 range
-				if resp := t.readinessHTTPClient.SendRequest(http.MethodGet, t.options.ReadinessHTTPPath, nil, nil); resp.Err != nil || resp.StatusCode/100 != 2 {
+				if resp := t.readinessHTTPClient.SendRequest(http.MethodGet, t.options.ReadinessHTTPPath, util.ToHeaders(headers), nil); resp.Err != nil || resp.StatusCode/100 != 2 {
 					log.Printf("HTTP target not ready yet...")
 					continue
 				}
@@ -83,7 +84,7 @@ func (t Target) WaitForReadinessProbe() error {
 					if connErr != nil {
 						log.Printf("gRPC readiness client connect error: %v", connErr)
 					}
-					err1 := t.readinessGrpcClient.SendRequest(request.ServiceMethod, "", nil, false)
+					err1 := t.readinessGrpcClient.SendRequest(request.ServiceMethod, "", headers, false)
 					if err1.Err != nil {
 						log.Printf("gRPC target not ready yet...")
 						continue
