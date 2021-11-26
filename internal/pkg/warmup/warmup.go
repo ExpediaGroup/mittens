@@ -119,6 +119,5 @@ func (w Warmup) GrpcWarmupWorker(wg *sync.WaitGroup, requests <-chan grpc.Reques
 func delayIfNeeded(rampUpIntervalSeconds int, currentConcurrency int) {
 	if rampUpIntervalSeconds > 0 && currentConcurrency > 1 {
 		time.Sleep(time.Duration(rampUpIntervalSeconds) * time.Second)
-		log.Printf("Ramping up concurrency")
 	}
 }
