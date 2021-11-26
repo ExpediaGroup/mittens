@@ -37,6 +37,7 @@ type Root struct {
 	HTTP
 	HTTPHeaders
 	Grpc
+	RampUpIntervalSeconds int
 }
 
 func (r *Root) String() string {
@@ -50,6 +51,7 @@ func (r *Root) InitFlags() {
 	flag.IntVar(&r.RequestDelayMilliseconds, "request-delay-milliseconds", 500, "Delay in milliseconds between requests")
 	flag.BoolVar(&r.ExitAfterWarmup, "exit-after-warmup", false, "If warm up process should finish after completion. This is useful to prevent container restarts.")
 	flag.BoolVar(&r.FailReadiness, "fail-readiness", false, "If set to true readiness will fail if no requests were sent.")
+	flag.IntVar(&r.RampUpIntervalSeconds, "ramp-up-interval-seconds", 0, "If set to non negative number, ramps up by with this interval")
 
 	r.FileProbe.initFlags()
 	r.Target.initFlags()
@@ -66,6 +68,11 @@ func (r *Root) GetMaxDurationSeconds() int {
 // GetConcurrency returns the value of the concurrency parameter.
 func (r *Root) GetConcurrency() int {
 	return r.Concurrency
+}
+
+// GetRampUpIntervalSeconds returns the value of the ramp-up-interval-seconds parameter.
+func (r *Root) GetRampUpIntervalSeconds() int {
+	return r.RampUpIntervalSeconds
 }
 
 // GetReadinessHTTPClient creates the HTTP client to be used for the readiness requests.

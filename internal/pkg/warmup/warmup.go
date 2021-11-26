@@ -34,6 +34,7 @@ type Warmup struct {
 	HttpHeaders              []string
 	GrpcRequests             chan grpc.Request
 	RequestDelayMilliseconds int
+	RampUpIntervalSeconds    int
 }
 
 // Run sends requests to the target using goroutines.
@@ -51,6 +52,7 @@ func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, requestsSentCoun
 			log.Printf("gRPC client connect error: %v", connErr)
 		} else {
 			for i := 1; i <= w.Concurrency; i++ {
+				delayIfNeeded(w.RampUpIntervalSeconds, i)
 				log.Printf("Spawning new go routine for gRPC requests")
 				wg.Add(1)
 				go safe.Do(func() {
@@ -62,6 +64,7 @@ func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, requestsSentCoun
 
 	if hasHttpRequests {
 		for i := 1; i <= w.Concurrency; i++ {
+			delayIfNeeded(w.RampUpIntervalSeconds, i)
 			log.Printf("Spawning new go routine for HTTP requests")
 			wg.Add(1)
 			go safe.Do(func() {
@@ -106,9 +109,16 @@ func (w Warmup) GrpcWarmupWorker(wg *sync.WaitGroup, requests <-chan grpc.Reques
 			log.Printf("🔴 Error in request for %s: %v", request.ServiceMethod, resp.Err)
 		} else {
 			*requestsSentCounter++
-			log.Printf("🟢 %s response\t%d ms %s", resp.Type, resp.Duration/time.Millisecond, request.ServiceMethod)
+			log.Printf("🟢 %s response\t%d ms\t%v\t%s", resp.Type, resp.Duration/time.Millisecond, resp.StatusCode, request.ServiceMethod)
 		}
 
 	}
 	wg.Done()
+}
+
+func delayIfNeeded(rampUpIntervalSeconds int, currentConcurrency int) {
+	if rampUpIntervalSeconds > 0 && currentConcurrency > 1 {
+		time.Sleep(time.Duration(rampUpIntervalSeconds) * time.Second)
+		log.Printf("Ramping up concurrency")
+	}
 }
