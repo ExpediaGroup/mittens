@@ -109,7 +109,7 @@ func (w Warmup) GrpcWarmupWorker(wg *sync.WaitGroup, requests <-chan grpc.Reques
 			log.Printf("🔴 Error in request for %s: %v", request.ServiceMethod, resp.Err)
 		} else {
 			*requestsSentCounter++
-			log.Printf("🟢 %s response\t%d ms\t%v\t%s", resp.Type, resp.Duration/time.Millisecond, resp.StatusCode, request.ServiceMethod)
+			log.Printf("🟢 %s response\t%d ms %s", resp.Type, resp.Duration/time.Millisecond, request.ServiceMethod)
 		}
 
 	}
