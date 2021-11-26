@@ -92,7 +92,7 @@ func run() int {
 				RequestDelayMilliseconds: opts.RequestDelayMilliseconds,
 				RampUpIntervalSeconds:    opts.RampUpIntervalSeconds,
 			}
-			wp.Run(hasHttpRequests, hasGrpcRequests, &requestsSentCounter)
+			wp.Run(hasHttpRequests, hasGrpcRequests, &requestsSentCounter, opts.MaxDurationSeconds)
 		} else {
 			log.Print("Target still not ready. Giving up!")
 		}

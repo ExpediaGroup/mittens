@@ -38,9 +38,9 @@ type Warmup struct {
 }
 
 // Run sends requests to the target using goroutines.
-func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, requestsSentCounter *int) {
+func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, requestsSentCounter *int, maxDurationSeconds int) {
 	rand.Seed(time.Now().UnixNano()) // initialize seed only once to prevent deterministic/repeated calls every time we run
-
+	var endTime = time.Now().Add(time.Duration(maxDurationSeconds) * time.Second)
 	var wg sync.WaitGroup
 
 	if hasGrpcRequests {
@@ -51,7 +51,7 @@ func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, requestsSentCoun
 		if connErr != nil {
 			log.Printf("gRPC client connect error: %v", connErr)
 		} else {
-			for i := 1; i <= w.Concurrency; i++ {
+			for i := 1; i <= w.Concurrency && endTime.After(time.Now()); i++ {
 				delayIfNeeded(w.RampUpIntervalSeconds, i)
 				log.Printf("Spawning new go routine for gRPC requests")
 				wg.Add(1)
@@ -63,7 +63,7 @@ func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, requestsSentCoun
 	}
 
 	if hasHttpRequests {
-		for i := 1; i <= w.Concurrency; i++ {
+		for i := 1; i <= w.Concurrency && endTime.After(time.Now()); i++ {
 			delayIfNeeded(w.RampUpIntervalSeconds, i)
 			log.Printf("Spawning new go routine for HTTP requests")
 			wg.Add(1)
