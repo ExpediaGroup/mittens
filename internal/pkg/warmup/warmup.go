@@ -119,11 +119,12 @@ func (w Warmup) GrpcWarmupWorker(wg *sync.WaitGroup, requests <-chan grpc.Reques
 	wg.Done()
 }
 
+// checks if ramp up is enabled, sleep not required for concurrency 1, sleep may not be required for last few ramp ups (when unbalanced interval)
 func waitForRampUp(rampUpIntervalSeconds int, currentConcurrency int, endTime time.Time) bool {
 	var sleepInterval = math.Ceil(time.Until(endTime).Seconds())
 
 	if rampUpIntervalSeconds > 0 && currentConcurrency > 1 && sleepInterval > 0 {
 		time.Sleep(time.Duration(math.Min(float64(rampUpIntervalSeconds), sleepInterval)) * time.Second)
 	}
-	return sleepInterval > 0
+	return sleepInterval > 0 // Need not ramp up if maxDuration is exhausted
 }
