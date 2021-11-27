@@ -16,6 +16,7 @@ package warmup
 
 import (
 	"log"
+	"math"
 	"math/rand"
 	"mittens/internal/pkg/grpc"
 	"mittens/internal/pkg/http"
@@ -51,25 +52,27 @@ func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, requestsSentCoun
 		if connErr != nil {
 			log.Printf("gRPC client connect error: %v", connErr)
 		} else {
-			for i := 1; i <= w.Concurrency && endTime.After(time.Now()); i++ {
-				delayIfNeeded(w.RampUpIntervalSeconds, i)
-				log.Printf("Spawning new go routine for gRPC requests")
-				wg.Add(1)
-				go safe.Do(func() {
-					w.GrpcWarmupWorker(&wg, w.GrpcRequests, w.HttpHeaders, w.RequestDelayMilliseconds, requestsSentCounter)
-				})
+			for i := 1; i <= w.Concurrency; i++ {
+				if waitForRampUp(w.RampUpIntervalSeconds, i, endTime) {
+					log.Printf("Spawning new go routine for gRPC requests")
+					wg.Add(1)
+					go safe.Do(func() {
+						w.GrpcWarmupWorker(&wg, w.GrpcRequests, w.HttpHeaders, w.RequestDelayMilliseconds, requestsSentCounter)
+					})
+				}
 			}
 		}
 	}
 
 	if hasHttpRequests {
-		for i := 1; i <= w.Concurrency && endTime.After(time.Now()); i++ {
-			delayIfNeeded(w.RampUpIntervalSeconds, i)
-			log.Printf("Spawning new go routine for HTTP requests")
-			wg.Add(1)
-			go safe.Do(func() {
-				w.HTTPWarmupWorker(&wg, w.HttpRequests, util.ToHeaders(w.HttpHeaders), w.RequestDelayMilliseconds, requestsSentCounter)
-			})
+		for i := 1; i <= w.Concurrency; i++ {
+			if waitForRampUp(w.RampUpIntervalSeconds, i, endTime) {
+				log.Printf("Spawning new go routine for HTTP requests")
+				wg.Add(1)
+				go safe.Do(func() {
+					w.HTTPWarmupWorker(&wg, w.HttpRequests, util.ToHeaders(w.HttpHeaders), w.RequestDelayMilliseconds, requestsSentCounter)
+				})
+			}
 		}
 	}
 
@@ -116,8 +119,11 @@ func (w Warmup) GrpcWarmupWorker(wg *sync.WaitGroup, requests <-chan grpc.Reques
 	wg.Done()
 }
 
-func delayIfNeeded(rampUpIntervalSeconds int, currentConcurrency int) {
-	if rampUpIntervalSeconds > 0 && currentConcurrency > 1 {
-		time.Sleep(time.Duration(rampUpIntervalSeconds) * time.Second)
+func waitForRampUp(rampUpIntervalSeconds int, currentConcurrency int, endTime time.Time) bool {
+	var sleepInterval = math.Ceil(time.Until(endTime).Seconds())
+
+	if rampUpIntervalSeconds > 0 && currentConcurrency > 1 && sleepInterval > 0 {
+		time.Sleep(time.Duration(math.Min(float64(rampUpIntervalSeconds), sleepInterval)) * time.Second)
 	}
+	return sleepInterval > 0
 }
