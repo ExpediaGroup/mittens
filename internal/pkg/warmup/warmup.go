@@ -40,8 +40,9 @@ type Warmup struct {
 // Run sends requests to the target using goroutines.
 func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, requestsSentCounter *int) {
 	rand.Seed(time.Now().UnixNano()) // initialize seed only once to prevent deterministic/repeated calls every time we run
-	var sleepInterval = w.ConcurrencyTargetSeconds / w.Concurrency
+
 	var wg sync.WaitGroup
+	var sleepInterval = w.ConcurrencyTargetSeconds / w.Concurrency
 
 	if hasGrpcRequests {
 		// connect to gRPC server once and only if there are gRPC requests
