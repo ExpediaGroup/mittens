@@ -172,6 +172,7 @@ func TestGrpcAndHttp(t *testing.T) {
 		"-exit-after-warmup=true",
 		"-target-readiness-http-path=/health",
 		"-max-duration-seconds=2",
+		"-concurrency-target-seconds=1",
 	}
 
 	cmd.CreateConfig()

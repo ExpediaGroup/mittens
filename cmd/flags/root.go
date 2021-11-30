@@ -30,6 +30,7 @@ type Root struct {
 	MaxDurationSeconds       int
 	Concurrency              int
 	RequestDelayMilliseconds int
+	ConcurrencyTargetSeconds int
 	ExitAfterWarmup          bool
 	FailReadiness            bool
 	FileProbe
@@ -48,6 +49,7 @@ func (r *Root) InitFlags() {
 	flag.IntVar(&r.MaxDurationSeconds, "max-duration-seconds", 60, "Max duration in seconds after which warm up will stop making requests")
 	flag.IntVar(&r.Concurrency, "concurrency", 2, "Number of concurrent requests for warm up")
 	flag.IntVar(&r.RequestDelayMilliseconds, "request-delay-milliseconds", 500, "Delay in milliseconds between requests")
+	flag.IntVar(&r.ConcurrencyTargetSeconds, "concurrency-target-seconds", 0, "Time taken to reach expected concurrency. This is useful to ramp up traffic.")
 	flag.BoolVar(&r.ExitAfterWarmup, "exit-after-warmup", false, "If warm up process should finish after completion. This is useful to prevent container restarts.")
 	flag.BoolVar(&r.FailReadiness, "fail-readiness", false, "If set to true readiness will fail if no requests were sent.")
 
@@ -61,6 +63,11 @@ func (r *Root) InitFlags() {
 // GetMaxDurationSeconds returns the value of the max-duration-seconds parameter.
 func (r *Root) GetMaxDurationSeconds() int {
 	return r.MaxDurationSeconds
+}
+
+// GetConcurrencyTargetSeconds returns the value of the concurrency-target-seconds parameter.
+func (r *Root) GetConcurrencyTargetSeconds() int {
+	return r.ConcurrencyTargetSeconds
 }
 
 // GetConcurrency returns the value of the concurrency parameter.
