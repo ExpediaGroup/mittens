@@ -29,8 +29,8 @@ func ToHeaders(headersFlag []string) map[string]string {
 			log.Printf("cannot find ':' separator in supplied header %s", h)
 			headers[strings.TrimSpace(kv[0])] = ""
 			continue
-		}
-		headers[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
+		}		
+		headers[strings.TrimSpace(kv[0])] = placeholders.InterpolatePlaceholders(strings.TrimSpace(kv[1]))
 	}
 	return headers
 }
