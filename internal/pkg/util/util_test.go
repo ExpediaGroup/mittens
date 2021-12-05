@@ -59,3 +59,15 @@ func Test_HeadersWithMultipleSeparatorsToHeaders(t *testing.T) {
 	assert.Equal(t, 1, len(headers))
 	assert.Equal(t, "some:strange:cookie", headers["Cookie"])
 }
+
+func Test_HeadersWithMultipleSeparatorsToHeadersWithPlaceholders(t *testing.T) {
+
+	headersFlag := []string{
+		"Cookie: {$random|foo}",
+	}
+
+	headers := ToHeaders(headersFlag)
+
+	assert.Equal(t, 1, len(headers))
+	assert.Equal(t, "foo", headers["Cookie"])
+}
