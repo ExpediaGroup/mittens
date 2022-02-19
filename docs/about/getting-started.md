@@ -54,7 +54,8 @@ optional). Host and port are taken from `target-grpc-host` and
 
 ### Placeholders for random elements
 
-Mittens allows you to use special keywords if you need to generate randomized urls.
+Mittens allows you to use special keywords if you need to make randomized requests. You can use these in the HTTP headers as well as in the request parameters and request bodies.
+
 The following are available:
 - `{$currentDate|days+x,months+y,years+z,format=yyyy-MM-dd}`: you can adjust the temporal offset by adding or subtracting days, months, or years. The offsets are optional and can be removed, but their order cannot change (i.e. `days` is always first, or `years` always last). You can optionally specify a custom format using yyyy or yy to represent the year, MM or MMM for the month and dd or d for the day.
 - `{$currentTimestamp}`: Time from Unix epoch in milliseconds.

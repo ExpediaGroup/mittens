@@ -20,7 +20,7 @@ import (
 	"mittens/internal/pkg/grpc"
 	"mittens/internal/pkg/http"
 	"mittens/internal/pkg/safe"
-	"mittens/internal/pkg/util"
+
 	"sync"
 	"time"
 )
@@ -69,7 +69,7 @@ func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, requestsSentCoun
 			log.Printf("Spawning new go routine for HTTP requests")
 			wg.Add(1)
 			go safe.Do(func() {
-				w.HTTPWarmupWorker(&wg, w.HttpRequests, util.ToHeaders(w.HttpHeaders), w.RequestDelayMilliseconds, requestsSentCounter)
+				w.HTTPWarmupWorker(&wg, w.HttpRequests, w.HttpHeaders, w.RequestDelayMilliseconds, requestsSentCounter)
 			})
 		}
 	}
@@ -78,7 +78,7 @@ func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, requestsSentCoun
 }
 
 // HTTPWarmupWorker sends HTTP requests to the target using goroutines.
-func (w Warmup) HTTPWarmupWorker(wg *sync.WaitGroup, requests <-chan http.Request, headers map[string]string, requestDelayMilliseconds int, requestsSentCounter *int) {
+func (w Warmup) HTTPWarmupWorker(wg *sync.WaitGroup, requests <-chan http.Request, headers []string, requestDelayMilliseconds int, requestsSentCounter *int) {
 	for request := range requests {
 		time.Sleep(time.Duration(requestDelayMilliseconds) * time.Millisecond)
 

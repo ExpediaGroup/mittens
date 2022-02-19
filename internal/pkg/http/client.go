@@ -21,7 +21,9 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"mittens/internal/pkg/placeholders"
 	"mittens/internal/pkg/response"
+	"mittens/internal/pkg/util"
 	"net/http"
 	"strings"
 	"time"
@@ -47,7 +49,7 @@ func NewClient(host string, insecure bool) Client {
 }
 
 // SendRequest sends a request to the HTTP server and wraps useful information into a Response object.
-func (c Client) SendRequest(method, path string, headers map[string]string, requestBody *string) response.Response {
+func (c Client) SendRequest(method, path string, headers []string, requestBody *string) response.Response {
 	const respType = "http"
 	var body io.Reader
 	if requestBody != nil {
@@ -62,11 +64,16 @@ func (c Client) SendRequest(method, path string, headers map[string]string, requ
 		return response.Response{Duration: time.Duration(0), Err: err, Type: respType}
 	}
 
-	for k, v := range headers {
+	headersMap := util.ToHeaders(headers)
+	for k, v := range headersMap {
 		if strings.EqualFold(k, "Host") {
 			req.Host = v
 		}
-		req.Header.Add(k, v)
+
+		// interpolate headers (just the values, not the keys)
+		interpolatedHeaderValue := placeholders.InterpolatePlaceholders(v)
+
+		req.Header.Add(k, interpolatedHeaderValue)
 	}
 
 	startTime := time.Now()

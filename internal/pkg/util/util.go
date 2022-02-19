@@ -21,7 +21,6 @@ import (
 
 // ToHeaders converts the headers from the format these are passed by the user to a map.
 func ToHeaders(headersFlag []string) map[string]string {
-
 	headers := make(map[string]string)
 	for _, h := range headersFlag {
 		kv := strings.SplitN(h, ":", 2)
