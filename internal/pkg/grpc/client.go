@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"mittens/internal/pkg/placeholders"
 	"mittens/internal/pkg/response"
 	"os"
 	"time"
@@ -100,7 +101,14 @@ func (c *Client) SendRequest(serviceMethod string, message string, headers []str
 
 	loggingEventHandler := eventHandler{InvocationEventHandler: delegate, logResponses: logResponses}
 	startTime := time.Now()
-	err = grpcurl.InvokeRPC(context.Background(), c.descriptorSource, c.conn, serviceMethod, headers, loggingEventHandler, requestParser.Next)
+
+	// Interpolate
+	interpolatedHeaders := make([]string, len(headers))
+	for i, header := range headers {
+		interpolatedHeaders[i] = placeholders.InterpolatePlaceholders(header)
+	}
+
+	err = grpcurl.InvokeRPC(context.Background(), c.descriptorSource, c.conn, serviceMethod, interpolatedHeaders, loggingEventHandler, requestParser.Next)
 	endTime := time.Now()
 	if err != nil {
 		log.Printf("grpc response error: %s", err)
