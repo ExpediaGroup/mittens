@@ -16,13 +16,11 @@ package util
 
 import (
 	"log"
-	"mittens/internal/pkg/placeholders"	
 	"strings"
 )
 
 // ToHeaders converts the headers from the format these are passed by the user to a map.
 func ToHeaders(headersFlag []string) map[string]string {
-
 	headers := make(map[string]string)
 	for _, h := range headersFlag {
 		kv := strings.SplitN(h, ":", 2)
@@ -31,7 +29,7 @@ func ToHeaders(headersFlag []string) map[string]string {
 			headers[strings.TrimSpace(kv[0])] = ""
 			continue
 		}
-		headers[strings.TrimSpace(kv[0])] = placeholders.InterpolatePlaceholders(strings.TrimSpace(kv[1]))
+		headers[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
 	}
 	return headers
 }
