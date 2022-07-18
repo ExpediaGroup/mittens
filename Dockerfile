@@ -1,4 +1,4 @@
-FROM golang:1.16 as builder
+FROM golang:1.18 as builder
 # Create required dirs and copy files
 RUN mkdir -p /mittens
 COPY ./ /mittens/
@@ -6,7 +6,7 @@ WORKDIR /mittens
 # Build app
 RUN CGO_ENABLED=0 go build
 
-FROM alpine:3.12
+FROM alpine:3.16
 
 # Create a group and user
 RUN addgroup -g 1000 mittens && \
