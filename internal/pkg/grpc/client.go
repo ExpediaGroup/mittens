@@ -35,7 +35,6 @@ import (
 // Client represents a gRPC client.
 type Client struct {
 	host             string
-	timeoutSeconds   int
 	insecure         bool
 	connClose        func() error
 	conn             *grpc.ClientConn
@@ -49,13 +48,14 @@ type eventHandler struct {
 }
 
 // NewClient returns a gRPC client.
-func NewClient(host string, insecure bool, timeoutSeconds int) Client {
-	return Client{host: host, timeoutSeconds: timeoutSeconds, insecure: insecure, connClose: func() error { return nil }}
+func NewClient(host string, insecure bool) Client {
+	return Client{host: host, insecure: insecure, connClose: func() error { return nil }}
 }
 
 // Connect attempts to establish a connection with a gRPC server.
 func (c *Client) Connect(headers []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.timeoutSeconds)*time.Second)
+	timeoutSeconds := 30 // TODO: make this configurable?
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSeconds)*time.Second)
 
 	headersMetadata := grpcurl.MetadataFromHeaders(headers)
 	contextWithMetadata := metadata.NewOutgoingContext(ctx, headersMetadata)

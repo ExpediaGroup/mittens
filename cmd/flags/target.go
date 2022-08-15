@@ -72,14 +72,14 @@ func (t *Target) getReadinessHTTPClient() http.Client {
 	return http.NewClient(fmt.Sprintf("%s:%d", t.HTTPHost, t.ReadinessPort), t.Insecure)
 }
 
-func (t *Target) getReadinessGrpcClient(timeoutSeconds int) grpc.Client {
-	return grpc.NewClient(fmt.Sprintf("%s:%d", t.GrpcHost, t.ReadinessPort), t.Insecure, timeoutSeconds)
+func (t *Target) getReadinessGrpcClient() grpc.Client {
+	return grpc.NewClient(fmt.Sprintf("%s:%d", t.GrpcHost, t.ReadinessPort), t.Insecure)
 }
 
 func (t *Target) getHTTPClient() http.Client {
 	return http.NewClient(fmt.Sprintf("%s:%d", t.HTTPHost, t.HTTPPort), t.Insecure)
 }
 
-func (t *Target) getGrpcClient(timeoutSeconds int) grpc.Client {
-	return grpc.NewClient(fmt.Sprintf("%s:%d", t.GrpcHost, t.GrpcPort), t.Insecure, timeoutSeconds)
+func (t *Target) getGrpcClient() grpc.Client {
+	return grpc.NewClient(fmt.Sprintf("%s:%d", t.GrpcHost, t.GrpcPort), t.Insecure)
 }

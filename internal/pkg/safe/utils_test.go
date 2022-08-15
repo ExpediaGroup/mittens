@@ -15,8 +15,9 @@
 package safe
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const RESULT = 1
@@ -32,7 +33,6 @@ func TestPanicIsCaught(t *testing.T) {
 	assert.NotPanics(t, func() {
 		DoAndReturn(func() int {
 			panic("test panic")
-			return RESULT
 		}, FALLBACK)
 	})
 }
@@ -48,14 +48,7 @@ func TestOriginalResultReturnedWhenNoPanic(t *testing.T) {
 func TestFallbackResultReturnedWhenPanic(t *testing.T) {
 	actual := DoAndReturn(func() int {
 		panic("test panic")
-		return RESULT
 	}, FALLBACK)
 
 	assert.Equal(t, FALLBACK, actual)
-}
-
-func TestHasPanicked(t *testing.T) {
-	Do(func() { panic("test panic") })
-
-	assert.True(t, HasPanicked())
 }
