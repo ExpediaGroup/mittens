@@ -17,12 +17,9 @@ package flags
 import (
 	"flag"
 	"fmt"
-	"math/rand"
 	"mittens/internal/pkg/grpc"
 	"mittens/internal/pkg/http"
-	"mittens/internal/pkg/safe"
 	"mittens/internal/pkg/warmup"
-	"time"
 )
 
 // Root stores all the flags.
@@ -126,64 +123,20 @@ func (r *Root) GetWarmupHTTPHeaders() []string {
 	return r.HTTPHeaders.getWarmupHTTPHeaders()
 }
 
-// GetWarmupHTTPRequests returns a channel with HTTP requests.
-func (r *Root) GetWarmupHTTPRequests() (chan http.Request, error) {
+// GetWarmupHTTPRequests HTTP requests.
+func (r *Root) GetWarmupHTTPRequests() ([]http.Request, error) {
 	requests, err := r.HTTP.getWarmupHTTPRequests()
 	if err != nil {
 		return nil, err
 	}
-
-	requestsChan := make(chan http.Request)
-
-	// create a goroutine that continuously adds requests to a channel for a maximum of MaxWarmupDurationSeconds
-	go safe.Do(func() {
-		if len(requests) == 0 {
-			close(requestsChan)
-			return
-		}
-		timeout := time.After(time.Duration(r.MaxWarmupDurationSeconds) * time.Second)
-
-		for {
-			select {
-			case <-timeout:
-				close(requestsChan)
-				return
-			default:
-				number := rand.Intn(len(requests))
-				requestsChan <- requests[number]
-			}
-		}
-	})
-	return requestsChan, nil
+	return requests, nil
 }
 
-// GetWarmupGrpcRequests returns a channel with gRPC requests.
-func (r *Root) GetWarmupGrpcRequests() (chan grpc.Request, error) {
+// GetWarmupGrpcRequests returns gRPC requests.
+func (r *Root) GetWarmupGrpcRequests() ([]grpc.Request, error) {
 	requests, err := r.Grpc.getWarmupGrpcRequests()
 	if err != nil {
 		return nil, err
 	}
-
-	requestsChan := make(chan grpc.Request)
-
-	// create a goroutine that continuously adds requests to a channel for a maximum of MaxWarmupDurationSeconds
-	go safe.Do(func() {
-		if len(requests) == 0 {
-			close(requestsChan)
-			return
-		}
-		timeout := time.After(time.Duration(r.MaxWarmupDurationSeconds) * time.Second)
-
-		for {
-			select {
-			case <-timeout:
-				close(requestsChan)
-				return
-			default:
-				number := rand.Intn(len(requests))
-				requestsChan <- requests[number]
-			}
-		}
-	})
-	return requestsChan, nil
+	return requests, nil
 }

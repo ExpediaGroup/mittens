@@ -30,19 +30,81 @@ type Warmup struct {
 	Target                   Target
 	MaxDurationSeconds       int
 	Concurrency              int
-	HttpRequests             chan http.Request
+	HttpRequests             []http.Request
 	HttpHeaders              []string
-	GrpcRequests             chan grpc.Request
+	GrpcRequests             []grpc.Request
 	RequestDelayMilliseconds int
 	ConcurrencyTargetSeconds int
 }
 
+func (w Warmup) GetWarmupHTTPRequests(maxDurationSeconds int) chan http.Request {
+	requestsChan := make(chan http.Request)
+
+	// create a goroutine that continuously adds requests to a channel for a maximum of maxDurationSeconds
+	go safe.Do(func() {
+		if len(w.HttpRequests) == 0 {
+			close(requestsChan)
+			return
+		}
+		timeout := time.After(time.Duration(maxDurationSeconds) * time.Second)
+
+		for {
+			select {
+			case <-timeout:
+				close(requestsChan)
+				return
+			default:
+				number := rand.Intn(len(w.HttpRequests))
+				requestsChan <- w.HttpRequests[number]
+			}
+		}
+	})
+	return requestsChan
+}
+
+// FIXME: make this generic and remove duplication
+func (w Warmup) GetWarmupGrpcRequests(maxDurationSeconds int) chan grpc.Request {
+	requestsChan := make(chan grpc.Request)
+
+	// create a goroutine that continuously adds requests to a channel for a maximum of maxDurationSeconds
+	go safe.Do(func() {
+		if len(w.GrpcRequests) == 0 {
+			close(requestsChan)
+			return
+		}
+		timeout := time.After(time.Duration(maxDurationSeconds) * time.Second)
+
+		for {
+			select {
+			case <-timeout:
+				close(requestsChan)
+				return
+			default:
+				number := rand.Intn(len(w.GrpcRequests))
+				requestsChan <- w.GrpcRequests[number]
+			}
+		}
+	})
+	return requestsChan
+}
+
 // Run sends requests to the target using goroutines.
-func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, requestsSentCounter *int) {
+func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, maxDurationSeconds int, requestsSentCounter *int) {
 	rand.Seed(time.Now().UnixNano()) // initialize seed only once to prevent deterministic/repeated calls every time we run
 
 	var wg sync.WaitGroup
 	var rampUpInterval = w.ConcurrencyTargetSeconds / w.Concurrency
+
+	if hasHttpRequests {
+		for i := 1; i <= w.Concurrency; i++ {
+			waitForRampUp(rampUpInterval, i)
+			log.Printf("Spawning new go routine for HTTP requests")
+			wg.Add(1)
+			go safe.Do(func() {
+				w.HTTPWarmupWorker(&wg, w.GetWarmupHTTPRequests(maxDurationSeconds), w.HttpHeaders, w.RequestDelayMilliseconds, requestsSentCounter)
+			})
+		}
+	}
 
 	if hasGrpcRequests {
 		// connect to gRPC server once and only if there are gRPC requests
@@ -57,20 +119,9 @@ func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, requestsSentCoun
 				log.Printf("Spawning new go routine for gRPC requests")
 				wg.Add(1)
 				go safe.Do(func() {
-					w.GrpcWarmupWorker(&wg, w.GrpcRequests, w.HttpHeaders, w.RequestDelayMilliseconds, requestsSentCounter)
+					w.GrpcWarmupWorker(&wg, w.GetWarmupGrpcRequests(maxDurationSeconds), w.HttpHeaders, w.RequestDelayMilliseconds, requestsSentCounter)
 				})
 			}
-		}
-	}
-
-	if hasHttpRequests {
-		for i := 1; i <= w.Concurrency; i++ {
-			waitForRampUp(rampUpInterval, i)
-			log.Printf("Spawning new go routine for HTTP requests")
-			wg.Add(1)
-			go safe.Do(func() {
-				w.HTTPWarmupWorker(&wg, w.HttpRequests, w.HttpHeaders, w.RequestDelayMilliseconds, requestsSentCounter)
-			})
 		}
 	}
 

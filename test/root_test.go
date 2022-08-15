@@ -41,87 +41,6 @@ func TestMain(m *testing.M) {
 	teardown()
 }
 
-func TestShouldBeReadyRegardlessIfWarmupRan(t *testing.T) {
-	t.Cleanup(func() {
-		cleanup()
-	})
-
-	os.Args = []string{
-		"mittens",
-		"-file-probe-enabled=true",
-		"-http-requests=get:/non-existent",
-		"-concurrency=2",
-		"-exit-after-warmup=true",
-		"-target-readiness-http-path=/health",
-		"-max-duration-seconds=2",
-	}
-
-	cmd.CreateConfig()
-	cmd.RunCmdRoot()
-
-	assert.Equal(t, httpInvocations, 0, "Assert that no calls were made to the http service")
-
-	readyFileExists, err := probe.FileExists("ready")
-	require.NoError(t, err)
-	assert.True(t, readyFileExists)
-}
-
-func TestWarmupFailReadinessIfGrpcTargetIsNeverReady(t *testing.T) {
-	t.Cleanup(func() {
-		cleanup()
-	})
-
-	// we simulate a failure in the target by setting the readiness path to a non existent one so that
-	// the target never becomes ready and the warmup does not run
-	os.Args = []string{
-		"mittens",
-		"-file-probe-enabled=true",
-		"-exit-after-warmup=true",
-		"-fail-readiness=false",
-		"-target-readiness-protocol=grpc",
-		"-target-grpc-port=50051",
-		"-target-readiness-grpc-method=non.existent/NonExistent",
-		"-target-insecure=true",
-		"-max-duration-seconds=2",
-	}
-
-	cmd.CreateConfig()
-	cmd.RunCmdRoot()
-
-	readyFileExists, err := probe.FileExists("ready")
-	require.NoError(t, err)
-	assert.True(t, readyFileExists)
-}
-
-func TestWarmupFailReadinessIfHttpTargetIsNeverReady(t *testing.T) {
-	t.Cleanup(func() {
-		cleanup()
-	})
-
-	// we simulate a failure in the target by setting the readiness path to a non existent one so that
-	// the target never becomes ready and the warmup does not run
-	os.Args = []string{
-		"mittens",
-		"-file-probe-enabled=true",
-		"-http-requests=get:/hello-world",
-		fmt.Sprintf("-target-http-port=%d", mockHttpServerPort),
-		fmt.Sprintf("-target-readiness-port=%d", mockHttpServerPort),
-		"-target-readiness-http-path=/non-existent",
-		"-max-duration-seconds=2",
-		"-exit-after-warmup=true",
-		"-fail-readiness=true",
-	}
-
-	cmd.CreateConfig()
-	cmd.RunCmdRoot()
-
-	assert.Equal(t, httpInvocations, 0, "Assert that no calls were made to the http service")
-
-	readyFileExists, err := probe.FileExists("ready")
-	require.NoError(t, err)
-	assert.False(t, readyFileExists)
-}
-
 func TestWarmupFailReadinessIfNoRequestsAreSentToTarget(t *testing.T) {
 	t.Cleanup(func() {
 		cleanup()
@@ -148,39 +67,8 @@ func TestWarmupFailReadinessIfNoRequestsAreSentToTarget(t *testing.T) {
 	readyFileExists, err := probe.FileExists("ready")
 	require.NoError(t, err)
 	assert.False(t, readyFileExists)
-}
 
-func TestHttp(t *testing.T) {
-	t.Cleanup(func() {
-		cleanup()
-	})
-
-	os.Args = []string{
-		"mittens",
-		"-file-probe-enabled=true",
-		// FIXME: for some reason we need to set both ports?
-		fmt.Sprintf("-target-http-port=%d", mockHttpServerPort),
-		fmt.Sprintf("-target-readiness-port=%d", mockHttpServerPort),
-		"-http-requests=get:/hello-world",
-		"-target-insecure=true",
-		"-concurrency=2",
-		"-exit-after-warmup=true",
-		"-target-readiness-http-path=/health",
-		"-max-duration-seconds=10",
-		"-max-readiness-wait-seconds=5",
-		"-max-warmup-seconds=5",
-		"-concurrency-target-seconds=1",
-	}
-
-	cmd.CreateConfig()
-	cmd.RunCmdRoot()
-
-	assert.Greater(t, httpInvocations, 1, "Assert that we made some calls to the http service")
-	// TODO: validate grpc invocations
-
-	readyFileExists, err := probe.FileExists("ready")
-	require.NoError(t, err)
-	assert.True(t, readyFileExists)
+	time.Sleep(time.Second * 50)
 }
 
 func TestGrpcAndHttp(t *testing.T) {
@@ -202,9 +90,42 @@ func TestGrpcAndHttp(t *testing.T) {
 		"-concurrency=2",
 		"-exit-after-warmup=true",
 		"-target-readiness-http-path=/health",
-		"-max-duration-seconds=4",
-		"-max-readiness-wait-seconds=2",
-		"-max-warmup-seconds=2",
+		"-max-duration-seconds=10",
+		"-max-readiness-wait-seconds=5",
+		"-max-warmup-seconds=5",
+		"-concurrency-target-seconds=1",
+	}
+
+	cmd.CreateConfig()
+	cmd.RunCmdRoot()
+
+	assert.Greater(t, httpInvocations, 1, "Assert that we made some calls to the http service")
+	// TODO: validate grpc invocations
+
+	readyFileExists, err := probe.FileExists("ready")
+	require.NoError(t, err)
+	assert.True(t, readyFileExists)
+}
+
+func TestHttp(t *testing.T) {
+	t.Cleanup(func() {
+		cleanup()
+	})
+
+	os.Args = []string{
+		"mittens",
+		"-file-probe-enabled=true",
+		// FIXME: for some reason we need to set both ports?
+		fmt.Sprintf("-target-http-port=%d", mockHttpServerPort),
+		fmt.Sprintf("-target-readiness-port=%d", mockHttpServerPort),
+		"-http-requests=get:/hello-world",
+		"-target-insecure=true",
+		"-concurrency=2",
+		"-exit-after-warmup=true",
+		"-target-readiness-http-path=/health",
+		"-max-duration-seconds=10",
+		"-max-readiness-wait-seconds=5",
+		"-max-warmup-seconds=5",
 		"-concurrency-target-seconds=1",
 	}
 
