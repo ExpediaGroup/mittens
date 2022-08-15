@@ -83,8 +83,8 @@ func run() int {
 	c1 := make(chan bool, 1)
 
 	requestsSentCounter := 0
-	go func() {
 
+	go safe.Do(func() {
 		if !validationError {
 			target := createTarget(targetOptions)
 
@@ -107,7 +107,7 @@ func run() int {
 			}
 		}
 		c1 <- true
-	}()
+	})
 
 	select {
 	case <-c1:
@@ -117,6 +117,7 @@ func run() int {
 		log.Printf("🛑 Warmup unable to run for the full %d seconds as the `max-duration-seconds` limit of %d seconds was reached.", opts.MaxWarmupDurationSeconds, opts.MaxDurationSeconds)
 		return requestsSentCounter
 	}
+
 }
 
 // block blocks forever unless `-exit-after-warmup` is set to true

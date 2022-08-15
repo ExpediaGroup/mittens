@@ -36,7 +36,6 @@ var mockGrpcServer *grpc.Server
 var httpInvocations = 0
 
 func TestMain(m *testing.M) {
-	cleanup()
 	setup()
 	m.Run()
 	teardown()
@@ -221,6 +220,7 @@ func TestGrpcAndHttp(t *testing.T) {
 }
 
 func setup() {
+	fmt.Println("Starting up http server")
 	mockHttpServer, mockHttpServerPort = fixture.StartHttpTargetTestServer([]fixture.PathResponseHandler{
 		{
 			Path: "/hello-world",
@@ -233,8 +233,10 @@ func setup() {
 			},
 		},
 	})
+	fmt.Printf("Http server started on port %d\n", mockHttpServerPort)
 
 	// FIXME: should run on a random/free port
+	fmt.Println("Starting up grpc server")
 	mockGrpcServer = fixture.StartGrpcTargetTestServer(50051)
 }
 
