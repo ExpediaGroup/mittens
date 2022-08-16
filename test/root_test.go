@@ -90,7 +90,7 @@ func TestGrpcAndHttp(t *testing.T) {
 		"-concurrency=2",
 		"-exit-after-warmup=true",
 		"-target-readiness-http-path=/health",
-		"-max-duration-seconds=10",
+		"-max-duration-seconds=3",
 		"-max-readiness-wait-seconds=5",
 		"-max-warmup-seconds=5",
 		"-concurrency-target-seconds=1",

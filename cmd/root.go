@@ -79,7 +79,6 @@ func run() int {
 	}
 
 	// The next block contains the "wait for target readiness" + "warmup" logic.
-	// We wait a max of X seconds for the entire thing to complete
 	c1 := make(chan bool, 1)
 
 	requestsSentCounter := 0
@@ -97,15 +96,15 @@ func run() int {
 				log.Printf("💚 Target took %d second(s) to become ready", int(elapsed))
 
 				globalMaxDurationSecondsLeft := opts.MaxDurationSeconds - int(elapsed)
-				maxWarmupDurationSecondsLeft := opts.MaxWarmupDurationSeconds - int(elapsed)
 
-				maxDurationInSeconds := Min(globalMaxDurationSecondsLeft, maxWarmupDurationSecondsLeft)
+				maxDurationInSeconds := Min(globalMaxDurationSecondsLeft, opts.MaxWarmupDurationSeconds)
 
-				log.Printf("Warmup requests will only run for %d seconds", maxDurationInSeconds)
+				if maxDurationInSeconds < opts.MaxWarmupDurationSeconds {
+					log.Printf("⚠️ Warmup requests will only run for %d seconds instead of the configured %d seconds as to meet the global maximum duration of %d seconds", maxDurationInSeconds, opts.MaxWarmupDurationSeconds, opts.MaxDurationSeconds)
+				}
 
 				wp := warmup.Warmup{
 					Target:                   target,
-					MaxDurationSeconds:       maxDurationInSeconds,
 					Concurrency:              opts.GetConcurrency(),
 					HttpRequests:             httpRequests,
 					GrpcRequests:             grpcRequests,
@@ -114,9 +113,7 @@ func run() int {
 					ConcurrencyTargetSeconds: opts.GetConcurrencyTargetSeconds(),
 				}
 
-				// FIXME: maxDurationSeconds
-				maxDurationSeconds := opts.GetMaxWarmupDurationSeconds()
-				wp.Run(hasHttpRequests, hasGrpcRequests, maxDurationSeconds, &requestsSentCounter)
+				wp.Run(hasHttpRequests, hasGrpcRequests, maxDurationInSeconds, &requestsSentCounter)
 			} else {
 				log.Print("Target still not ready. Giving up!")
 			}
@@ -124,15 +121,9 @@ func run() int {
 		c1 <- true
 	})
 
-	select {
-	case <-c1:
-		log.Printf("🟢 Warmup ran for the full %d seconds", opts.MaxWarmupDurationSeconds)
-		return requestsSentCounter
-	case <-time.After(time.Duration(opts.MaxDurationSeconds) * time.Second):
-		log.Printf("🛑 Warmup unable to run for the full %d seconds as the `max-duration-seconds` limit of %d seconds was reached.", opts.MaxWarmupDurationSeconds, opts.MaxDurationSeconds)
-		return requestsSentCounter
-	}
-
+	<-c1
+	log.Println("🟢 Warmup completed")
+	return requestsSentCounter
 }
 
 func Min(x, y int) int {

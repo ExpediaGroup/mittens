@@ -28,7 +28,6 @@ import (
 // Warmup holds any information needed for the workers to send requests.
 type Warmup struct {
 	Target                   Target
-	MaxDurationSeconds       int
 	Concurrency              int
 	HttpRequests             []http.Request
 	HttpHeaders              []string
