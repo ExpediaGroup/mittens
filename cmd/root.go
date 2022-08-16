@@ -90,7 +90,9 @@ func run() int {
 		if !validationError {
 			target := createTarget(targetOptions)
 
-			if err := target.WaitForReadinessProbe(opts.GetWarmupHTTPHeaders()); err == nil {
+			maxReadinessWaitDurationInSeconds := Min(opts.MaxDurationSeconds, opts.MaxReadinessWaitSeconds)
+
+			if err := target.WaitForReadinessProbe(maxReadinessWaitDurationInSeconds, opts.GetWarmupHTTPHeaders()); err == nil {
 				elapsed := time.Since(start).Seconds()
 
 				log.Printf("💚 Target took %d second(s) to become ready", int(elapsed))

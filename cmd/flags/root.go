@@ -110,7 +110,6 @@ func (r *Root) GetGrpcClient() grpc.Client {
 // GetWarmupTargetOptions validates and returns any options that apply to the target.
 func (r *Root) GetWarmupTargetOptions() (warmup.TargetOptions, error) {
 	options := r.Target.getWarmupTargetOptions()
-	options.ReadinessTimeoutInSeconds = r.MaxReadinessWaitSeconds
 	if options.ReadinessProtocol != "http" && options.ReadinessProtocol != "grpc" {
 		err := fmt.Errorf("readiness protocol %s not supported, please use http or grpc", r.ReadinessProtocol)
 		return options, err
