@@ -67,12 +67,12 @@ func (r *Root) GetMaxDurationSeconds() int {
 	return r.MaxDurationSeconds
 }
 
-// MaxReadinessWaitSeconds returns the value of the max-readiness-wait-seconds parameter.
+// GetMaxReadinessWaitSeconds returns the value of the max-readiness-wait-seconds parameter.
 func (r *Root) GetMaxReadinessWaitSeconds() int {
 	return r.MaxReadinessWaitSeconds
 }
 
-// MaxWarmupDurationSeconds returns the value of the max-warmup-seconds parameter.
+// GetMaxWarmupDurationSeconds returns the value of the max-warmup-seconds parameter.
 func (r *Root) GetMaxWarmupDurationSeconds() int {
 	return r.MaxWarmupDurationSeconds
 }
