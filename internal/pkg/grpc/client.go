@@ -54,7 +54,7 @@ func NewClient(host string, insecure bool) Client {
 
 // Connect attempts to establish a connection with a gRPC server.
 func (c *Client) Connect(headers []string) error {
-	timeoutSeconds := 30 // TODO: make this configurable?
+	timeoutSeconds := 1 // TODO: make this configurable?
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSeconds)*time.Second)
 
 	headersMetadata := grpcurl.MetadataFromHeaders(headers)
