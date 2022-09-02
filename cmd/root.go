@@ -22,6 +22,7 @@ import (
 	"mittens/internal/pkg/safe"
 	"mittens/internal/pkg/warmup"
 	"os"
+	"time"
 )
 
 var opts *flags.Root
@@ -35,7 +36,8 @@ func CreateConfig() {
 }
 
 // RunCmdRoot runs the main logic
-//  It blocks forever unless `-exit-after-warmup` is set to true
+//
+//	It blocks forever unless `-exit-after-warmup` is set to true
 func RunCmdRoot() {
 	requestsSent := safe.DoAndReturn(run, 0)
 	postProcess(requestsSent)
@@ -76,28 +78,61 @@ func run() int {
 		hasGrpcRequests = true
 	}
 
-	requestsSentCounter := 0
-	if !validationError {
-		target := createTarget(targetOptions)
-		if err := target.WaitForReadinessProbe(opts.GetWarmupHTTPHeaders()); err == nil {
-			log.Print("💚 Target is ready")
+	// The next block contains the "wait for target readiness" + "warmup" logic.
+	c1 := make(chan bool, 1)
 
-			wp := warmup.Warmup{
-				Target:                   target,
-				MaxDurationSeconds:       opts.GetMaxDurationSeconds(),
-				Concurrency:              opts.GetConcurrency(),
-				HttpRequests:             httpRequests,
-				GrpcRequests:             grpcRequests,
-				HttpHeaders:              opts.GetWarmupHTTPHeaders(),
-				RequestDelayMilliseconds: opts.RequestDelayMilliseconds,
-				ConcurrencyTargetSeconds: opts.GetConcurrencyTargetSeconds(),
+	requestsSentCounter := 0
+
+	// current time
+	start := time.Now()
+
+	go safe.Do(func() {
+		if !validationError {
+			target := createTarget(targetOptions)
+
+			maxReadinessWaitDurationInSeconds := Min(opts.MaxDurationSeconds, opts.MaxReadinessWaitSeconds)
+
+			if err := target.WaitForReadinessProbe(maxReadinessWaitDurationInSeconds, opts.GetWarmupHTTPHeaders()); err == nil {
+				elapsed := time.Since(start).Seconds()
+
+				log.Printf("💚 Target took %d second(s) to become ready", int(elapsed))
+
+				globalMaxDurationSecondsLeft := opts.MaxDurationSeconds - int(elapsed)
+
+				maxDurationInSeconds := Min(globalMaxDurationSecondsLeft, opts.MaxWarmupDurationSeconds)
+
+				if maxDurationInSeconds < opts.MaxWarmupDurationSeconds {
+					log.Printf("⚠️ Warmup requests will only run for %d seconds instead of the configured %d seconds as to meet the global maximum duration of %d seconds", maxDurationInSeconds, opts.MaxWarmupDurationSeconds, opts.MaxDurationSeconds)
+				}
+
+				wp := warmup.Warmup{
+					Target:                   target,
+					Concurrency:              opts.GetConcurrency(),
+					HttpRequests:             httpRequests,
+					GrpcRequests:             grpcRequests,
+					HttpHeaders:              opts.GetWarmupHTTPHeaders(),
+					RequestDelayMilliseconds: opts.RequestDelayMilliseconds,
+					ConcurrencyTargetSeconds: opts.GetConcurrencyTargetSeconds(),
+				}
+
+				wp.Run(hasHttpRequests, hasGrpcRequests, maxDurationInSeconds, &requestsSentCounter)
+			} else {
+				log.Print("Target still not ready. Giving up!")
 			}
-			wp.Run(hasHttpRequests, hasGrpcRequests, &requestsSentCounter)
-		} else {
-			log.Print("Target still not ready. Giving up!")
 		}
-	}
+		c1 <- true
+	})
+
+	<-c1
+	log.Println("🟢 Warmup completed")
 	return requestsSentCounter
+}
+
+func Min(x, y int) int {
+	if x > y {
+		return y
+	}
+	return x
 }
 
 // block blocks forever unless `-exit-after-warmup` is set to true

@@ -20,7 +20,6 @@ import (
 	"mittens/cmd"
 	"mittens/fixture"
 	"mittens/internal/pkg/probe"
-	"mittens/internal/pkg/safe"
 	"net/http"
 	"os"
 	"testing"
@@ -37,7 +36,6 @@ var mockGrpcServer *grpc.Server
 var httpInvocations = 0
 
 func TestMain(m *testing.M) {
-	cleanup()
 	setup()
 	m.Run()
 	teardown()
@@ -63,33 +61,6 @@ func TestShouldBeReadyRegardlessIfWarmupRan(t *testing.T) {
 
 	assert.Equal(t, httpInvocations, 0, "Assert that no calls were made to the http service")
 
-	readyFileExists, err := probe.FileExists("ready")
-	require.NoError(t, err)
-	assert.True(t, readyFileExists)
-}
-
-func TestShouldBeReadyRegardlessIfHasPanicked(t *testing.T) {
-	t.Cleanup(func() {
-		cleanup()
-	})
-
-	// we trigger a panic scenario by using a non-existent gRPC readiness probe
-	os.Args = []string{
-		"mittens",
-		"-file-probe-enabled=true",
-		"-exit-after-warmup=true",
-		"-fail-readiness=false",
-		"-target-readiness-protocol=grpc",
-		"-target-grpc-port=50051",
-		"-target-readiness-grpc-method=non.existent/NonExistent",
-		"-target-insecure=true",
-		"-max-duration-seconds=2",
-	}
-
-	cmd.CreateConfig()
-	cmd.RunCmdRoot()
-
-	assert.True(t, safe.HasPanicked())
 	readyFileExists, err := probe.FileExists("ready")
 	require.NoError(t, err)
 	assert.True(t, readyFileExists)
@@ -152,6 +123,37 @@ func TestWarmupFailReadinessIfNoRequestsAreSentToTarget(t *testing.T) {
 	assert.False(t, readyFileExists)
 }
 
+func TestHttp(t *testing.T) {
+	t.Cleanup(func() {
+		cleanup()
+	})
+
+	os.Args = []string{
+		"mittens",
+		"-file-probe-enabled=true",
+		// FIXME: for some reason we need to set both ports?
+		fmt.Sprintf("-target-http-port=%d", mockHttpServerPort),
+		fmt.Sprintf("-target-readiness-port=%d", mockHttpServerPort),
+		"-http-requests=get:/hello-world",
+		"-target-insecure=true",
+		"-concurrency=2",
+		"-exit-after-warmup=true",
+		"-target-readiness-http-path=/health",
+		"-max-duration-seconds=2",
+		"-concurrency-target-seconds=1",
+	}
+
+	cmd.CreateConfig()
+	cmd.RunCmdRoot()
+
+	assert.Greater(t, httpInvocations, 1, "Assert that we made some calls to the http service")
+	// TODO: validate grpc invocations
+
+	readyFileExists, err := probe.FileExists("ready")
+	require.NoError(t, err)
+	assert.True(t, readyFileExists)
+}
+
 func TestGrpcAndHttp(t *testing.T) {
 	t.Cleanup(func() {
 		cleanup()
@@ -187,6 +189,7 @@ func TestGrpcAndHttp(t *testing.T) {
 }
 
 func setup() {
+	fmt.Println("Starting up http server")
 	mockHttpServer, mockHttpServerPort = fixture.StartHttpTargetTestServer([]fixture.PathResponseHandler{
 		{
 			Path: "/hello-world",
@@ -201,6 +204,7 @@ func setup() {
 	})
 
 	// FIXME: should run on a random/free port
+	fmt.Println("Starting up grpc server")
 	mockGrpcServer = fixture.StartGrpcTargetTestServer(50051)
 }
 
