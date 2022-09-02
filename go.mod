@@ -1,7 +1,7 @@
 module mittens
 
 require (
-	github.com/fullstorydev/grpcurl v1.8.6
+	github.com/fullstorydev/grpcurl v1.8.7
 	github.com/golang/protobuf v1.5.2
 	github.com/jhump/protoreflect v1.12.0
 	github.com/stretchr/testify v1.8.0
@@ -15,7 +15,7 @@ require (
 	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20220715211116-798f69b842b9 // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
