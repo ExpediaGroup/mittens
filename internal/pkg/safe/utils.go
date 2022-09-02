@@ -22,7 +22,7 @@ import (
 func Do(f func()) {
 	defer func() {
 		if err := recover(); err != nil {
-			logPanic(err)
+			log.Println("Unexpected panic was caught:", err)
 		}
 	}()
 	f()
@@ -33,21 +33,9 @@ func Do(f func()) {
 func DoAndReturn(f func() int, fallback int) (result int) {
 	defer func() {
 		if err := recover(); err != nil {
-			logPanic(err)
+			log.Println("Unexpected panic was caught:", err)
 			result = fallback
 		}
 	}()
 	return f()
-}
-
-// HasPanicked checks whether a panic was ever caught during the execution of the program.
-func HasPanicked() bool {
-	return panicCaught
-}
-
-var panicCaught = false
-
-func logPanic(err interface{}) {
-	log.Println("Unexpected panic was caught:", err)
-	panicCaught = true
 }

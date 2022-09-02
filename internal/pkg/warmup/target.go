@@ -25,11 +25,10 @@ import (
 
 // TargetOptions represents target configurations set by the user.
 type TargetOptions struct {
-	ReadinessProtocol         string
-	ReadinessHTTPPath         string
-	ReadinessGrpcMethod       string
-	ReadinessPort             int
-	ReadinessTimeoutInSeconds int
+	ReadinessProtocol   string
+	ReadinessHTTPPath   string
+	ReadinessGrpcMethod string
+	ReadinessPort       int
 }
 
 // Target includes information needed to send requests to the target. It includes configured http and gRPC clients and options set by the user.
@@ -56,15 +55,15 @@ func NewTarget(readinessHTTPClient whttp.Client, readinessGrpcClient grpc.Client
 // WaitForReadinessProbe sends health-check requests to the target and waits until it becomes ready.
 // It returns an error if the timeout is exceeded.
 // It supports both HTTP and gRPC health-checks.
-func (t Target) WaitForReadinessProbe(headers []string) error {
-	log.Printf("Waiting for %s target to be ready for a max of %ds", t.options.ReadinessProtocol, t.options.ReadinessTimeoutInSeconds)
+func (t Target) WaitForReadinessProbe(maxReadinessWaitDurationInSeconds int, headers []string) error {
+	log.Printf("Waiting for %s target to be ready for a max of %ds", t.options.ReadinessProtocol, maxReadinessWaitDurationInSeconds)
 
-	timeout := time.After(time.Duration(t.options.ReadinessTimeoutInSeconds) * time.Second)
+	timeout := time.After(time.Duration(maxReadinessWaitDurationInSeconds) * time.Second)
 
 	for {
 		select {
 		case <-timeout:
-			return fmt.Errorf("giving up; target not ready after %d seconds 🙁", t.options.ReadinessTimeoutInSeconds)
+			return fmt.Errorf("giving up; target not ready after %d seconds 🙁", maxReadinessWaitDurationInSeconds)
 		default:
 			// Wait one second between attempts. This is not configurable
 			time.Sleep(time.Second * 1)

@@ -17,17 +17,16 @@ package flags
 import (
 	"flag"
 	"fmt"
-	"math/rand"
 	"mittens/internal/pkg/grpc"
 	"mittens/internal/pkg/http"
-	"mittens/internal/pkg/safe"
 	"mittens/internal/pkg/warmup"
-	"time"
 )
 
 // Root stores all the flags.
 type Root struct {
 	MaxDurationSeconds       int
+	MaxReadinessWaitSeconds  int
+	MaxWarmupDurationSeconds int
 	Concurrency              int
 	RequestDelayMilliseconds int
 	ConcurrencyTargetSeconds int
@@ -46,7 +45,10 @@ func (r *Root) String() string {
 
 // InitFlags initialises all the flags.
 func (r *Root) InitFlags() {
-	flag.IntVar(&r.MaxDurationSeconds, "max-duration-seconds", 60, "Max duration in seconds after which warm up will stop making requests")
+	// TODO: rename this to `max-global-duration-seconds`
+	flag.IntVar(&r.MaxDurationSeconds, "max-duration-seconds", 60, "Global maximum duration. This includes both the time spent warming up the target service and also the time waiting for the target to become ready")
+	flag.IntVar(&r.MaxReadinessWaitSeconds, "max-readiness-wait-seconds", 30, "Maximum time to wait for the target to become ready")
+	flag.IntVar(&r.MaxWarmupDurationSeconds, "max-warmup-seconds", 30, "Maximum time spent sending warmup requests to the target service. Please note that `max-duration-seconds` may cap this duration.")
 	flag.IntVar(&r.Concurrency, "concurrency", 2, "Number of concurrent requests for warm up")
 	flag.IntVar(&r.RequestDelayMilliseconds, "request-delay-milliseconds", 500, "Delay in milliseconds between requests")
 	flag.IntVar(&r.ConcurrencyTargetSeconds, "concurrency-target-seconds", 0, "Time taken to reach expected concurrency. This is useful to ramp up traffic.")
@@ -63,6 +65,16 @@ func (r *Root) InitFlags() {
 // GetMaxDurationSeconds returns the value of the max-duration-seconds parameter.
 func (r *Root) GetMaxDurationSeconds() int {
 	return r.MaxDurationSeconds
+}
+
+// GetMaxReadinessWaitSeconds returns the value of the max-readiness-wait-seconds parameter.
+func (r *Root) GetMaxReadinessWaitSeconds() int {
+	return r.MaxReadinessWaitSeconds
+}
+
+// GetMaxWarmupDurationSeconds returns the value of the max-warmup-seconds parameter.
+func (r *Root) GetMaxWarmupDurationSeconds() int {
+	return r.MaxWarmupDurationSeconds
 }
 
 // GetConcurrencyTargetSeconds returns the value of the concurrency-target-seconds parameter.
@@ -82,7 +94,7 @@ func (r *Root) GetReadinessHTTPClient() http.Client {
 
 // GetReadinessGrpcClient creates the gRPC client to be used for the readiness requests.
 func (r *Root) GetReadinessGrpcClient() grpc.Client {
-	return r.Target.getReadinessGrpcClient(r.MaxDurationSeconds)
+	return r.Target.getReadinessGrpcClient()
 }
 
 // GetHTTPClient creates the HTTP client to be used for the actual requests.
@@ -92,13 +104,12 @@ func (r *Root) GetHTTPClient() http.Client {
 
 // GetGrpcClient creates the gRPC client to be used for the actual requests.
 func (r *Root) GetGrpcClient() grpc.Client {
-	return r.Target.getGrpcClient(r.MaxDurationSeconds)
+	return r.Target.getGrpcClient()
 }
 
 // GetWarmupTargetOptions validates and returns any options that apply to the target.
 func (r *Root) GetWarmupTargetOptions() (warmup.TargetOptions, error) {
 	options := r.Target.getWarmupTargetOptions()
-	options.ReadinessTimeoutInSeconds = r.MaxDurationSeconds
 	if options.ReadinessProtocol != "http" && options.ReadinessProtocol != "grpc" {
 		err := fmt.Errorf("readiness protocol %s not supported, please use http or grpc", r.ReadinessProtocol)
 		return options, err
@@ -111,64 +122,20 @@ func (r *Root) GetWarmupHTTPHeaders() []string {
 	return r.HTTPHeaders.getWarmupHTTPHeaders()
 }
 
-// GetWarmupHTTPRequests returns a channel with HTTP requests.
-func (r *Root) GetWarmupHTTPRequests() (chan http.Request, error) {
+// GetWarmupHTTPRequests HTTP requests.
+func (r *Root) GetWarmupHTTPRequests() ([]http.Request, error) {
 	requests, err := r.HTTP.getWarmupHTTPRequests()
 	if err != nil {
 		return nil, err
 	}
-
-	requestsChan := make(chan http.Request)
-
-	// create a goroutine that continuously adds requests to a channel for a maximum of MaxDurationSeconds
-	go safe.Do(func() {
-		if len(requests) == 0 {
-			close(requestsChan)
-			return
-		}
-		timeout := time.After(time.Duration(r.MaxDurationSeconds) * time.Second)
-
-		for {
-			select {
-			case <-timeout:
-				close(requestsChan)
-				return
-			default:
-				number := rand.Intn(len(requests))
-				requestsChan <- requests[number]
-			}
-		}
-	})
-	return requestsChan, nil
+	return requests, nil
 }
 
-// GetWarmupGrpcRequests returns a channel with gRPC requests.
-func (r *Root) GetWarmupGrpcRequests() (chan grpc.Request, error) {
+// GetWarmupGrpcRequests returns gRPC requests.
+func (r *Root) GetWarmupGrpcRequests() ([]grpc.Request, error) {
 	requests, err := r.Grpc.getWarmupGrpcRequests()
 	if err != nil {
 		return nil, err
 	}
-
-	requestsChan := make(chan grpc.Request)
-
-	// create a goroutine that continuously adds requests to a channel for a maximum of MaxDurationSeconds
-	go safe.Do(func() {
-		if len(requests) == 0 {
-			close(requestsChan)
-			return
-		}
-		timeout := time.After(time.Duration(r.MaxDurationSeconds) * time.Second)
-
-		for {
-			select {
-			case <-timeout:
-				close(requestsChan)
-				return
-			default:
-				number := rand.Intn(len(requests))
-				requestsChan <- requests[number]
-			}
-		}
-	})
-	return requestsChan, nil
+	return requests, nil
 }

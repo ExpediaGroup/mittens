@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -39,6 +40,8 @@ func StartGrpcTargetTestServer(port int) *grpc.Server {
 // Optionally, it receives a list of handler functions
 func StartHttpTargetTestServer(pathHandlers []PathResponseHandler) (*http.Server, int) {
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		// Sleep for half a second to simulate a slow server
+		time.Sleep(500 * time.Millisecond)
 		w.WriteHeader(http.StatusOK)
 	})
 
