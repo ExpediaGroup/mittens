@@ -28,7 +28,7 @@ import (
 	"github.com/jhump/protoreflect/grpcreflect"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	reflectpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 )
@@ -63,7 +63,12 @@ func (c *Client) Connect(headers []string) error {
 
 	dialOptions := []grpc.DialOption{grpc.WithBlock()}
 	if c.insecure {
-		dialOptions = append(dialOptions, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		tlsConf, err := grpcurl.ClientTLSConfig(c.insecure, "", "", "")
+		if err != nil {
+			return fmt.Errorf("failed to create TLS config: %v", err)
+		}
+		var creds = credentials.NewTLS(tlsConf)
+		dialOptions = append(dialOptions, grpc.WithTransportCredentials(creds))
 	}
 
 	conn, err := grpc.DialContext(ctx, c.host, dialOptions...)
