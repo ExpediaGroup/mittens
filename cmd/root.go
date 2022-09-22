@@ -47,7 +47,7 @@ func RunCmdRoot() {
 // run runs the main logic and returns the number of warmup requests actually sent.
 func run() int {
 	if opts.FileProbe.Enabled {
-		probe.WriteFile("alive")
+		probe.WriteFile(opts.FileProbe.LivenessPath)
 	}
 
 	var validationError bool
@@ -156,7 +156,7 @@ func postProcess(requestsSentCounter int) {
 		}
 
 		if opts.FileProbe.Enabled {
-			probe.WriteFile("ready")
+			probe.WriteFile(opts.FileProbe.ReadinessPath)
 		}
 	}
 }

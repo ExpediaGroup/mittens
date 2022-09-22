@@ -21,7 +21,9 @@ import (
 
 // FileProbe stores flags related to the file probe.
 type FileProbe struct {
-	Enabled bool
+	Enabled       bool
+	LivenessPath  string
+	ReadinessPath string
 }
 
 func (p *FileProbe) String() string {
@@ -30,4 +32,6 @@ func (p *FileProbe) String() string {
 
 func (p *FileProbe) initFlags() {
 	flag.BoolVar(&p.Enabled, "file-probe-enabled", true, "If set to true writes files to be used as readiness/liveness probes")
+	flag.StringVar(&p.LivenessPath, "file-probe-liveness-path", "alive", "File to be used for liveness probe")
+	flag.StringVar(&p.ReadinessPath, "file-probe-readiness-path", "ready", "File to be used for readiness probe")
 }
