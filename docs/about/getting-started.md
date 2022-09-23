@@ -72,7 +72,7 @@ E.g.:
 
 ### File probes
 Mittens writes files that can be used as liveness and readiness probes. These files are written to disk as `alive` and `ready` respectively.
-If you run mittens as a sidecar you can then define a [liveness command](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-command) as follows:
+If you run mittens as a sidecar you can then define [liveness and readiness commands](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/) as follows:
 
 ```
 ...
@@ -80,8 +80,13 @@ livenessProbe:
   exec:
     command:
     - "cat"
+    - "alive"
+readinessProbe:
+  exec:
+    command:
+    - "cat"
     - "ready"
-    ...
+...
 ```
 
 In case such probes are not needed you can disable this feature by setting `file-probe-enabled` to `false`. 
