@@ -30,6 +30,7 @@ type Target struct {
 	GrpcPort            int
 	ReadinessProtocol   string
 	ReadinessHTTPPath   string
+	ReadinessHTTPHost   string
 	ReadinessGrpcMethod string
 	ReadinessPort       int
 	Insecure            bool
@@ -46,12 +47,20 @@ func (t *Target) initFlags() {
 	flag.IntVar(&t.GrpcPort, "target-grpc-port", 50051, "Grpc port for warm up requests")
 	flag.StringVar(&t.ReadinessProtocol, "target-readiness-protocol", "http", "Protocol to be used for readiness check. One of [http, grpc]")
 	flag.StringVar(&t.ReadinessHTTPPath, "target-readiness-http-path", "/ready", "The path used for HTTP target readiness probe")
+	flag.StringVar(&t.ReadinessHTTPHost, "target-readiness-http-host", toStringOrDefaultIfNull(&t.HTTPHost, "http://localhost"), "The HTTP host used for target readiness probe")
 	flag.StringVar(&t.ReadinessGrpcMethod, "target-readiness-grpc-method", "grpc.health.v1.Health/Check", "The service method used for gRPC target readiness probe")
 	flag.IntVar(&t.ReadinessPort, "target-readiness-port", toIntOrDefaultIfNull(&t.HTTPPort, 8080), "The port used for target readiness probe")
 	flag.BoolVar(&t.Insecure, "target-insecure", false, "Whether to skip TLS validation")
 }
 
 func toIntOrDefaultIfNull(value *int, defaultValue int) int {
+	if value == nil {
+		return defaultValue
+	}
+	return *value
+}
+
+func toStringOrDefaultIfNull(value *string, defaultValue string) string {
 	if value == nil {
 		return defaultValue
 	}
@@ -69,7 +78,7 @@ func (t *Target) getWarmupTargetOptions() warmup.TargetOptions {
 }
 
 func (t *Target) getReadinessHTTPClient() http.Client {
-	return http.NewClient(fmt.Sprintf("%s:%d", t.HTTPHost, t.ReadinessPort), t.Insecure)
+	return http.NewClient(fmt.Sprintf("%s:%d", t.ReadinessHTTPHost, t.ReadinessPort), t.Insecure)
 }
 
 func (t *Target) getReadinessGrpcClient() grpc.Client {
