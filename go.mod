@@ -2,7 +2,7 @@ module mittens
 
 require (
 	github.com/fullstorydev/grpcurl v1.8.7
-	github.com/golang/protobuf v1.5.2
+	github.com/golang/protobuf v1.5.3
 	github.com/jhump/protoreflect v1.13.0
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/net v0.0.0-20220708220712-1185a9018129
