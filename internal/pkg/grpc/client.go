@@ -17,6 +17,7 @@ package grpc
 import (
 	"bytes"
 	"fmt"
+	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"mittens/internal/pkg/placeholders"
 	"mittens/internal/pkg/response"
@@ -61,8 +62,14 @@ func (c *Client) Connect(headers []string) error {
 	headersMetadata := grpcurl.MetadataFromHeaders(headers)
 	contextWithMetadata := metadata.NewOutgoingContext(ctx, headersMetadata)
 
-	dialOptions := []grpc.DialOption{grpc.WithBlock()}
+	// grpc.WithReturnConnectionError() is EXPERIMENTAL and may be changed or removed in a later release
+	// Added to provide more information if a connection error occurs
+	dialOptions := []grpc.DialOption{grpc.WithBlock(), grpc.WithReturnConnectionError()}
 	if c.insecure {
+		log.Print("ignoring gRPC server SSL/TLS authentication")
+		dialOptions = append(dialOptions, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	} else {
+		log.Print("using gRPC server SSL/TLS authentication")
 		tlsConf, err := grpcurl.ClientTLSConfig(c.insecure, "", "", "")
 		if err != nil {
 			return fmt.Errorf("failed to create TLS config: %v", err)
@@ -71,12 +78,13 @@ func (c *Client) Connect(headers []string) error {
 		dialOptions = append(dialOptions, grpc.WithTransportCredentials(creds))
 	}
 
+	grpc.WithReturnConnectionError()
 	conn, err := grpc.DialContext(ctx, c.host, dialOptions...)
 	if err != nil {
 		return fmt.Errorf("gRPC dial: %v", err)
 	}
 
-	reflectionClient := grpcreflect.NewClient(contextWithMetadata, reflectpb.NewServerReflectionClient(conn))
+	reflectionClient := grpcreflect.NewClientV1Alpha(contextWithMetadata, reflectpb.NewServerReflectionClient(conn))
 	descriptorSource := grpcurl.DescriptorSourceFromServer(contextWithMetadata, reflectionClient)
 
 	log.Print("gRPC client connected")
