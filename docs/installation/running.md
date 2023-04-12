@@ -6,6 +6,8 @@ title: How to Run
 The simplest way to run Mittens is as a cmd application. It receives a number of command line arguments (see [flags](https://expediagroup.github.io/mittens/docs/about/getting-started#flags)).
 You can also run it as a linked Docker container or even as a sidecar in Kubernetes.
 
+> Please ensure that your service provides endpoints for both HTTP and gRPC requests, with the HTTP endpoint being exposed at `/hotel/potatoes` and the gRPC endpoint at `service/method` before running the below commands.
+
 ## Run as a cmd application
 
 You can run the binary executable as follows:
@@ -148,7 +150,7 @@ spec:
         volumeMounts:
           - name: mittens-config
             mountPath: /mittens
-    volumes:
+      volumes:
         - name: mittens-config
           configMap:
             name: mittens-config
