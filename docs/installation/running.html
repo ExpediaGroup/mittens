@@ -56,6 +56,9 @@
             });
         </script></nav></div><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">How to Run</h1></header><article><div><span><p>The simplest way to run Mittens is as a cmd application. It receives a number of command line arguments (see <a href="https://expediagroup.github.io/mittens/docs/about/getting-started#flags">flags</a>).
 You can also run it as a linked Docker container or even as a sidecar in Kubernetes.</p>
+<blockquote>
+<p>Please ensure that your service provides endpoints for both HTTP and gRPC requests, with the HTTP endpoint being exposed at <code>/hotel/potatoes</code> and the gRPC endpoint at <code>service/method</code> before running the below commands.</p>
+</blockquote>
 <h2><a class="anchor" aria-hidden="true" id="run-as-a-cmd-application"></a><a href="#run-as-a-cmd-application" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Run as a cmd application</h2>
 <p>You can run the binary executable as follows:</p>
 <pre><code class="hljs">./mittens -target-readiness-http-path=/health -target-grpc-port=6565 -max-duration-seconds=60 -concurrency=3 -http-request=get:/hotel/potatoes -grpc-requests=service/method:&quot;{\&quot;foo\&quot;:\&quot;bar\&quot;, \&quot;bar\&quot;:\&quot;foo\&quot;}&quot;
@@ -188,7 +191,7 @@ To do that in Kubernetes, you can make use of ConfigMaps and define the body of 
         <span class="hljs-attr">volumeMounts:</span>
           <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">mittens-config</span>
             <span class="hljs-attr">mountPath:</span> <span class="hljs-string">/mittens</span>
-    <span class="hljs-attr">volumes:</span>
+      <span class="hljs-attr">volumes:</span>
         <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">mittens-config</span>
           <span class="hljs-attr">configMap:</span>
             <span class="hljs-attr">name:</span> <span class="hljs-string">mittens-config</span>
