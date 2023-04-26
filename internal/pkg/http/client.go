@@ -17,6 +17,7 @@ package http
 import (
 	"bytes"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -25,6 +26,7 @@ import (
 	"mittens/internal/pkg/response"
 	"mittens/internal/pkg/util"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -46,6 +48,38 @@ func NewClient(host string, insecure bool) Client {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
 	}
 	return Client{httpClient: client, host: strings.TrimRight(host, "/")}
+}
+
+// SendAuthTokenRequest sends a request to the HTTP server for fetching the AuthToken.
+func (c Client) SendAuthTokenRequest(path string) (string, error) {
+
+	url := fmt.Sprintf("%s/%s", c.host, strings.TrimLeft(path, "/"))
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+
+	if err != nil {
+		log.Printf("Failed to create request: %s: %v", url, err)
+		return "", errors.New("failed to create request")
+	}
+
+	resp, err := c.httpClient.Do(req)
+
+	if err != nil {
+		fmt.Printf("client: error making http request: %s\n", err)
+		return "", errors.New("client: error making http request")
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return "", errors.New("Auth token status code is: " + strconv.Itoa(resp.StatusCode))
+	} else {
+		responseBody, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Printf("Could not read response body: %s\n", err)
+		}
+		return string(responseBody), nil
+	}
+
 }
 
 // SendRequest sends a request to the HTTP server and wraps useful information into a Response object.

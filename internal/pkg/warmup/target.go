@@ -29,6 +29,7 @@ type TargetOptions struct {
 	ReadinessHTTPPath   string
 	ReadinessGrpcMethod string
 	ReadinessPort       int
+	AuthTokenPath       string
 }
 
 // Target includes information needed to send requests to the target. It includes configured http and gRPC clients and options set by the user.
@@ -50,6 +51,11 @@ func NewTarget(readinessHTTPClient whttp.Client, readinessGrpcClient grpc.Client
 		options:             options,
 	}
 	return t
+}
+
+func (t Target) FetchAuthToken() (string, error) {
+	log.Printf("Fetching token...")
+	return t.httpClient.SendAuthTokenRequest(t.options.AuthTokenPath)
 }
 
 // WaitForReadinessProbe sends health-check requests to the target and waits until it becomes ready.

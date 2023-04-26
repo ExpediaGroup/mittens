@@ -32,6 +32,7 @@ type Root struct {
 	ConcurrencyTargetSeconds int
 	ExitAfterWarmup          bool
 	FailReadiness            bool
+	FetchAuthToken           bool
 	FileProbe
 	Target
 	HTTP
@@ -54,6 +55,7 @@ func (r *Root) InitFlags() {
 	flag.IntVar(&r.ConcurrencyTargetSeconds, "concurrency-target-seconds", 0, "Time taken to reach expected concurrency. This is useful to ramp up traffic.")
 	flag.BoolVar(&r.ExitAfterWarmup, "exit-after-warmup", false, "If warm up process should finish after completion. This is useful to prevent container restarts.")
 	flag.BoolVar(&r.FailReadiness, "fail-readiness", false, "If set to true readiness will fail if no requests were sent.")
+	flag.BoolVar(&r.FetchAuthToken, "fetch-auth-token", false, "If set to true auth token is fetched from the target.")
 
 	r.FileProbe.initFlags()
 	r.Target.initFlags()

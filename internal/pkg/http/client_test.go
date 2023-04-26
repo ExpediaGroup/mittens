@@ -27,6 +27,7 @@ import (
 var mockServer *http.Server
 
 const WorkingPath = "/path"
+const AuthTokenPath = "/mittens/token"
 
 var serverUrl string
 
@@ -59,15 +60,44 @@ func TestConnectionError(t *testing.T) {
 	assert.NotNil(t, resp.Err)
 }
 
+func TestAuthRequestSuccess(t *testing.T) {
+	c := NewClient(serverUrl, false)
+	resp, err := c.SendAuthTokenRequest(AuthTokenPath)
+	assert.Nil(t, err)
+	assert.NotNil(t, resp)
+}
+
+func TestAuthRequestHttpError(t *testing.T) {
+	c := NewClient(serverUrl, false)
+	resp, err := c.SendAuthTokenRequest("/wrong/auth/token/path")
+	assert.NotNil(t, err)
+	assert.Empty(t, resp)
+}
+
+func TestAuthTokenConnectionError(t *testing.T) {
+	c := NewClient("http://localhost:9999", false)
+	resp, err := c.SendAuthTokenRequest("/potato")
+	assert.NotNil(t, err)
+	assert.Empty(t, resp)
+}
+
 func setup() {
 	pathResponseHandlerFunc := func(rw http.ResponseWriter, r *http.Request) {
 		if want, have := "/path", r.URL.Path; want != have {
 			rw.WriteHeader(404)
 		}
 	}
+
+	authResponseHandlerFunc := func(rw http.ResponseWriter, r *http.Request) {
+		if want, have := "/mittens/token", r.URL.Path; want != have {
+			rw.WriteHeader(404)
+		}
+	}
+
 	pathHandler := fixture.PathResponseHandler{Path: WorkingPath, PathHandlerFunc: pathResponseHandlerFunc}
+	authHandler := fixture.PathResponseHandler{Path: AuthTokenPath, PathHandlerFunc: authResponseHandlerFunc}
 	var mockServerPort int
-	mockServer, mockServerPort = fixture.StartHttpTargetTestServer([]fixture.PathResponseHandler{pathHandler})
+	mockServer, mockServerPort = fixture.StartHttpTargetTestServer([]fixture.PathResponseHandler{pathHandler, authHandler})
 
 	serverUrl = "http://localhost:" + fmt.Sprint(mockServerPort)
 }

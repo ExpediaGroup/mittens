@@ -67,6 +67,8 @@ func run() int {
 		validationError = true
 	}
 
+	httpHeaders := opts.GetWarmupHTTPHeaders()
+
 	// this is used to decide on whether we should create goroutines for HTTP and/or gRPC requests
 	// since requests are passed to a channel after that point we need to store that info and pass it
 	var hasHttpRequests bool
@@ -93,6 +95,18 @@ func run() int {
 			maxReadinessWaitDurationInSeconds := Min(opts.MaxDurationSeconds, opts.MaxReadinessWaitSeconds)
 
 			if err := target.WaitForReadinessProbe(maxReadinessWaitDurationInSeconds, opts.GetWarmupHTTPHeaders()); err == nil {
+
+				if opts.FetchAuthToken {
+					token, err := target.FetchAuthToken()
+					if err != nil {
+						log.Printf("FetchAuthToken call failed: %s", err.Error())
+					} else {
+						log.Printf("AuthToken: %s", token)
+						AuthToken := "Authorization:" + token
+						httpHeaders = append(httpHeaders, AuthToken)
+					}
+				}
+
 				elapsed := time.Since(start).Seconds()
 
 				log.Printf("💚 Target took %d second(s) to become ready", int(elapsed))
@@ -110,7 +124,7 @@ func run() int {
 					Concurrency:              opts.GetConcurrency(),
 					HttpRequests:             httpRequests,
 					GrpcRequests:             grpcRequests,
-					HttpHeaders:              opts.GetWarmupHTTPHeaders(),
+					HttpHeaders:              httpHeaders,
 					RequestDelayMilliseconds: opts.RequestDelayMilliseconds,
 					ConcurrencyTargetSeconds: opts.GetConcurrencyTargetSeconds(),
 				}

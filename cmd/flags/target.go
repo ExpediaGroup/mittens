@@ -34,6 +34,7 @@ type Target struct {
 	ReadinessGrpcMethod string
 	ReadinessPort       int
 	Insecure            bool
+	AuthTokenPath       string
 }
 
 func (t *Target) String() string {
@@ -51,6 +52,7 @@ func (t *Target) initFlags() {
 	flag.StringVar(&t.ReadinessGrpcMethod, "target-readiness-grpc-method", "grpc.health.v1.Health/Check", "The service method used for gRPC target readiness probe")
 	flag.IntVar(&t.ReadinessPort, "target-readiness-port", toIntOrDefaultIfNull(&t.HTTPPort, 8080), "The port used for target readiness probe")
 	flag.BoolVar(&t.Insecure, "target-insecure", false, "Whether to skip TLS validation")
+	flag.StringVar(&t.AuthTokenPath, "target-auth-token-path", "/mittens/token", "The path used for fetch auth token")
 }
 
 func toIntOrDefaultIfNull(value *int, defaultValue int) int {
@@ -74,6 +76,7 @@ func (t *Target) getWarmupTargetOptions() warmup.TargetOptions {
 		ReadinessHTTPPath:   t.ReadinessHTTPPath,
 		ReadinessGrpcMethod: t.ReadinessGrpcMethod,
 		ReadinessPort:       t.ReadinessPort,
+		AuthTokenPath:       t.AuthTokenPath,
 	}
 }
 

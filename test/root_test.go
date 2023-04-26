@@ -175,6 +175,7 @@ func TestGrpcAndHttp(t *testing.T) {
 		"-target-readiness-http-path=/health",
 		"-max-duration-seconds=2",
 		"-concurrency-target-seconds=1",
+		"-fetch-auth-token=true",
 	}
 
 	cmd.CreateConfig()
@@ -199,6 +200,17 @@ func setup() {
 				// Record number of invocations made to this endpoint
 				httpInvocations++
 				w.WriteHeader(http.StatusOK)
+			},
+		},
+		{
+			Path: "/mittens/token",
+			PathHandlerFunc: func(w http.ResponseWriter, r *http.Request) {
+				// Tiny sleep to mimic a regular http call
+				time.Sleep(time.Millisecond * 10)
+				// Record number of invocations made to this endpoint
+				httpInvocations++
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"))
 			},
 		},
 	})
