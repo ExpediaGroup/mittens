@@ -37,9 +37,9 @@ type Client struct {
 
 // NewClient creates a new HTTP client for a given host.
 // If insecure is true, the client will not verify the server's certificate chain and host name.
-func NewClient(host string, insecure bool) Client {
+func NewClient(host string, insecure bool, timeoutMilliseconds int) Client {
 	client := &http.Client{
-		Timeout: 10 * time.Second,
+		Timeout: time.Duration(timeoutMilliseconds) * time.Millisecond,
 	}
 
 	client.Transport = &http.Transport{
