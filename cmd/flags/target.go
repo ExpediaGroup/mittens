@@ -24,16 +24,18 @@ import (
 
 // Target stores flags related to the target.
 type Target struct {
-	HTTPHost            string
-	HTTPPort            int
-	GrpcHost            string
-	GrpcPort            int
-	ReadinessProtocol   string
-	ReadinessHTTPPath   string
-	ReadinessHTTPHost   string
-	ReadinessGrpcMethod string
-	ReadinessPort       int
-	Insecure            bool
+	HTTPHost                string
+	HTTPPort                int
+	HTTPTimeoutMilliseconds int
+	GrpcHost                string
+	GrpcPort                int
+	GrpcTimeoutMilliseconds int
+	ReadinessProtocol       string
+	ReadinessHTTPPath       string
+	ReadinessHTTPHost       string
+	ReadinessGrpcMethod     string
+	ReadinessPort           int
+	Insecure                bool
 }
 
 func (t *Target) String() string {
@@ -43,8 +45,10 @@ func (t *Target) String() string {
 func (t *Target) initFlags() {
 	flag.StringVar(&t.HTTPHost, "target-http-host", "http://localhost", "HTTP host to warm up")
 	flag.IntVar(&t.HTTPPort, "target-http-port", 8080, "HTTP port for warm up requests")
+	flag.IntVar(&t.HTTPTimeoutMilliseconds, "target-http-timeout-milliseconds", 10000, "HTTP timeout for requests")
 	flag.StringVar(&t.GrpcHost, "target-grpc-host", "localhost", "Grpc host to warm up")
 	flag.IntVar(&t.GrpcPort, "target-grpc-port", 50051, "Grpc port for warm up requests")
+	flag.IntVar(&t.GrpcTimeoutMilliseconds, "target-grpc-timeout-milliseconds", 1000, "Grpc timeout for requests")
 	flag.StringVar(&t.ReadinessProtocol, "target-readiness-protocol", "http", "Protocol to be used for readiness check. One of [http, grpc]")
 	flag.StringVar(&t.ReadinessHTTPPath, "target-readiness-http-path", "/ready", "The path used for HTTP target readiness probe")
 	flag.StringVar(&t.ReadinessHTTPHost, "target-readiness-http-host", toStringOrDefaultIfNull(&t.HTTPHost, "http://localhost"), "The HTTP host used for target readiness probe")
@@ -78,17 +82,17 @@ func (t *Target) getWarmupTargetOptions() warmup.TargetOptions {
 }
 
 func (t *Target) getReadinessHTTPClient() http.Client {
-	return http.NewClient(fmt.Sprintf("%s:%d", t.ReadinessHTTPHost, t.ReadinessPort), t.Insecure)
+	return http.NewClient(fmt.Sprintf("%s:%d", t.ReadinessHTTPHost, t.ReadinessPort), t.Insecure, t.HTTPTimeoutMilliseconds)
 }
 
 func (t *Target) getReadinessGrpcClient() grpc.Client {
-	return grpc.NewClient(fmt.Sprintf("%s:%d", t.GrpcHost, t.ReadinessPort), t.Insecure)
+	return grpc.NewClient(fmt.Sprintf("%s:%d", t.GrpcHost, t.ReadinessPort), t.Insecure, t.GrpcTimeoutMilliseconds)
 }
 
 func (t *Target) getHTTPClient() http.Client {
-	return http.NewClient(fmt.Sprintf("%s:%d", t.HTTPHost, t.HTTPPort), t.Insecure)
+	return http.NewClient(fmt.Sprintf("%s:%d", t.HTTPHost, t.HTTPPort), t.Insecure, t.HTTPTimeoutMilliseconds)
 }
 
 func (t *Target) getGrpcClient() grpc.Client {
-	return grpc.NewClient(fmt.Sprintf("%s:%d", t.GrpcHost, t.GrpcPort), t.Insecure)
+	return grpc.NewClient(fmt.Sprintf("%s:%d", t.GrpcHost, t.GrpcPort), t.Insecure, t.GrpcTimeoutMilliseconds)
 }
