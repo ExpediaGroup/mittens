@@ -122,6 +122,11 @@ func (c *Client) SendRequest(serviceMethod string, message string, headers []str
 		interpolatedHeaders[i] = placeholders.InterpolatePlaceholders(header)
 	}
 
+	if c.conn == nil {
+		log.Printf("No connection available. Skip making request.")
+		return response.Response{Duration: time.Duration(0), Err: err, Type: respType}
+	}
+
 	err = grpcurl.InvokeRPC(context.Background(), c.descriptorSource, c.conn, serviceMethod, interpolatedHeaders, loggingEventHandler, requestParser.Next)
 	endTime := time.Now()
 	if err != nil {
