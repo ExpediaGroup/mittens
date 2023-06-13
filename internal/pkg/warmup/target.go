@@ -81,6 +81,7 @@ func (t Target) WaitForReadinessProbe(maxReadinessWaitDurationInSeconds int, hea
 					connErr := t.readinessGrpcClient.Connect(nil)
 					if connErr != nil {
 						log.Printf("gRPC readiness client connect error: %v", connErr)
+						continue
 					}
 					err1 := t.readinessGrpcClient.SendRequest(request.ServiceMethod, "", headers, false)
 					if err1.Err != nil {
