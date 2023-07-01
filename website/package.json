@@ -13,6 +13,6 @@
   "devDependencies": {
     "docusaurus": "1.14.7",
     "minimist": "1.2.8",
-    "bl": "6.0.1"
+    "bl": "6.0.2"
   }
 }
