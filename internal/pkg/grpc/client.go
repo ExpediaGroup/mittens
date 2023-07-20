@@ -16,6 +16,7 @@ package grpc
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
@@ -36,11 +37,12 @@ import (
 
 // Client represents a gRPC client.
 type Client struct {
-	host             string
-	insecure         bool
-	connClose        func() error
-	conn             *grpc.ClientConn
-	descriptorSource grpcurl.DescriptorSource
+	host                string
+	insecure            bool
+	timeoutMilliseconds int
+	connClose           func() error
+	conn                *grpc.ClientConn
+	descriptorSource    grpcurl.DescriptorSource
 }
 
 // eventHandler is a custom event handler with the option to enable/disable logging of responses.
@@ -50,14 +52,13 @@ type eventHandler struct {
 }
 
 // NewClient returns a gRPC client.
-func NewClient(host string, insecure bool) Client {
-	return Client{host: host, insecure: insecure, connClose: func() error { return nil }}
+func NewClient(host string, insecure bool, timeoutMilliseconds int) Client {
+	return Client{host: host, insecure: insecure, connClose: func() error { return nil }, timeoutMilliseconds: timeoutMilliseconds}
 }
 
 // Connect attempts to establish a connection with a gRPC server.
 func (c *Client) Connect(headers []string) error {
-	timeoutSeconds := 1 // TODO: make this configurable?
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSeconds)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.timeoutMilliseconds)*time.Millisecond)
 
 	headersMetadata := grpcurl.MetadataFromHeaders(headers)
 	contextWithMetadata := metadata.NewOutgoingContext(ctx, headersMetadata)
@@ -120,6 +121,11 @@ func (c *Client) SendRequest(serviceMethod string, message string, headers []str
 	interpolatedHeaders := make([]string, len(headers))
 	for i, header := range headers {
 		interpolatedHeaders[i] = placeholders.InterpolatePlaceholders(header)
+	}
+
+	if c.conn == nil {
+		log.Printf("No connection available. Skip making request.")
+		return response.Response{Duration: time.Duration(0), Err: errors.New("no connection available"), Type: respType}
 	}
 
 	err = grpcurl.InvokeRPC(context.Background(), c.descriptorSource, c.conn, serviceMethod, interpolatedHeaders, loggingEventHandler, requestParser.Next)
