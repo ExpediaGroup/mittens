@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/interop/grpc_testing"
 	"google.golang.org/grpc/reflection"
-	"google.golang.org/grpc/test/grpc_testing"
 )
 
 type PathResponseHandler struct {
