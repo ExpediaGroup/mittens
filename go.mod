@@ -6,7 +6,7 @@ require (
 	github.com/jhump/protoreflect v1.15.1
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/net v0.12.0
-	google.golang.org/grpc v1.54.0
+	google.golang.org/grpc v1.57.0
 )
 
 require (
@@ -16,8 +16,8 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
-	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
-	google.golang.org/protobuf v1.28.2-0.20230222093303-bc1253ad3743 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230525234030-28d5490b6b19 // indirect
+	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
