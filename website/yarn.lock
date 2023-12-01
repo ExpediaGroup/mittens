@@ -1402,10 +1402,10 @@ bin-wrapper@^4.0.0:
     os-filter-obj "^2.0.0"
     pify "^4.0.1"
 
-bl@6.0.3:
-  version "6.0.3"
-  resolved "https://registry.yarnpkg.com/bl/-/bl-6.0.3.tgz#9534f75ee27c22dfb6d08871947ad25e5fb09907"
-  integrity sha512-ZmReEQkPP4zOjCHVzGpXYLvf95/HnvwsNZ1sh2dhoy6OxqX9Sl3JF7UmoKXlXE40AjldnWlsSxvqDiDrgSCJDA==
+bl@6.0.9:
+  version "6.0.9"
+  resolved "https://registry.yarnpkg.com/bl/-/bl-6.0.9.tgz#df8fcb2ef7be2e5ee8f65afa493502914e0d816f"
+  integrity sha512-Vh+M9HMfeTST9rkkQ1utRnOeABNcBO3i0dJMFkenCv7JIp76XWx8uQOGpaXyXVyenrLDZsdAHXbf0Cz18Eb0fw==
   dependencies:
     buffer "^6.0.3"
     inherits "^2.0.4"
