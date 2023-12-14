@@ -15,7 +15,6 @@
 package http
 
 import (
-	"bytes"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -23,7 +22,6 @@ import (
 	"log"
 	"mittens/internal/pkg/placeholders"
 	"mittens/internal/pkg/response"
-	"mittens/internal/pkg/util"
 	"net"
 	"net/http"
 	"strings"
@@ -75,12 +73,8 @@ func NewClient(host string, insecure bool, timeoutMilliseconds int, protocol Pro
 }
 
 // SendRequest sends a request to the HTTP server and wraps useful information into a Response object.
-func (c Client) SendRequest(method, path string, headers []string, requestBody *string) response.Response {
+func (c Client) SendRequest(method, path string, headers map[string]string, body io.Reader) response.Response {
 	const respType = "http"
-	var body io.Reader
-	if requestBody != nil {
-		body = bytes.NewBufferString(*requestBody)
-	}
 
 	url := fmt.Sprintf("%s/%s", c.host, strings.TrimLeft(path, "/"))
 	req, err := http.NewRequest(method, url, body)
@@ -90,8 +84,7 @@ func (c Client) SendRequest(method, path string, headers []string, requestBody *
 		return response.Response{Duration: time.Duration(0), Err: err, Type: respType}
 	}
 
-	headersMap := util.ToHeaders(headers)
-	for k, v := range headersMap {
+	for k, v := range headers {
 		if strings.EqualFold(k, "Host") {
 			req.Host = v
 		}
@@ -101,9 +94,14 @@ func (c Client) SendRequest(method, path string, headers []string, requestBody *
 
 		req.Header.Add(k, interpolatedHeaderValue)
 	}
-
+	if err != nil {
+		defer req.Body.Close()
+	}
 	startTime := time.Now()
 	resp, err := c.httpClient.Do(req)
+	if resp != nil {
+		defer resp.Body.Close()
+	}
 	endTime := time.Now()
 	if err != nil {
 		return response.Response{Duration: endTime.Sub(startTime), Err: err, Type: respType}

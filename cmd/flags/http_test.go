@@ -15,10 +15,11 @@
 package flags
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"mittens/internal/pkg/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHttp_ToHttpRequests(t *testing.T) {
@@ -27,7 +28,7 @@ func TestHttp_ToHttpRequests(t *testing.T) {
 		"get:/ping",
 	}
 
-	requests, err := toHTTPRequests(requestFlags)
+	requests, err := toHTTPRequests(requestFlags, http.COMPRESSION_NONE)
 	require.NoError(t, err)
 
 	require.Equal(t, 2, len(requests))
@@ -41,7 +42,7 @@ func TestHttp_ToHttpRequestsInvalidFormat(t *testing.T) {
 		"get/health",
 	}
 
-	requests, err := toHTTPRequests(requestFlags)
+	requests, err := toHTTPRequests(requestFlags, http.COMPRESSION_NONE)
 
 	var expected []http.Request
 	require.Error(t, err)
@@ -55,7 +56,7 @@ func TestHttp_ToHttpRequestsInvalidMethod(t *testing.T) {
 		"invalidMethod:/health",
 	}
 
-	requests, err := toHTTPRequests(requestFlags)
+	requests, err := toHTTPRequests(requestFlags, http.COMPRESSION_NONE)
 
 	var expected []http.Request
 	require.Error(t, err)
@@ -69,7 +70,7 @@ func TestHttp_ToHttpRequestsInvalidBody(t *testing.T) {
 		"get:/test:file:test",
 	}
 
-	requests, err := toHTTPRequests(requestFlags)
+	requests, err := toHTTPRequests(requestFlags, http.COMPRESSION_NONE)
 
 	var expected []http.Request
 	require.Error(t, err)

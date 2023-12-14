@@ -15,17 +15,33 @@
 package http
 
 import (
+	"bytes"
+	"compress/flate"
+	"compress/gzip"
 	"fmt"
+	"io"
 	"mittens/internal/pkg/placeholders"
 	"strings"
+
+	"github.com/andybalholm/brotli"
 )
 
 // Request represents an HTTP request.
 type Request struct {
-	Method string
-	Path   string
-	Body   *string
+	Method  string
+	Headers map[string]string
+	Path    string
+	Body    io.Reader
 }
+
+type CompressionType string
+
+const (
+	COMPRESSION_NONE    CompressionType = ""
+	COMPRESSION_GZIP    CompressionType = "gzip"
+	COMPRESSION_BROTLI  CompressionType = "brotli"
+	COMPRESSION_DEFLATE CompressionType = "deflate"
+)
 
 var allowedHTTPMethods = map[string]interface{}{
 	"GET":     nil,
@@ -39,9 +55,8 @@ var allowedHTTPMethods = map[string]interface{}{
 	"TRACE":   nil,
 }
 
-//
 // ToHTTPRequest parses an HTTP request which is in a string format and stores it in a struct.
-func ToHTTPRequest(requestString string) (Request, error) {
+func ToHTTPRequest(requestString string, compression CompressionType) (Request, error) {
 	parts := strings.SplitN(requestString, ":", 3)
 	if len(parts) < 2 {
 		return Request{}, fmt.Errorf("invalid request flag: %s, expected format <http-method>:<path>[:body]", requestString)
@@ -72,9 +87,63 @@ func ToHTTPRequest(requestString string) (Request, error) {
 	}
 	var body = placeholders.InterpolatePlaceholders(*rawBody)
 
+	var reader io.Reader
+	switch compression {
+	case COMPRESSION_GZIP:
+		reader = compressGzip([]byte(body))
+	case COMPRESSION_BROTLI:
+		reader = compressBrotli([]byte(body))
+	case COMPRESSION_DEFLATE:
+		reader = compressFlate([]byte(body))
+	default:
+		reader = bytes.NewBufferString(body)
+	}
+
+	headers := make(map[string]string)
+	if compression != COMPRESSION_NONE {
+		encoding := ""
+		switch compression {
+		case COMPRESSION_GZIP:
+			encoding = "gzip"
+		case COMPRESSION_BROTLI:
+			encoding = "brotli"
+		case COMPRESSION_DEFLATE:
+			encoding = "deflate"
+		}
+		headers["Content-Encoding"] = encoding
+	}
+
 	return Request{
-		Method: method,
-		Path:   path,
-		Body:   &body,
+		Method:  method,
+		Headers: headers,
+		Path:    path,
+		Body:    reader,
 	}, nil
+}
+
+func compressGzip(data []byte) io.Reader {
+	pr, pw := io.Pipe()
+	go func() {
+		gz := gzip.NewWriter(pw)
+		_, err := gz.Write(data)
+		gz.Close()
+		pw.CloseWithError(err)
+	}()
+	return pr
+}
+
+func compressFlate(data []byte) *bytes.Buffer {
+	var b bytes.Buffer
+	w, _ := flate.NewWriter(&b, 9)
+	w.Write(data)
+	w.Close()
+	return &b
+}
+
+func compressBrotli(data []byte) *bytes.Buffer {
+	var b bytes.Buffer
+	w := brotli.NewWriterLevel(&b, brotli.BestCompression)
+	w.Write(data)
+	w.Close()
+	return &b
 }
