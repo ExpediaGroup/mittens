@@ -24,9 +24,12 @@ import (
 	"mittens/internal/pkg/placeholders"
 	"mittens/internal/pkg/response"
 	"mittens/internal/pkg/util"
+	"net"
 	"net/http"
 	"strings"
 	"time"
+
+	"golang.org/x/net/http2"
 )
 
 // Client is a wrapper for the HTTP Client which includes a host.
@@ -35,16 +38,39 @@ type Client struct {
 	host       string
 }
 
+type ProtoctolType string
+
+const (
+	HTTP1 ProtoctolType = "h1"
+	H2    ProtoctolType = "h2"
+	H2C   ProtoctolType = "h2c"
+)
+
 // NewClient creates a new HTTP client for a given host.
 // If insecure is true, the client will not verify the server's certificate chain and host name.
-func NewClient(host string, insecure bool, timeoutMilliseconds int) Client {
+func NewClient(host string, insecure bool, timeoutMilliseconds int, protocol ProtoctolType) Client {
 	client := &http.Client{
 		Timeout: time.Duration(timeoutMilliseconds) * time.Millisecond,
 	}
 
-	client.Transport = &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+	switch protocol {
+	case H2:
+		client.Transport = &http2.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+		}
+	case H2C:
+		client.Transport = &http2.Transport{
+			AllowHTTP: true,
+			DialTLS: func(network, addr string, cfg *tls.Config) (net.Conn, error) {
+				return net.Dial(network, addr)
+			},
+		}
+	default:
+		client.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+		}
 	}
+
 	return Client{httpClient: client, host: strings.TrimRight(host, "/")}
 }
 

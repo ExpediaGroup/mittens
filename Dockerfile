@@ -1,4 +1,4 @@
-FROM golang:1.19 as builder
+FROM golang:1.21 as builder
 # Create required dirs and copy files
 RUN mkdir -p /mittens
 COPY ./ /mittens/
