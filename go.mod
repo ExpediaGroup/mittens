@@ -5,7 +5,7 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/jhump/protoreflect v1.15.1
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/net v0.15.0
+	golang.org/x/net v0.17.0
 	google.golang.org/grpc v1.57.0
 )
 
