@@ -15,7 +15,6 @@
 package http
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"mittens/fixture"
@@ -39,45 +38,45 @@ func TestMain(m *testing.M) {
 
 func TestRequestSuccessHTTP1(t *testing.T) {
 	c := NewClient(serverUrl, false, 10000, HTTP1)
-	reqBody := bytes.NewBufferString("")
-	resp := c.SendRequest("GET", WorkingPath, []string{}, reqBody)
+	reqBody := ""
+	resp := c.SendRequest("GET", WorkingPath, []string{}, &reqBody)
 	assert.Nil(t, resp.Err)
 }
 
 func TestRequestSuccessH2C(t *testing.T) {
 	c := NewClient(serverUrl, false, 10000, H2C)
-	reqBody := bytes.NewBufferString("")
-	resp := c.SendRequest("GET", WorkingPath, []string{}, reqBody)
+	reqBody := ""
+	resp := c.SendRequest("GET", WorkingPath, []string{}, &reqBody)
 	assert.Nil(t, resp.Err)
 }
 
 func TestHttpErrorHTTP1(t *testing.T) {
 	c := NewClient(serverUrl, false, 10000, HTTP1)
-	reqBody := bytes.NewBufferString("")
-	resp := c.SendRequest("GET", "/", []string{}, reqBody)
+	reqBody := ""
+	resp := c.SendRequest("GET", "/", []string{}, &reqBody)
 	assert.Nil(t, resp.Err)
 	assert.Equal(t, resp.StatusCode, 404)
 }
 
 func TestHttpErrorH2C(t *testing.T) {
 	c := NewClient(serverUrl, false, 10000, H2C)
-	reqBody := bytes.NewBufferString("")
-	resp := c.SendRequest("GET", "/", []string{}, reqBody)
+	reqBody := ""
+	resp := c.SendRequest("GET", "/", []string{}, &reqBody)
 	assert.Nil(t, resp.Err)
 	assert.Equal(t, resp.StatusCode, 404)
 }
 
 func TestConnectionErrorHTTP1(t *testing.T) {
 	c := NewClient("http://localhost:9999", false, 10000, HTTP1)
-	reqBody := bytes.NewBufferString("")
-	resp := c.SendRequest("GET", "/potato", []string{}, reqBody)
+	reqBody := ""
+	resp := c.SendRequest("GET", "/potato", []string{}, &reqBody)
 	assert.NotNil(t, resp.Err)
 }
 
 func TestConnectionErrorH2C(t *testing.T) {
 	c := NewClient("http://localhost:9999", false, 10000, H2C)
-	reqBody := bytes.NewBufferString("")
-	resp := c.SendRequest("GET", "/potato", []string{}, reqBody)
+	reqBody := ""
+	resp := c.SendRequest("GET", "/potato", []string{}, &reqBody)
 	assert.NotNil(t, resp.Err)
 }
 

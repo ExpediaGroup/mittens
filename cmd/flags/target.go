@@ -84,7 +84,7 @@ func (t *Target) getWarmupTargetOptions() warmup.TargetOptions {
 }
 
 func (t *Target) getReadinessHTTPClient() http.Client {
-	return http.NewClient(fmt.Sprintf("%s:%d", t.ReadinessHTTPHost, t.ReadinessPort), t.Insecure, t.HTTPTimeoutMilliseconds, http.ProtoctolType(t.HTTPProtocol))
+	return http.NewClient(fmt.Sprintf("%s:%d", t.ReadinessHTTPHost, t.ReadinessPort), t.Insecure, t.HTTPTimeoutMilliseconds, http.ProtocolType(t.HTTPProtocol))
 }
 
 func (t *Target) getReadinessGrpcClient() grpc.Client {
@@ -92,7 +92,7 @@ func (t *Target) getReadinessGrpcClient() grpc.Client {
 }
 
 func (t *Target) getHTTPClient() http.Client {
-	return http.NewClient(fmt.Sprintf("%s:%d", t.HTTPHost, t.HTTPPort), t.Insecure, t.HTTPTimeoutMilliseconds, http.ProtoctolType(t.HTTPProtocol))
+	return http.NewClient(fmt.Sprintf("%s:%d", t.HTTPHost, t.HTTPPort), t.Insecure, t.HTTPTimeoutMilliseconds, http.ProtocolType(t.HTTPProtocol))
 }
 
 func (t *Target) getGrpcClient() grpc.Client {

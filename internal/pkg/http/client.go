@@ -38,17 +38,17 @@ type Client struct {
 	host       string
 }
 
-type ProtoctolType string
+type ProtocolType string
 
 const (
-	HTTP1 ProtoctolType = "h1"
-	HTTP2 ProtoctolType = "h2"
-	H2C   ProtoctolType = "h2c"
+	HTTP1 ProtocolType = "h1"
+	HTTP2 ProtocolType = "h2"
+	H2C   ProtocolType = "h2c"
 )
 
 // NewClient creates a new HTTP client for a given host.
 // If insecure is true, the client will not verify the server's certificate chain and host name.
-func NewClient(host string, insecure bool, timeoutMilliseconds int, protocol ProtoctolType) Client {
+func NewClient(host string, insecure bool, timeoutMilliseconds int, protocol ProtocolType) Client {
 	client := &http.Client{
 		Timeout: time.Duration(timeoutMilliseconds) * time.Millisecond,
 	}
