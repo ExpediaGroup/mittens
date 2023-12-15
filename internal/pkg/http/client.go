@@ -42,7 +42,7 @@ type ProtoctolType string
 
 const (
 	HTTP1 ProtoctolType = "h1"
-	H2    ProtoctolType = "h2"
+	HTTP2 ProtoctolType = "h2"
 	H2C   ProtoctolType = "h2c"
 )
 
@@ -54,7 +54,7 @@ func NewClient(host string, insecure bool, timeoutMilliseconds int, protocol Pro
 	}
 
 	switch protocol {
-	case H2:
+	case HTTP2:
 		client.Transport = &http2.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
 		}
