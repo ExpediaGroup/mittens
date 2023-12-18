@@ -9,6 +9,7 @@ ready
 debug
 mittens
 vendor
+oryxBuildBinary
 
 website/translated_docs
 website/build/
