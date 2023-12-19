@@ -53,18 +53,24 @@ func StartHttpTargetTestServer(pathHandlers []PathResponseHandler) (*http.Server
 		router.HandleFunc(pathHandler.Path, pathHandler.PathHandlerFunc)
 	}
 
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		panic(err)
+	}
+	addr := listener.Addr().(*net.TCPAddr).String()
+	port := listener.Addr().(*net.TCPAddr).Port
+
 	server := &http.Server{
-		Addr:    ":8080",
 		Handler: h2c.NewHandler(router, &http2.Server{}),
 	}
 
 	go func() {
-		err := server.ListenAndServe()
-		fmt.Printf("Listening [0.0.0.0:8080]...\n")
+		err := server.Serve(listener)
+		fmt.Printf("Listening on [%s]...\n", addr)
 		if err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server failed. Err: %v", err)
 		}
 	}()
 
-	return server, 8080
+	return server, port
 }
