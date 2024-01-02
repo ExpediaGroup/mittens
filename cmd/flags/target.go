@@ -24,6 +24,7 @@ import (
 
 // Target stores flags related to the target.
 type Target struct {
+	HTTPProtocol            string
 	HTTPHost                string
 	HTTPPort                int
 	HTTPTimeoutMilliseconds int
@@ -43,6 +44,7 @@ func (t *Target) String() string {
 }
 
 func (t *Target) initFlags() {
+	flag.StringVar(&t.HTTPProtocol, "target-http-protocol", string(http.HTTP1), "Protocol used for HTTP requests")
 	flag.StringVar(&t.HTTPHost, "target-http-host", "http://localhost", "HTTP host to warm up")
 	flag.IntVar(&t.HTTPPort, "target-http-port", 8080, "HTTP port for warm up requests")
 	flag.IntVar(&t.HTTPTimeoutMilliseconds, "target-http-timeout-milliseconds", 10000, "HTTP timeout for requests")
@@ -82,7 +84,7 @@ func (t *Target) getWarmupTargetOptions() warmup.TargetOptions {
 }
 
 func (t *Target) getReadinessHTTPClient() http.Client {
-	return http.NewClient(fmt.Sprintf("%s:%d", t.ReadinessHTTPHost, t.ReadinessPort), t.Insecure, t.HTTPTimeoutMilliseconds)
+	return http.NewClient(fmt.Sprintf("%s:%d", t.ReadinessHTTPHost, t.ReadinessPort), t.Insecure, t.HTTPTimeoutMilliseconds, http.ProtocolType(t.HTTPProtocol))
 }
 
 func (t *Target) getReadinessGrpcClient() grpc.Client {
@@ -90,7 +92,7 @@ func (t *Target) getReadinessGrpcClient() grpc.Client {
 }
 
 func (t *Target) getHTTPClient() http.Client {
-	return http.NewClient(fmt.Sprintf("%s:%d", t.HTTPHost, t.HTTPPort), t.Insecure, t.HTTPTimeoutMilliseconds)
+	return http.NewClient(fmt.Sprintf("%s:%d", t.HTTPHost, t.HTTPPort), t.Insecure, t.HTTPTimeoutMilliseconds, http.ProtocolType(t.HTTPProtocol))
 }
 
 func (t *Target) getGrpcClient() grpc.Client {

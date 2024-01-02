@@ -97,6 +97,7 @@ class Index extends React.Component {
                     <ul>
                         <li>Sends requests continuously for X seconds</li>
                         <li>Supports REST and gRPC</li>
+                        <li>Supports HTTP/1.1, HTTP/2 and HTTP/2 Cleartext protocol for REST</li>
                         <li>Supports custom HTTP headers</li>
                         <li>Supports concurrent requests</li>
                         <li>Supports placeholders for random elements in requests</li>
