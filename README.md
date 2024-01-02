@@ -18,6 +18,7 @@ Mittens can run as a standalone [command-line tool](https://expediagroup.github.
 Its main features are summarised below:
 - Sends requests continuously for X seconds
 - Supports REST and gRPC
+- Supports HTTP/1.1, HTTP/2 and HTTP/2 Cleartext protocol for REST
 - Supports placeholders for random elements in requests
 - Supports concurrent requests
 - Provides files or/and endpoints that can be used as liveness/readiness probes in Kubernetes

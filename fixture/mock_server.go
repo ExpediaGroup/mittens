@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/interop/grpc_testing"
 	"google.golang.org/grpc/reflection"
@@ -39,30 +41,36 @@ func StartGrpcTargetTestServer(port int) *grpc.Server {
 // StartHttpTargetTestServer starts a HTTP server on the provided port
 // Optionally, it receives a list of handler functions
 func StartHttpTargetTestServer(pathHandlers []PathResponseHandler) (*http.Server, int) {
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	router := http.NewServeMux()
+
+	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		// Sleep for half a second to simulate a slow server
 		time.Sleep(500 * time.Millisecond)
 		w.WriteHeader(http.StatusOK)
 	})
 
 	for _, pathHandler := range pathHandlers {
-		http.HandleFunc(pathHandler.Path, pathHandler.PathHandlerFunc)
+		router.HandleFunc(pathHandler.Path, pathHandler.PathHandlerFunc)
 	}
 
-	server := &http.Server{}
 	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
 		panic(err)
 	}
-
+	addr := listener.Addr().(*net.TCPAddr).String()
 	port := listener.Addr().(*net.TCPAddr).Port
 
-	go func() {
-		err = server.Serve(listener)
+	server := &http.Server{
+		Handler: h2c.NewHandler(router, &http2.Server{}),
+	}
 
+	go func() {
+		err := server.Serve(listener)
+		fmt.Printf("Listening on [%s]...\n", addr)
 		if err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server failed. Err: %v", err)
 		}
 	}()
+
 	return server, port
 }
