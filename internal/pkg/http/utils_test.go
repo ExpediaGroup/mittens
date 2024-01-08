@@ -64,7 +64,7 @@ func TestHttp_CompressBrotli(t *testing.T) {
 	assert.Equal(t, http.MethodPost, request.Method)
 	assert.Equal(t, "/db", request.Path)
 
-	assert.Equal(t, map[string]string{"Content-Encoding": "brotli"}, request.Headers)
+	assert.Equal(t, map[string]string{"Content-Encoding": "br"}, request.Headers)
 
 	body := new(bytes.Buffer)
 	body.ReadFrom(request.Body)
