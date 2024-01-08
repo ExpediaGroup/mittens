@@ -106,7 +106,7 @@ func ToHTTPRequest(requestString string, compression CompressionType) (Request, 
 		case COMPRESSION_GZIP:
 			encoding = "gzip"
 		case COMPRESSION_BROTLI:
-			encoding = "brotli"
+			encoding = "br"
 		case COMPRESSION_DEFLATE:
 			encoding = "deflate"
 		}
