@@ -16,10 +16,12 @@ package warmup
 
 import (
 	"log"
+	"maps"
 	"math/rand"
 	"mittens/internal/pkg/grpc"
 	"mittens/internal/pkg/http"
 	"mittens/internal/pkg/safe"
+	"mittens/internal/pkg/util"
 
 	"sync"
 	"time"
@@ -132,7 +134,11 @@ func (w Warmup) HTTPWarmupWorker(wg *sync.WaitGroup, requests <-chan http.Reques
 	for request := range requests {
 		time.Sleep(time.Duration(requestDelayMilliseconds) * time.Millisecond)
 
-		resp := w.Target.httpClient.SendRequest(request.Method, request.Path, headers, request.Body)
+		headersMap := util.ToHeaders(headers)
+		// Overwrite Content-Encoding header if required
+		maps.Copy(headersMap, request.Headers)
+
+		resp := w.Target.httpClient.SendRequest(request.Method, request.Path, headersMap, request.Body)
 
 		if resp.Err != nil {
 			log.Printf("🔴 Error in request for %s: %v", request.Path, resp.Err)

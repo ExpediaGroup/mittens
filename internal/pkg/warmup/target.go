@@ -19,6 +19,7 @@ import (
 	"log"
 	"mittens/internal/pkg/grpc"
 	whttp "mittens/internal/pkg/http"
+	"mittens/internal/pkg/util"
 	"net/http"
 	"time"
 )
@@ -59,6 +60,7 @@ func (t Target) WaitForReadinessProbe(maxReadinessWaitDurationInSeconds int, hea
 	log.Printf("Waiting for %s target to be ready for a max of %ds", t.options.ReadinessProtocol, maxReadinessWaitDurationInSeconds)
 
 	timeout := time.After(time.Duration(maxReadinessWaitDurationInSeconds) * time.Second)
+	headersMap := util.ToHeaders(headers)
 
 	for {
 		select {
@@ -70,7 +72,7 @@ func (t Target) WaitForReadinessProbe(maxReadinessWaitDurationInSeconds int, hea
 
 			if t.options.ReadinessProtocol == "http" {
 				// error if error in the response or status code not in the 200 range
-				if resp := t.readinessHTTPClient.SendRequest(http.MethodGet, t.options.ReadinessHTTPPath, headers, nil); resp.Err != nil || resp.StatusCode/100 != 2 {
+				if resp := t.readinessHTTPClient.SendRequest(http.MethodGet, t.options.ReadinessHTTPPath, headersMap, nil); resp.Err != nil || resp.StatusCode/100 != 2 {
 					log.Printf("HTTP target not ready yet...")
 					continue
 				}
