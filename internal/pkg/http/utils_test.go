@@ -15,7 +15,6 @@
 package http
 
 import (
-	"bytes"
 	"net/http"
 	"os"
 	"regexp"
@@ -34,9 +33,7 @@ func TestHttp_FlagToHttpRequest(t *testing.T) {
 
 	assert.Equal(t, http.MethodPost, request.Method)
 	assert.Equal(t, "/db", request.Path)
-	body := new(bytes.Buffer)
-	body.ReadFrom(request.Body)
-	assert.Equal(t, `{"db": "true"}`, body.String())
+	assert.Equal(t, `{"db": "true"}`, *request.Body)
 }
 
 func TestHttp_CompressGzip(t *testing.T) {
@@ -49,11 +46,9 @@ func TestHttp_CompressGzip(t *testing.T) {
 
 	assert.Equal(t, map[string]string{"Content-Encoding": "gzip"}, request.Headers)
 
-	body := new(bytes.Buffer)
-	body.ReadFrom(request.Body)
-	expected := &bytes.Buffer{}
-	expected.Write([]byte{0x1f, 0x8b, 0x8, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xff, 0xaa, 0x56, 0x4a, 0x49, 0x52, 0xb2, 0x52, 0x50, 0x2a, 0x29, 0x2a, 0x4d, 0x55, 0xaa, 0x5, 0x4, 0x0, 0x0, 0xff, 0xff, 0xa1, 0x4a, 0x9b, 0x5d, 0xe, 0x0, 0x0, 0x0})
-	assert.Equal(t, expected, body)
+	expected := []byte{0x1f, 0x8b, 0x8, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xff, 0xaa, 0x56, 0x4a, 0x49, 0x52, 0xb2, 0x52, 0x50, 0x2a, 0x29, 0x2a, 0x4d, 0x55, 0xaa, 0x5, 0x4, 0x0, 0x0, 0xff, 0xff, 0xa1, 0x4a, 0x9b, 0x5d, 0xe, 0x0, 0x0, 0x0}
+	actual := []byte(*request.Body)
+	assert.Equal(t, expected, actual)
 }
 
 func TestHttp_CompressBrotli(t *testing.T) {
@@ -66,11 +61,9 @@ func TestHttp_CompressBrotli(t *testing.T) {
 
 	assert.Equal(t, map[string]string{"Content-Encoding": "br"}, request.Headers)
 
-	body := new(bytes.Buffer)
-	body.ReadFrom(request.Body)
-	expected := &bytes.Buffer{}
-	expected.Write([]byte{0x8b, 0x6, 0x80, 0x7b, 0x22, 0x64, 0x62, 0x22, 0x3a, 0x20, 0x22, 0x74, 0x72, 0x75, 0x65, 0x22, 0x7d, 0x3})
-	assert.Equal(t, expected, body)
+	expected := []byte{0x8b, 0x6, 0x80, 0x7b, 0x22, 0x64, 0x62, 0x22, 0x3a, 0x20, 0x22, 0x74, 0x72, 0x75, 0x65, 0x22, 0x7d, 0x3}
+	actual := []byte(*request.Body)
+	assert.Equal(t, expected, actual)
 }
 
 func TestHttp_CompressDeflate(t *testing.T) {
@@ -81,11 +74,9 @@ func TestHttp_CompressDeflate(t *testing.T) {
 	assert.Equal(t, http.MethodPost, request.Method)
 	assert.Equal(t, "/db", request.Path)
 	assert.Equal(t, map[string]string{"Content-Encoding": "deflate"}, request.Headers)
-	body := new(bytes.Buffer)
-	body.ReadFrom(request.Body)
-	expected := &bytes.Buffer{}
-	expected.Write([]byte{0xaa, 0x56, 0x4a, 0x49, 0x52, 0xb2, 0x52, 0x50, 0x2a, 0x29, 0x2a, 0x4d, 0x55, 0xaa, 0x5, 0x4, 0x0, 0x0, 0xff, 0xff})
-	assert.Equal(t, expected, body)
+	expected := []byte{0xaa, 0x56, 0x4a, 0x49, 0x52, 0xb2, 0x52, 0x50, 0x2a, 0x29, 0x2a, 0x4d, 0x55, 0xaa, 0x5, 0x4, 0x0, 0x0, 0xff, 0xff}
+	actual := []byte(*request.Body)
+	assert.Equal(t, expected, actual)
 }
 
 func TestBodyFromFile(t *testing.T) {
@@ -100,9 +91,7 @@ func TestBodyFromFile(t *testing.T) {
 
 	assert.Equal(t, http.MethodPost, request.Method)
 	assert.Equal(t, "/db", request.Path)
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(request.Body)
-	assert.Equal(t, `{"foo": "bar"}`, buf.String())
+	assert.Equal(t, `{"foo": "bar"}`, *request.Body)
 }
 
 func TestHttp_FlagWithoutBodyToHttpRequest(t *testing.T) {
@@ -130,14 +119,12 @@ func TestHttp_TimestampInterpolation(t *testing.T) {
 
 	var numbersRegex = regexp.MustCompile("\\d+")
 	matchPath := numbersRegex.MatchString(request.Path)
-	body := new(bytes.Buffer)
-	body.ReadFrom(request.Body)
-	matchBody := numbersRegex.MatchString(body.String())
+	matchBody := numbersRegex.MatchString(*request.Body)
 
 	assert.True(t, matchPath)
 	assert.True(t, matchBody)
 	assert.Equal(t, len(request.Path), 19)  //  "path_ + 13 numbers for timestamp
-	assert.Equal(t, len(body.String()), 25) // { "body": 13 numbers for timestamp
+	assert.Equal(t, len(*request.Body), 25) // { "body": 13 numbers for timestamp
 }
 
 func TestHttp_Interpolation(t *testing.T) {
@@ -151,9 +138,7 @@ func TestHttp_Interpolation(t *testing.T) {
 	matchPath := pathRegex.MatchString(request.Path)
 
 	var bodyRegex = regexp.MustCompile("{\"body\": \"(foo|bar) \\d\"}")
-	body := new(bytes.Buffer)
-	body.ReadFrom(request.Body)
-	matchBody := bodyRegex.MatchString(body.String())
+	matchBody := bodyRegex.MatchString(*request.Body)
 
 	assert.True(t, matchPath)
 	assert.True(t, matchBody)
