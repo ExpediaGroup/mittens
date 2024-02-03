@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"mittens/fixture"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -40,24 +39,21 @@ func TestMain(m *testing.M) {
 func TestRequestSuccessHTTP1(t *testing.T) {
 	c := NewClient(serverUrl, false, 10000, HTTP1)
 	reqBody := ""
-	reader := strings.NewReader(reqBody)
-	resp := c.SendRequest("GET", WorkingPath, make(map[string]string), reader)
+	resp := c.SendRequest("GET", WorkingPath, make(map[string]string), &reqBody)
 	assert.Nil(t, resp.Err)
 }
 
 func TestRequestSuccessH2C(t *testing.T) {
 	c := NewClient(serverUrl, false, 10000, H2C)
 	reqBody := ""
-	reader := strings.NewReader(reqBody)
-	resp := c.SendRequest("GET", WorkingPath, make(map[string]string), reader)
+	resp := c.SendRequest("GET", WorkingPath, make(map[string]string), &reqBody)
 	assert.Nil(t, resp.Err)
 }
 
 func TestHttpErrorHTTP1(t *testing.T) {
 	c := NewClient(serverUrl, false, 10000, HTTP1)
 	reqBody := ""
-	reader := strings.NewReader(reqBody)
-	resp := c.SendRequest("GET", "/", make(map[string]string), reader)
+	resp := c.SendRequest("GET", "/", make(map[string]string), &reqBody)
 	assert.Nil(t, resp.Err)
 	assert.Equal(t, resp.StatusCode, 404)
 }
@@ -65,8 +61,7 @@ func TestHttpErrorHTTP1(t *testing.T) {
 func TestHttpErrorH2C(t *testing.T) {
 	c := NewClient(serverUrl, false, 10000, H2C)
 	reqBody := ""
-	reader := strings.NewReader(reqBody)
-	resp := c.SendRequest("GET", "/", make(map[string]string), reader)
+	resp := c.SendRequest("GET", "/", make(map[string]string), &reqBody)
 	assert.Nil(t, resp.Err)
 	assert.Equal(t, resp.StatusCode, 404)
 }
@@ -74,16 +69,14 @@ func TestHttpErrorH2C(t *testing.T) {
 func TestConnectionErrorHTTP1(t *testing.T) {
 	c := NewClient("http://localhost:9999", false, 10000, HTTP1)
 	reqBody := ""
-	reader := strings.NewReader(reqBody)
-	resp := c.SendRequest("GET", "/potato", make(map[string]string), reader)
+	resp := c.SendRequest("GET", "/potato", make(map[string]string), &reqBody)
 	assert.NotNil(t, resp.Err)
 }
 
 func TestConnectionErrorH2C(t *testing.T) {
 	c := NewClient("http://localhost:9999", false, 10000, H2C)
 	reqBody := ""
-	reader := strings.NewReader(reqBody)
-	resp := c.SendRequest("GET", "/potato", make(map[string]string), reader)
+	resp := c.SendRequest("GET", "/potato", make(map[string]string), &reqBody)
 	assert.NotNil(t, resp.Err)
 }
 

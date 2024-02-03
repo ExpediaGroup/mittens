@@ -15,8 +15,10 @@
 package test
 
 import (
+	"compress/gzip"
 	"context"
 	"fmt"
+	"io"
 	"mittens/cmd"
 	"mittens/fixture"
 	"mittens/internal/pkg/probe"
@@ -34,6 +36,7 @@ var mockHttpServerPort int
 var mockHttpServer *http.Server
 var mockGrpcServer *grpc.Server
 var httpInvocations = 0
+var decompressedBody = ""
 
 func TestMain(m *testing.M) {
 	setup()
@@ -188,6 +191,36 @@ func TestGrpcAndHttp(t *testing.T) {
 	assert.True(t, readyFileExists)
 }
 
+func TestCompressWithGZip(t *testing.T) {
+	t.Cleanup(func() {
+		cleanup()
+	})
+
+	var requestBody = "{\"payload\":{\"body\":\"abcdefghijklmnopqrstuvwxyz01\"}}"
+
+	os.Args = []string{
+		"mittens",
+		"-file-probe-enabled=true",
+		// FIXME: for some reason we need to set both ports?
+		fmt.Sprintf("-target-http-port=%d", mockHttpServerPort),
+		fmt.Sprintf("-target-readiness-port=%d", mockHttpServerPort),
+		"-http-requests=post:/compressed:" + requestBody,
+		"-http-requests-compression=gzip",
+		"-target-insecure=true",
+		"-concurrency=2",
+		"-exit-after-warmup=true",
+		"-target-readiness-http-path=/health",
+		"-max-duration-seconds=2",
+		"-concurrency-target-seconds=1",
+	}
+
+	cmd.CreateConfig()
+	cmd.RunCmdRoot()
+
+	assert.Greater(t, httpInvocations, 1, "Assert that we made some calls to the http service")
+	assert.Equal(t, requestBody, decompressedBody, "Assert that server-side decompressed body is equal to client request body")
+}
+
 func setup() {
 	fmt.Println("Starting up http server")
 	mockHttpServer, mockHttpServerPort = fixture.StartHttpTargetTestServer([]fixture.PathResponseHandler{
@@ -198,6 +231,32 @@ func setup() {
 				time.Sleep(time.Millisecond * 10)
 				// Record number of invocations made to this endpoint
 				httpInvocations++
+				w.WriteHeader(http.StatusOK)
+			},
+		},
+		{
+			Path: "/compressed",
+			PathHandlerFunc: func(w http.ResponseWriter, r *http.Request) {
+				// Tiny sleep to mimic a regular http call
+				time.Sleep(time.Millisecond * 10)
+				httpInvocations++
+				// Record number of invocations made to this endpoint
+				if r.Header.Get("Content-Encoding") == "gzip" {
+					gr, err := gzip.NewReader(r.Body)
+					if err != nil {
+						 w.WriteHeader(http.StatusInternalServerError)
+						 return
+					}
+					b, err := io.ReadAll(gr)
+					if err != nil {
+						 w.WriteHeader(http.StatusInternalServerError)
+						 return
+					}
+					decompressedBody = string(b)
+					gr.Close()
+					w.WriteHeader(http.StatusOK)
+					return
+				}
 				w.WriteHeader(http.StatusOK)
 			},
 		},

@@ -15,6 +15,7 @@
 package http
 
 import (
+	"bytes"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -73,17 +74,22 @@ func NewClient(host string, insecure bool, timeoutMilliseconds int, protocol Pro
 }
 
 // SendRequest sends a request to the HTTP server and wraps useful information into a Response object.
-func (c Client) SendRequest(method, path string, headers map[string]string, body io.Reader) response.Response {
+func (c Client) SendRequest(method, path string, headers map[string]string, requestBody *string) response.Response {
 	const respType = "http"
-
+	var body io.Reader
+	if requestBody != nil {
+		body = bytes.NewBufferString(*requestBody)
+	}
+	
 	url := fmt.Sprintf("%s/%s", c.host, strings.TrimLeft(path, "/"))
 	req, err := http.NewRequest(method, url, body)
-
 	if err != nil {
 		log.Printf("Failed to create request: %s %s: %v", method, url, err)
 		return response.Response{Duration: time.Duration(0), Err: err, Type: respType}
 	}
-
+	if req.Body != nil {
+		defer req.Body.Close()
+	} 
 	for k, v := range headers {
 		if strings.EqualFold(k, "Host") {
 			req.Host = v
@@ -94,14 +100,8 @@ func (c Client) SendRequest(method, path string, headers map[string]string, body
 
 		req.Header.Add(k, interpolatedHeaderValue)
 	}
-	if err != nil {
-		defer req.Body.Close()
-	}
 	startTime := time.Now()
 	resp, err := c.httpClient.Do(req)
-	if resp != nil {
-		defer resp.Body.Close()
-	}
 	endTime := time.Now()
 	if err != nil {
 		return response.Response{Duration: endTime.Sub(startTime), Err: err, Type: respType}

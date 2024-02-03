@@ -31,7 +31,7 @@ type Request struct {
 	Method  string
 	Headers map[string]string
 	Path    string
-	Body    io.Reader
+	Body    *string
 }
 
 type CompressionType string
@@ -90,14 +90,22 @@ func ToHTTPRequest(requestString string, compression CompressionType) (Request, 
 	var reader io.Reader
 	switch compression {
 	case COMPRESSION_GZIP:
-		reader = compressGzip([]byte(body))
+		reader, err = compressGzip([]byte(body))
 	case COMPRESSION_BROTLI:
-		reader = compressBrotli([]byte(body))
+		reader, err = compressBrotli([]byte(body))
 	case COMPRESSION_DEFLATE:
-		reader = compressFlate([]byte(body))
+		reader, err = compressFlate([]byte(body))
 	default:
 		reader = bytes.NewBufferString(body)
 	}
+
+	if err != nil {
+		return Request{}, fmt.Errorf("unable to compress body for request: %s", parts[2])
+	}
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(reader)
+	compressedBody := buf.String()
 
 	headers := make(map[string]string)
 	if compression != COMPRESSION_NONE {
@@ -117,33 +125,42 @@ func ToHTTPRequest(requestString string, compression CompressionType) (Request, 
 		Method:  method,
 		Headers: headers,
 		Path:    path,
-		Body:    reader,
+		Body:    &compressedBody,
 	}, nil
 }
 
-func compressGzip(data []byte) io.Reader {
-	pr, pw := io.Pipe()
-	go func() {
-		gz := gzip.NewWriter(pw)
-		_, err := gz.Write(data)
-		gz.Close()
-		pw.CloseWithError(err)
-	}()
-	return pr
+func compressGzip(data []byte) (io.Reader, error) {
+	var b bytes.Buffer
+	w := gzip.NewWriter(&b)
+	_, err := w.Write(data); if err != nil {
+		return nil, err
+	} 
+    err = w.Close(); if err != nil {
+		return nil, err
+	} 
+	return &b, nil
 }
 
-func compressFlate(data []byte) *bytes.Buffer {
+func compressFlate(data []byte) (io.Reader, error) {
 	var b bytes.Buffer
 	w, _ := flate.NewWriter(&b, 9)
-	w.Write(data)
-	w.Close()
-	return &b
+	_, err := w.Write(data); if err != nil {
+		return nil, err
+	} 
+    err = w.Close(); if err != nil {
+		return nil, err
+	} 
+	return &b, nil
 }
 
-func compressBrotli(data []byte) *bytes.Buffer {
+func compressBrotli(data []byte) (io.Reader, error) {
 	var b bytes.Buffer
 	w := brotli.NewWriterLevel(&b, brotli.BestCompression)
-	w.Write(data)
-	w.Close()
-	return &b
+	_, err := w.Write(data); if err != nil {
+		return nil, err
+	} 
+    err = w.Close(); if err != nil {
+		return nil, err
+	} 
+	return &b, nil
 }
