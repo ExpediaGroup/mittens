@@ -1,7 +1,7 @@
 module mittens
 
 require (
-	github.com/andybalholm/brotli v1.0.6
+	github.com/andybalholm/brotli v1.1.0
 	github.com/fullstorydev/grpcurl v1.8.9
 	github.com/golang/protobuf v1.5.3
 	github.com/jhump/protoreflect v1.15.4
