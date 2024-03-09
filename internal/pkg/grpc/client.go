@@ -128,7 +128,8 @@ func (c *Client) SendRequest(serviceMethod string, message string, headers []str
 		return response.Response{Duration: time.Duration(0), Err: errors.New("no connection available"), Type: respType}
 	}
 
-	err = grpcurl.InvokeRPC(context.Background(), c.descriptorSource, c.conn, serviceMethod, interpolatedHeaders, loggingEventHandler, requestParser.Next)
+	ctx, _ := context.WithTimeout(context.Background(), time.Duration(c.timeoutMilliseconds)*time.Millisecond)
+	err = grpcurl.InvokeRPC(ctx, c.descriptorSource, c.conn, serviceMethod, interpolatedHeaders, loggingEventHandler, requestParser.Next)
 	endTime := time.Now()
 	if err != nil {
 		log.Printf("grpc response error: %s", err)
