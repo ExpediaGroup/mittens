@@ -41,28 +41,36 @@ To build the binary make sure you've installed [Go 1.21](https://golang.org/dl/)
 
 To build the project run the following:
 
+```bash
     make test
+```
 
 This will run the unit tests and generate a binary executable.
 
 #### Run the executable
 
 To run the binary:
-        
+
+```bash
     ./mittens -target-readiness-http-path=/health -target-grpc-port=6565 -max-duration-seconds=60 -concurrency=3 -http-requests=get:/hotel/potatoes -grpc-requests=service/method:"{\"foo\":\"bar\",\"bar\":\"foo\"}"
+```
 
 ### Docker
 #### Build image
 
 To build a Docker image named `mittens`:
 
+```bash
     make docker
+```
 
 #### Run container
 
 To run the container:
 
+```bash
     docker run mittens:latest -target-readiness-http-path=/health -target-grpc-port=6565 -max-duration-seconds=60 -concurrency=3 -http-requests=get:/hotel/potatoes -grpc-requests=service/method:"{\"foo\":\"bar\",\"bar\":\"foo\"}"
+```
 
 _Note_: If you use Docker for Mac/Windows you might need to set the target host (`target-http-host`, `target-grpc-host`) to `host.docker.internal` so that your container can resolve localhost. If you use an older version of Docker (< 18.03), the value will depend on your Operating System, e.g. `docker.for.mac.host.internal` or `docker.for.win.host.internal`. For `target-http-host`, you need to prefix the host with the scheme, e.g. `http://host.docker.internal`.
 
@@ -84,4 +92,4 @@ Please refer to our [CONTRIBUTING](./CONTRIBUTING.md) file.
 
 This project is available under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
 
-Copyright 2022 Expedia, Inc.
+Copyright 2024 Expedia, Inc.
