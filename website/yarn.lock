@@ -1308,9 +1308,9 @@ bin-wrapper@^4.0.0:
     os-filter-obj "^2.0.0"
     pify "^4.0.1"
 
-bl@6.0.11:
-  version "6.0.11"
-  resolved "https://registry.yarnpkg.com/bl/-/bl-6.0.11.tgz#e264651d5f4adaaedf1813c94642cb24d3d30aeb"
+bl@6.0.12:
+  version "6.0.12"
+  resolved "https://registry.yarnpkg.com/bl/-/bl-6.0.12.tgz#77c35b96e13aeff028496c798b75389ddee9c7f8"
   dependencies:
     "@types/readable-stream" "^4.0.0"
     buffer "^6.0.3"
