@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/interop/grpc_testing"
 	"google.golang.org/grpc/reflection"
+	reflectionv1alpha "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 )
 
 type PathResponseHandler struct {
@@ -19,13 +20,32 @@ type PathResponseHandler struct {
 	PathHandlerFunc func(rw http.ResponseWriter, r *http.Request)
 }
 
-// It uses the test.proto from grpc-testing: https://github.com/grpc/grpc-go/blob/40a879c23a0dc77234d17e0699d074d5fd151bd0/test/grpc_testing/test.proto
 func StartGrpcTargetTestServer(callStats *CallStats) (*grpc.Server, int) {
+	return startGrpcTargetTestServer(callStats, func(server *grpc.Server) {
+		reflection.Register(server)
+	})
+}
+
+func StartGrpcTargetTestServerReflectionV1(callStats *CallStats) (*grpc.Server, int) {
+	return startGrpcTargetTestServer(callStats, func(server *grpc.Server) {
+		reflection.RegisterV1(server)
+	})
+}
+
+func StartGrpcTargetTestServerReflectionV1Alpha(callStats *CallStats) (*grpc.Server, int) {
+	return startGrpcTargetTestServer(callStats, func(server *grpc.Server) {
+		reflectionServer := reflection.NewServer(reflection.ServerOptions{Services: server})
+		reflectionv1alpha.RegisterServerReflectionServer(server, reflectionServer)
+	})
+}
+
+// It uses the test.proto from grpc-testing: https://github.com/grpc/grpc-go/blob/40a879c23a0dc77234d17e0699d074d5fd151bd0/test/grpc_testing/test.proto
+func startGrpcTargetTestServer(callStats *CallStats, reflRegFun func(*grpc.Server)) (*grpc.Server, int) {
 	server := grpc.NewServer(
 		grpc.UnaryInterceptor(callStats.UnaryInterceptor()),
 	)
 	grpc_testing.RegisterTestServiceServer(server, &grpc_testing.UnimplementedTestServiceServer{})
-	reflection.Register(server)
+	reflRegFun(server)
 
 	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
