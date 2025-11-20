@@ -19,7 +19,7 @@ func NewCallStats() *CallStats {
 	}
 }
 
-func (cs *CallStats) UnaryInterceptor() grpc.UnaryServerInterceptor {
+func (callStats *CallStats) UnaryInterceptor() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req any,
@@ -28,10 +28,10 @@ func (cs *CallStats) UnaryInterceptor() grpc.UnaryServerInterceptor {
 	) (any, error) {
 		resp, err := handler(ctx, req)
 
-		cs.mu.Lock()
-		defer cs.mu.Unlock()
+		callStats.mu.Lock()
+		defer callStats.mu.Unlock()
 
-		cs.StatusesByMethod[info.FullMethod] = append(cs.StatusesByMethod[info.FullMethod], status.Convert(err))
+		callStats.StatusesByMethod[info.FullMethod] = append(callStats.StatusesByMethod[info.FullMethod], status.Convert(err))
 
 		return resp, err
 	}

@@ -161,10 +161,10 @@ func TestHttp(t *testing.T) {
 	assert.True(t, readyFileExists)
 }
 
-func TestGrpcAndHttpWithVariousGrpcServerReflectionAPICombinations(t *testing.T) {
+func TestGrpcAndHttpWithVariousReflectionAPICombinations(t *testing.T) {
 	testConfigs := []struct {
-		name            string
-		setupGrpcServer func(*fixture.CallStats) (*grpc.Server, int)
+		name      string
+		setupFunc func(*fixture.CallStats) (*grpc.Server, int)
 	}{
 		{
 			"Run with v1 and v1alpha Reflection API support",
@@ -190,9 +190,9 @@ func TestGrpcAndHttpWithVariousGrpcServerReflectionAPICombinations(t *testing.T)
 			var server *grpc.Server
 			var port int
 
-			if testConfig.setupGrpcServer != nil {
+			if testConfig.setupFunc != nil {
 				callStats = fixture.NewCallStats()
-				server, port = testConfig.setupGrpcServer(callStats)
+				server, port = testConfig.setupFunc(callStats)
 				defer server.GracefulStop()
 			} else {
 				callStats = grpcCallStats

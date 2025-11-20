@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"mittens/internal/pkg/placeholders"
 	"mittens/internal/pkg/response"
@@ -31,8 +30,8 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
-	reflectpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 )
 
 // Client represents a gRPC client.
@@ -85,7 +84,7 @@ func (c *Client) Connect(headers []string) error {
 		return fmt.Errorf("gRPC dial: %v", err)
 	}
 
-	reflectionClient := grpcreflect.NewClientV1Alpha(contextWithMetadata, reflectpb.NewServerReflectionClient(conn))
+	reflectionClient := grpcreflect.NewClientAuto(contextWithMetadata, conn)
 	descriptorSource := grpcurl.DescriptorSourceFromServer(contextWithMetadata, reflectionClient)
 
 	log.Print("gRPC client connected")

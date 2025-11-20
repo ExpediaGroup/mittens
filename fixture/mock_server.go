@@ -40,12 +40,12 @@ func StartGrpcTargetTestServerReflectionV1Alpha(callStats *CallStats) (*grpc.Ser
 }
 
 // It uses the test.proto from grpc-testing: https://github.com/grpc/grpc-go/blob/40a879c23a0dc77234d17e0699d074d5fd151bd0/test/grpc_testing/test.proto
-func startGrpcTargetTestServer(callStats *CallStats, reflRegFun func(*grpc.Server)) (*grpc.Server, int) {
+func startGrpcTargetTestServer(callStats *CallStats, reflRegFunc func(*grpc.Server)) (*grpc.Server, int) {
 	server := grpc.NewServer(
 		grpc.UnaryInterceptor(callStats.UnaryInterceptor()),
 	)
 	grpc_testing.RegisterTestServiceServer(server, &grpc_testing.UnimplementedTestServiceServer{})
-	reflRegFun(server)
+	reflRegFunc(server)
 
 	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
