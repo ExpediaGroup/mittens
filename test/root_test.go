@@ -35,6 +35,7 @@ import (
 )
 
 var mockHttpServerPort int
+var mockGrpcServerPort int
 var mockHttpServer *http.Server
 var mockGrpcServer *grpc.Server
 var httpInvocations = 0
@@ -168,7 +169,7 @@ func TestGrpcAndHttp(t *testing.T) {
 	os.Args = []string{
 		"mittens",
 		"-file-probe-enabled=true",
-		"-target-grpc-port=50051",
+		fmt.Sprintf("-target-grpc-port=%d", mockGrpcServerPort),
 		// FIXME: for some reason we need to set both ports?
 		fmt.Sprintf("-target-http-port=%d", mockHttpServerPort),
 		fmt.Sprintf("-target-readiness-port=%d", mockHttpServerPort),
@@ -270,9 +271,8 @@ func setup() {
 		},
 	})
 
-	// FIXME: should run on a random/free port
 	fmt.Println("Starting up grpc server")
-	mockGrpcServer = fixture.StartGrpcTargetTestServer(50051, grpcCallStats)
+	mockGrpcServer, mockGrpcServerPort = fixture.StartGrpcTargetTestServer(grpcCallStats)
 }
 
 func teardown() {
