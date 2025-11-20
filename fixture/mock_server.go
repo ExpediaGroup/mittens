@@ -21,8 +21,10 @@ type PathResponseHandler struct {
 
 // StartGrpcTargetTestServer starts a gRPC server on the provided port
 // It uses the test.proto from grpc-testing: https://github.com/grpc/grpc-go/blob/40a879c23a0dc77234d17e0699d074d5fd151bd0/test/grpc_testing/test.proto
-func StartGrpcTargetTestServer(port int) *grpc.Server {
-	server := grpc.NewServer()
+func StartGrpcTargetTestServer(port int, callStats *CallStats) *grpc.Server {
+	server := grpc.NewServer(
+		grpc.UnaryInterceptor(callStats.UnaryInterceptor()),
+	)
 	grpc_testing.RegisterTestServiceServer(server, &grpc_testing.UnimplementedTestServiceServer{})
 	reflection.Register(server)
 
