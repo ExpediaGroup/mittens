@@ -30,12 +30,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var mockHttpServerPort int
+var mockGrpcServerPort int
 var mockHttpServer *http.Server
 var mockGrpcServer *grpc.Server
 var httpInvocations = 0
+var grpcCallStats = fixture.NewCallStats()
 var decompressedBody = ""
 
 func TestMain(m *testing.M) {
@@ -150,14 +154,57 @@ func TestHttp(t *testing.T) {
 	cmd.RunCmdRoot()
 
 	assert.Greater(t, httpInvocations, 1, "Assert that we made some calls to the http service")
-	// TODO: validate grpc invocations
+	assert.Equal(t, len(grpcCallStats.StatusesByMethod), 0, "Assert that no calls were made to the gRPC server")
 
 	readyFileExists, err := probe.FileExists("ready")
 	require.NoError(t, err)
 	assert.True(t, readyFileExists)
 }
 
-func TestGrpcAndHttp(t *testing.T) {
+func TestGrpcAndHttpWithVariousReflectionAPICombinations(t *testing.T) {
+	testConfigs := []struct {
+		name      string
+		setupFunc func(*fixture.CallStats) (*grpc.Server, int)
+	}{
+		{
+			"Run with v1 and v1alpha Reflection API support",
+			nil,
+		},
+		{
+			"Run only with v1 Reflection API support",
+			func(callStats *fixture.CallStats) (*grpc.Server, int) {
+				return fixture.StartGrpcTargetTestServerReflectionV1(callStats)
+			},
+		},
+		{
+			"Run only with v1alpha Reflection API support",
+			func(callStats *fixture.CallStats) (*grpc.Server, int) {
+				return fixture.StartGrpcTargetTestServerReflectionV1Alpha(callStats)
+			},
+		},
+	}
+
+	for _, testConfig := range testConfigs {
+		t.Run(testConfig.name, func(t *testing.T) {
+			var callStats *fixture.CallStats
+			var server *grpc.Server
+			var port int
+
+			if testConfig.setupFunc != nil {
+				callStats = fixture.NewCallStats()
+				server, port = testConfig.setupFunc(callStats)
+				defer server.GracefulStop()
+			} else {
+				callStats = grpcCallStats
+				port = mockGrpcServerPort
+			}
+
+			testGrpcAndHttp(t, port, callStats)
+		})
+	}
+}
+
+func testGrpcAndHttp(t *testing.T, grpcPort int, grpcCallStats *fixture.CallStats) {
 	t.Cleanup(func() {
 		cleanup()
 	})
@@ -165,7 +212,7 @@ func TestGrpcAndHttp(t *testing.T) {
 	os.Args = []string{
 		"mittens",
 		"-file-probe-enabled=true",
-		"-target-grpc-port=50051",
+		fmt.Sprintf("-target-grpc-port=%d", grpcPort),
 		// FIXME: for some reason we need to set both ports?
 		fmt.Sprintf("-target-http-port=%d", mockHttpServerPort),
 		fmt.Sprintf("-target-readiness-port=%d", mockHttpServerPort),
@@ -184,7 +231,12 @@ func TestGrpcAndHttp(t *testing.T) {
 	cmd.RunCmdRoot()
 
 	assert.Greater(t, httpInvocations, 1, "Assert that we made some calls to the http service")
-	// TODO: validate grpc invocations
+
+	assert.GreaterOrEqual(t, len(grpcCallStats.StatusesByMethod["/grpc.testing.TestService/EmptyCall"]), 1, "Assert that some calls were made to the gRPC server")
+	assert.True(t, allGrpcStatusesMatch("/grpc.testing.TestService/EmptyCall", codes.Unimplemented, grpcCallStats.StatusesByMethod), "Assert that all statuses are 'Unimplemented'")
+
+	assert.GreaterOrEqual(t, len(grpcCallStats.StatusesByMethod["/grpc.testing.TestService/UnaryCall"]), 1, "Assert that some calls were made to the gRPC server")
+	assert.True(t, allGrpcStatusesMatch("/grpc.testing.TestService/UnaryCall", codes.Unimplemented, grpcCallStats.StatusesByMethod), "Assert that all statuses are 'Unimplemented'")
 
 	readyFileExists, err := probe.FileExists("ready")
 	require.NoError(t, err)
@@ -262,9 +314,8 @@ func setup() {
 		},
 	})
 
-	// FIXME: should run on a random/free port
 	fmt.Println("Starting up grpc server")
-	mockGrpcServer = fixture.StartGrpcTargetTestServer(50051)
+	mockGrpcServer, mockGrpcServerPort = fixture.StartGrpcTargetTestServer(grpcCallStats)
 }
 
 func teardown() {
@@ -279,10 +330,26 @@ func teardown() {
 func cleanup() {
 	httpInvocations = 0
 
+	grpcCallStats.StatusesByMethod = make(map[string][]*status.Status)
+
 	if fileExists, err := probe.FileExists("alive"); err == nil && fileExists {
 		probe.DeleteFile("alive")
 	}
 	if fileExists, err := probe.FileExists("ready"); err == nil && fileExists {
 		probe.DeleteFile("ready")
 	}
+}
+
+func allGrpcStatusesMatch(method string, expected codes.Code, statusesByMethod map[string][]*status.Status) bool {
+	statuses, exists := statusesByMethod[method]
+	if !exists || len(statuses) == 0 {
+		return false
+	}
+
+	for _, status := range statuses {
+		if status.Code() != expected {
+			return false
+		}
+	}
+	return true
 }
