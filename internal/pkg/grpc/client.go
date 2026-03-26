@@ -18,7 +18,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"mittens/internal/pkg/placeholders"
 	"mittens/internal/pkg/response"
 	"os"
@@ -66,10 +66,10 @@ func (c *Client) Connect(headers []string) error {
 	// Added to provide more information if a connection error occurs
 	dialOptions := []grpc.DialOption{grpc.WithBlock(), grpc.WithReturnConnectionError()}
 	if c.insecure {
-		log.Print("ignoring gRPC server SSL/TLS authentication")
+		slog.Info("Ignoring gRPC server SSL/TLS authentication")
 		dialOptions = append(dialOptions, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
-		log.Print("using gRPC server SSL/TLS authentication")
+		slog.Info("Using gRPC server SSL/TLS authentication")
 		tlsConf, err := grpcurl.ClientTLSConfig(c.insecure, "", "", "")
 		if err != nil {
 			return fmt.Errorf("failed to create TLS config: %v", err)
@@ -87,7 +87,7 @@ func (c *Client) Connect(headers []string) error {
 	reflectionClient := grpcreflect.NewClientAuto(contextWithMetadata, conn)
 	descriptorSource := grpcurl.DescriptorSourceFromServer(contextWithMetadata, reflectionClient)
 
-	log.Print("gRPC client connected")
+	slog.Info("gRPC client connected")
 	c.conn = conn
 	c.connClose = func() error { cancel(); return conn.Close() }
 	c.descriptorSource = descriptorSource
@@ -103,7 +103,7 @@ func (c *Client) SendRequest(serviceMethod string, message string, headers []str
 	// TODO - create generic parser and formatter for any request, can we use text parser/formatter?
 	requestParser, formatter, err := grpcurl.RequestParserAndFormatter("json", c.descriptorSource, in, grpcurl.FormatOptions{})
 	if err != nil {
-		log.Printf("Cannot construct request parser and formatter for json")
+		slog.Error("Cannot construct request parser and formatter for json")
 		// FIXME FATAL
 		return response.Response{Duration: time.Duration(0), Err: err, Type: respType}
 	}
@@ -123,7 +123,7 @@ func (c *Client) SendRequest(serviceMethod string, message string, headers []str
 	}
 
 	if c.conn == nil {
-		log.Printf("No connection available. Skip making request.")
+		slog.Warn("No connection available. Skip making request.")
 		return response.Response{Duration: time.Duration(0), Err: errors.New("no connection available"), Type: respType}
 	}
 
@@ -131,7 +131,7 @@ func (c *Client) SendRequest(serviceMethod string, message string, headers []str
 	err = grpcurl.InvokeRPC(ctx, c.descriptorSource, c.conn, serviceMethod, interpolatedHeaders, loggingEventHandler, requestParser.Next)
 	endTime := time.Now()
 	if err != nil {
-		log.Printf("grpc response error: %s", err)
+		slog.Error("gRPC response error", "error", err)
 		return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: respType}
 	}
 	return response.Response{Duration: endTime.Sub(startTime), Err: nil, Type: respType}
@@ -146,6 +146,6 @@ func (h eventHandler) OnReceiveResponse(msg proto.Message) {
 
 // Close calling close on a client that has not established connection does not return an error.
 func (c Client) Close() error {
-	log.Print("Closing gRPC client connection")
+	slog.Debug("Closing gRPC client connection")
 	return c.connClose()
 }

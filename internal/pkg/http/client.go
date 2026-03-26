@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
+	"log/slog"
 	"mittens/internal/pkg/placeholders"
 	"mittens/internal/pkg/response"
 	"net"
@@ -84,7 +84,7 @@ func (c Client) SendRequest(method, path string, headers map[string]string, requ
 	url := fmt.Sprintf("%s/%s", c.host, strings.TrimLeft(path, "/"))
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
-		log.Printf("Failed to create request: %s %s: %v", method, url, err)
+		slog.Error("Failed to create request", "method", method, "url", url, "error", err)
 		return response.Response{Duration: time.Duration(0), Err: err, Type: respType}
 	}
 	if req.Body != nil {

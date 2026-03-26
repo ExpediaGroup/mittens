@@ -15,7 +15,7 @@
 package warmup
 
 import (
-	"log"
+	"log/slog"
 	"maps"
 	"math/rand"
 	"mittens/internal/pkg/grpc"
@@ -99,7 +99,7 @@ func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, maxDurationSecon
 	if hasHttpRequests {
 		for i := 1; i <= w.Concurrency; i++ {
 			waitForRampUp(rampUpInterval, i)
-			log.Printf("Spawning new go routine for HTTP requests")
+			slog.Debug("Spawning new goroutine for HTTP requests")
 			wg.Add(1)
 			go safe.Do(func() {
 				w.HTTPWarmupWorker(&wg, w.GetWarmupHTTPRequests(maxDurationSeconds), w.HttpHeaders, w.RequestDelayMilliseconds, requestsSentCounter)
@@ -109,15 +109,15 @@ func (w Warmup) Run(hasHttpRequests bool, hasGrpcRequests bool, maxDurationSecon
 
 	if hasGrpcRequests {
 		// connect to gRPC server once and only if there are gRPC requests
-		log.Print("gRPC client connecting...")
+		slog.Info("gRPC client connecting")
 		connErr := w.Target.grpcClient.Connect(w.HttpHeaders)
 
 		if connErr != nil {
-			log.Printf("gRPC client connect error: %v", connErr)
+			slog.Error("gRPC client connect error", "error", connErr)
 		} else {
 			for i := 1; i <= w.Concurrency; i++ {
 				waitForRampUp(rampUpInterval, i)
-				log.Printf("Spawning new go routine for gRPC requests")
+				slog.Debug("Spawning new goroutine for gRPC requests")
 				wg.Add(1)
 				go safe.Do(func() {
 					w.GrpcWarmupWorker(&wg, w.GetWarmupGrpcRequests(maxDurationSeconds), w.HttpHeaders, w.RequestDelayMilliseconds, requestsSentCounter)
@@ -141,14 +141,14 @@ func (w Warmup) HTTPWarmupWorker(wg *sync.WaitGroup, requests <-chan http.Reques
 		resp := w.Target.httpClient.SendRequest(request.Method, request.Path, headersMap, request.Body)
 
 		if resp.Err != nil {
-			log.Printf("🔴 Error in request for %s: %v", request.Path, resp.Err)
+			slog.Error("HTTP request failed", "path", request.Path, "error", resp.Err)
 		} else {
 			*requestsSentCounter++
 
 			if resp.StatusCode/100 == 2 {
-				log.Printf("🟢 %s response\t%d ms\t%v\t%s\t%s", resp.Type, resp.Duration/time.Millisecond, resp.StatusCode, request.Method, request.Path)
+				slog.Info("HTTP response", "type", resp.Type, "duration_ms", int64(resp.Duration/time.Millisecond), "status", resp.StatusCode, "method", request.Method, "path", request.Path)
 			} else {
-				log.Printf("🔴 %s response\t%d ms\t%v\t%s\t%s", resp.Type, resp.Duration/time.Millisecond, resp.StatusCode, request.Method, request.Path)
+				slog.Warn("HTTP response", "type", resp.Type, "duration_ms", int64(resp.Duration/time.Millisecond), "status", resp.StatusCode, "method", request.Method, "path", request.Path)
 			}
 		}
 	}
@@ -163,10 +163,10 @@ func (w Warmup) GrpcWarmupWorker(wg *sync.WaitGroup, requests <-chan grpc.Reques
 		resp := w.Target.grpcClient.SendRequest(request.ServiceMethod, request.Message, headers, false)
 
 		if resp.Err != nil {
-			log.Printf("🔴 Error in request for %s: %v", request.ServiceMethod, resp.Err)
+			slog.Error("gRPC request failed", "service_method", request.ServiceMethod, "error", resp.Err)
 		} else {
 			*requestsSentCounter++
-			log.Printf("🟢 %s response\t%d ms %s", resp.Type, resp.Duration/time.Millisecond, request.ServiceMethod)
+			slog.Info("gRPC response", "type", resp.Type, "duration_ms", int64(resp.Duration/time.Millisecond), "service_method", request.ServiceMethod)
 		}
 
 	}

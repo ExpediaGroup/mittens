@@ -16,8 +16,9 @@ package cmd
 
 import (
 	"flag"
-	"log"
+	"log/slog"
 	"mittens/cmd/flags"
+	"mittens/internal/pkg/logging"
 	"mittens/internal/pkg/probe"
 	"mittens/internal/pkg/safe"
 	"mittens/internal/pkg/warmup"
@@ -33,6 +34,10 @@ func CreateConfig() {
 	opts = &flags.Root{}
 	opts.InitFlags()
 	flag.Parse()
+
+	if err := logging.Setup(opts.LogLevel, opts.LogFormat, opts.LogDateTimeFormat); err != nil {
+		slog.Error("Failed to configure logging, using defaults", "error", err)
+	}
 }
 
 // RunCmdRoot runs the main logic
@@ -53,17 +58,17 @@ func run() int {
 	var validationError bool
 	httpRequests, err := opts.GetWarmupHTTPRequests()
 	if err != nil {
-		log.Printf("invalid HTTP options: %v", err)
+		slog.Error("Invalid HTTP options", "error", err)
 		validationError = true
 	}
 	grpcRequests, err := opts.GetWarmupGrpcRequests()
 	if err != nil {
-		log.Printf("invalid grpc options: %v", err)
+		slog.Error("Invalid gRPC options", "error", err)
 		validationError = true
 	}
 	targetOptions, err := opts.GetWarmupTargetOptions()
 	if err != nil {
-		log.Printf("invalid target options: %v", err)
+		slog.Error("Invalid target options", "error", err)
 		validationError = true
 	}
 
@@ -95,14 +100,14 @@ func run() int {
 			if err := target.WaitForReadinessProbe(maxReadinessWaitDurationInSeconds, opts.GetWarmupHTTPHeaders()); err == nil {
 				elapsed := time.Since(start).Seconds()
 
-				log.Printf("💚 Target took %d second(s) to become ready", int(elapsed))
+				slog.Info("Target is ready", "elapsed_seconds", int(elapsed))
 
 				globalMaxDurationSecondsLeft := opts.MaxDurationSeconds - int(elapsed)
 
 				maxDurationInSeconds := Min(globalMaxDurationSecondsLeft, opts.MaxWarmupDurationSeconds)
 
 				if maxDurationInSeconds < opts.MaxWarmupDurationSeconds {
-					log.Printf("⚠️ Warmup requests will only run for %d seconds instead of the configured %d seconds as to meet the global maximum duration of %d seconds", maxDurationInSeconds, opts.MaxWarmupDurationSeconds, opts.MaxDurationSeconds)
+					slog.Warn("Warmup duration capped by global maximum", "actual_seconds", maxDurationInSeconds, "configured_seconds", opts.MaxWarmupDurationSeconds, "max_duration_seconds", opts.MaxDurationSeconds)
 				}
 
 				wp := warmup.Warmup{
@@ -117,14 +122,14 @@ func run() int {
 
 				wp.Run(hasHttpRequests, hasGrpcRequests, maxDurationInSeconds, &requestsSentCounter)
 			} else {
-				log.Print("Target still not ready. Giving up!")
+				slog.Error("Target still not ready. Giving up!")
 			}
 		}
 		c1 <- true
 	})
 
 	<-c1
-	log.Println("🟢 Warmup completed")
+	slog.Info("Warmup completed")
 	return requestsSentCounter
 }
 
@@ -147,12 +152,12 @@ func block() {
 // The latter only happens if mittens did not send any requests and the user allows the readiness to fail.
 func postProcess(requestsSentCounter int) {
 	if opts.FailReadiness && requestsSentCounter == 0 {
-		log.Print("🛑 Warmup did not run. Mittens readiness probe will fail 🙁")
+		slog.Error("Warmup did not run. Mittens readiness probe will fail")
 	} else {
 		if requestsSentCounter == 0 {
-			log.Print("🛑 Warm up finished but no requests were sent 🙁")
+			slog.Warn("Warmup finished but no requests were sent")
 		} else {
-			log.Printf("Warm up finished 😊 Approximately %d reqs were sent", requestsSentCounter)
+			slog.Info("Warmup finished", "requests_sent", requestsSentCounter)
 		}
 
 		if opts.FileProbe.Enabled {

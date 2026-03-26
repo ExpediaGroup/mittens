@@ -17,29 +17,28 @@
 package probe
 
 import (
-	"io/ioutil"
-	"log"
+	"log/slog"
 	"os"
 )
 
 // WriteFile writes sample content to a file. This file can be used as a liveness/readiness check e.g. in Kubernetes.
 func WriteFile(file string) {
-	log.Printf("Writing file: %s", file)
+	slog.Debug("Writing file", "path", file)
 
 	fileBytes := []byte("foo bar")
 
-	if err := ioutil.WriteFile(file, fileBytes, 0644); err != nil {
-		log.Printf("Writing to file failed with error: %v", err)
+	if err := os.WriteFile(file, fileBytes, 0644); err != nil {
+		slog.Error("Writing to file failed", "path", file, "error", err)
 		return
 	}
-	log.Printf("Wrote file: %s", file)
+	slog.Debug("Wrote file", "path", file)
 }
 
 // DeleteFile removes the named file and logs an error in case of issues.
 func DeleteFile(path string) {
 	var err = os.Remove(path)
 	if err != nil {
-		log.Printf("File not deleted")
+		slog.Warn("File not deleted", "path", path, "error", err)
 	}
 }
 

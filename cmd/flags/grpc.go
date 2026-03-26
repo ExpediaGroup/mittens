@@ -17,7 +17,7 @@ package flags
 import (
 	"flag"
 	"fmt"
-	"log"
+	"log/slog"
 	"mittens/internal/pkg/grpc"
 )
 
@@ -35,7 +35,7 @@ func (g *Grpc) initFlags() {
 }
 
 func (g *Grpc) getWarmupGrpcRequests() ([]grpc.Request, error) {
-	log.Print(g.Requests)
+	slog.Debug("gRPC requests", "requests", g.Requests)
 	return toGrpcRequests(g.Requests)
 }
 

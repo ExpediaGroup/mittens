@@ -32,6 +32,9 @@ type Root struct {
 	ConcurrencyTargetSeconds int
 	ExitAfterWarmup          bool
 	FailReadiness            bool
+	LogLevel                 string
+	LogFormat                string
+	LogDateTimeFormat        string
 	FileProbe
 	Target
 	HTTP
@@ -54,6 +57,9 @@ func (r *Root) InitFlags() {
 	flag.IntVar(&r.ConcurrencyTargetSeconds, "concurrency-target-seconds", 0, "Time taken to reach expected concurrency. This is useful to ramp up traffic.")
 	flag.BoolVar(&r.ExitAfterWarmup, "exit-after-warmup", false, "If warm up process should finish after completion. This is useful to prevent container restarts.")
 	flag.BoolVar(&r.FailReadiness, "fail-readiness", false, "If set to true readiness will fail if no requests were sent.")
+	flag.StringVar(&r.LogLevel, "log-level", "info", "Log level: debug, info, warn, error")
+	flag.StringVar(&r.LogFormat, "log-format", "text", "Log format: text, json")
+	flag.StringVar(&r.LogDateTimeFormat, "log-datetime-format", "iso8601", "Log datetime format: iso8601, rfc3339, rfc3339nano, epoch")
 
 	r.FileProbe.initFlags()
 	r.Target.initFlags()

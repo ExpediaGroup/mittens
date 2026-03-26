@@ -15,14 +15,14 @@
 package safe
 
 import (
-	"log"
+	"log/slog"
 )
 
 // Do wraps a function with recover logic to catch unexpected panics.
 func Do(f func()) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println("Unexpected panic was caught:", err)
+			slog.Error("Unexpected panic was caught", "error", err)
 		}
 	}()
 	f()
@@ -33,7 +33,7 @@ func Do(f func()) {
 func DoAndReturn(f func() int, fallback int) (result int) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println("Unexpected panic was caught:", err)
+			slog.Error("Unexpected panic was caught", "error", err)
 			result = fallback
 		}
 	}()
