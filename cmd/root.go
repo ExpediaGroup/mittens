@@ -22,6 +22,8 @@ import (
 	"mittens/internal/pkg/safe"
 	"mittens/internal/pkg/warmup"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -135,11 +137,29 @@ func Min(x, y int) int {
 	return x
 }
 
-// block blocks forever unless `-exit-after-warmup` is set to true
+// block keeps the process alive after warm-up—so the container stays up and
+// its probe files remain—until the orchestrator asks it to stop. It returns
+// immediately when `-exit-after-warmup` is set.
+//
+// It waits for SIGINT/SIGTERM rather than parking on a bare `select {}`. Once
+// warm-up finishes every other goroutine has wound down, so an empty select
+// would be the only goroutine left and Go's runtime aborts the process with
+// "all goroutines are asleep - deadlock!" the moment it goes idle (see #366).
+// A blocked signal receive is wakeable, so the deadlock detector never fires,
+// and it lets the process exit gracefully when the signal arrives.
 func block() {
-	if !opts.ExitAfterWarmup {
-		select {}
+	if opts.ExitAfterWarmup {
+		return
 	}
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+	blockUntilSignal(sig)
+}
+
+// blockUntilSignal blocks until a signal is received. It is kept separate from
+// block so the waiting behaviour can be tested without sending real signals.
+func blockUntilSignal(sig <-chan os.Signal) {
+	<-sig
 }
 
 // postProcess includes steps that run once the warmup finishes.
