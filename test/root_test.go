@@ -15,6 +15,7 @@
 package test
 
 import (
+	"bytes"
 	"compress/gzip"
 	"context"
 	"fmt"
@@ -24,6 +25,9 @@ import (
 	"mittens/internal/pkg/probe"
 	"net/http"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"syscall"
 	"testing"
 	"time"
 
@@ -271,6 +275,65 @@ func TestCompressWithGZip(t *testing.T) {
 
 	assert.Greater(t, httpInvocations, 1, "Assert that we made some calls to the http service")
 	assert.Equal(t, requestBody, decompressedBody, "Assert that server-side decompressed body is equal to client request body")
+}
+
+// TestKeepAliveExitsGracefullyOnSigterm runs the built binary the way a
+// Kubernetes sidecar does: warm-up finishes (here the target never becomes
+// ready, so no requests are sent) and the process is left idle with
+// -exit-after-warmup unset. A bare `select {}` keep-alive would abort with
+// "all goroutines are asleep - deadlock!" once idle; the signal-based wait must
+// instead stay up and then exit cleanly on SIGTERM — the signal kubelet
+// delivers when it terminates a pod.
+func TestKeepAliveExitsGracefullyOnSigterm(t *testing.T) {
+	bin := filepath.Join(t.TempDir(), "mittens")
+	build := exec.Command("go", "build", "-o", bin, ".")
+	build.Dir = ".."
+	build.Env = append(os.Environ(), "CGO_ENABLED=0")
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("failed to build binary: %v\n%s", err, out)
+	}
+
+	// Point readiness at a port nothing listens on so the target never becomes
+	// ready: warm-up gives up quickly and the process goes idle.
+	proc := exec.Command(bin,
+		"-http-requests=get:/hello-world",
+		"-target-readiness-port=9999",
+		"-target-readiness-http-path=/non-existent",
+		"-max-readiness-wait-seconds=1",
+		"-max-duration-seconds=2",
+	)
+	var out bytes.Buffer
+	proc.Stdout = &out
+	proc.Stderr = &out
+	if err := proc.Start(); err != nil {
+		t.Fatalf("failed to start binary: %v", err)
+	}
+
+	waitErr := make(chan error, 1)
+	go func() { waitErr <- proc.Wait() }()
+
+	// Once idle the process must stay alive — a bare select{} would already have
+	// deadlocked and exited by now.
+	select {
+	case err := <-waitErr:
+		t.Fatalf("process exited before receiving a signal (deadlock regression?): %v\n%s", err, out.String())
+	case <-time.After(3 * time.Second):
+	}
+
+	// Kubernetes terminates a pod with SIGTERM; the container must exit promptly
+	// and cleanly (status 0).
+	if err := proc.Process.Signal(syscall.SIGTERM); err != nil {
+		t.Fatalf("failed to send SIGTERM: %v", err)
+	}
+	select {
+	case err := <-waitErr:
+		if err != nil {
+			t.Fatalf("process did not exit cleanly on SIGTERM: %v\n%s", err, out.String())
+		}
+	case <-time.After(5 * time.Second):
+		_ = proc.Process.Kill()
+		t.Fatalf("process did not exit within 5s of SIGTERM\n%s", out.String())
+	}
 }
 
 func setup() {

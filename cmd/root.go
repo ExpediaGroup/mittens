@@ -137,28 +137,17 @@ func Min(x, y int) int {
 	return x
 }
 
-// shutdownSignals are the signals block() waits for to keep the process alive
-// after warm-up. Kept as a single source of truth so block() and its tests
-// cannot drift on which signals trigger shutdown.
-var shutdownSignals = []os.Signal{syscall.SIGINT, syscall.SIGTERM}
-
-// block keeps the process alive until a shutdown signal so the container stays
-// up after warm-up and shuts down gracefully. Waiting on a signal (rather than
-// a bare `select {}`) avoids tripping Go's deadlock detector once the process
-// is idle (see #366). Returns immediately when `-exit-after-warmup` is set.
+// block keeps the process alive until SIGINT/SIGTERM so the container stays up
+// after warm-up and shuts down gracefully. Waiting on a signal (rather than a
+// bare `select {}`) avoids tripping Go's deadlock detector once the process is
+// idle (see #366). Returns immediately when `-exit-after-warmup` is set.
 func block() {
 	if opts.ExitAfterWarmup {
 		return
 	}
 	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, shutdownSignals...)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 	defer signal.Stop(sig)
-	blockUntilSignal(sig)
-}
-
-// blockUntilSignal blocks until a signal is received. It is kept separate from
-// block so the waiting behaviour can be tested without sending real signals.
-func blockUntilSignal(sig <-chan os.Signal) {
 	<-sig
 }
 
