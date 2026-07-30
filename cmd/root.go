@@ -22,6 +22,8 @@ import (
 	"mittens/internal/pkg/safe"
 	"mittens/internal/pkg/warmup"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -135,11 +137,18 @@ func Min(x, y int) int {
 	return x
 }
 
-// block blocks forever unless `-exit-after-warmup` is set to true
+// block keeps the process alive until SIGINT/SIGTERM so the container stays up
+// after warm-up and shuts down gracefully. Waiting on a signal (rather than a
+// bare `select {}`) avoids tripping Go's deadlock detector once the process is
+// idle (see #366). Returns immediately when `-exit-after-warmup` is set.
 func block() {
-	if !opts.ExitAfterWarmup {
-		select {}
+	if opts.ExitAfterWarmup {
+		return
 	}
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+	defer signal.Stop(sig)
+	<-sig
 }
 
 // postProcess includes steps that run once the warmup finishes.
