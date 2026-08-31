@@ -55,7 +55,8 @@ func NewClient(host string, insecure bool, timeoutMilliseconds int, protocol Pro
 	switch protocol {
 	case HTTP2:
 		client.Transport = &http2.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+			TLSClientConfig:   &tls.Config{InsecureSkipVerify: insecure},
+			MaxHeaderListSize: 0xffffffff, // avoid sending SETTINGS_MAX_HEADER_LIST_SIZE (0x6) via SETTINGS frame
 		}
 	case H2C:
 		client.Transport = &http2.Transport{
@@ -63,6 +64,7 @@ func NewClient(host string, insecure bool, timeoutMilliseconds int, protocol Pro
 			DialTLS: func(network, addr string, cfg *tls.Config) (net.Conn, error) {
 				return net.Dial(network, addr)
 			},
+			MaxHeaderListSize: 0xffffffff, // avoid sending SETTINGS_MAX_HEADER_LIST_SIZE (0x6) via SETTINGS frame
 		}
 	default:
 		client.Transport = &http.Transport{
@@ -80,7 +82,7 @@ func (c Client) SendRequest(method, path string, headers map[string]string, requ
 	if requestBody != nil {
 		body = bytes.NewBufferString(*requestBody)
 	}
-	
+
 	url := fmt.Sprintf("%s/%s", c.host, strings.TrimLeft(path, "/"))
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
@@ -89,7 +91,7 @@ func (c Client) SendRequest(method, path string, headers map[string]string, requ
 	}
 	if req.Body != nil {
 		defer req.Body.Close()
-	} 
+	}
 	for k, v := range headers {
 		if strings.EqualFold(k, "Host") {
 			req.Host = v
