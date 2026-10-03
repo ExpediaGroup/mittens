@@ -70,7 +70,7 @@ const config = {
       copyright: `Copyright © ${new Date().getFullYear()} Expedia, Inc.`,
     },
     prism: {
-      theme: require('prism-react-renderer').themes.github,
+      theme: require('prism-react-renderer/themes/github'),
     },
   },
 };
