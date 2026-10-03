@@ -163,7 +163,7 @@ const config = {
       copyright: `Copyright © ${new Date().getFullYear()} Expedia, Inc.`,
     },
     prism: {
-      theme: require('prism-react-renderer').themes.github,
+      theme: require('prism-react-renderer/themes/github'),
     },
   },
 };
@@ -542,15 +542,7 @@ Update `engines` to:
 
 - [ ] **Step 2: Update `docusaurus.config.js` for v3's prism theme import shape**
 
-v3 changed how `prism-react-renderer` themes are imported. Replace in `themeConfig.prism`:
-
-```js
-    prism: {
-      theme: require('prism-react-renderer').themes.github,
-    },
-```
-
-with:
+Bumping `prism-react-renderer` from the v1.x line (used in Task 2, pinned `^1.3.5`, subpath-per-theme imports) to `^2.3.0` (Step 1 above) changes how themes are imported. Replace in `themeConfig.prism`:
 
 ```js
     prism: {
@@ -558,7 +550,15 @@ with:
     },
 ```
 
-(v2.x used `.themes.github`; confirm which shape the installed `prism-react-renderer` version actually exports by running `node -e "console.log(Object.keys(require('prism-react-renderer')))"` from `website/` after Task 6 Step 1's install — adjust to whichever shape matches if this differs.)
+with:
+
+```js
+    prism: {
+      theme: require('prism-react-renderer').themes.github,
+    },
+```
+
+(v1.x required the per-theme subpath import; v2.x+ exports a `themes` object instead. Confirm which shape the installed version actually exports by running `node -e "console.log(Object.keys(require('prism-react-renderer')))"` from `website/` after Task 6 Step 1's install — adjust to whichever shape matches if this differs.)
 
 - [ ] **Step 3: No commit this task** — verification (Task 6) must pass first.
 
