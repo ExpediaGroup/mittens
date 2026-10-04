@@ -37,6 +37,16 @@ const config = {
     ],
   ],
 
+  themes: [
+    [
+      '@easyops-cn/docusaurus-search-local',
+      {
+        hashed: true,
+        language: ['en'],
+      },
+    ],
+  ],
+
   themeConfig: {
     navbar: {
       title: 'Mittens',

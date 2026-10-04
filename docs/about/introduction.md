@@ -4,7 +4,7 @@ title: Introduction
 ---
 
 <h1 align="left">
-  <img width="300" alt="Mittens" src="../assets/mittens_logo.svg">
+  <img width="300" alt="Mittens" src="../assets/mittens_logo.svg" />
 </h1>
 
 Mittens is a warm-up routine for http applications over REST and gRPC.
