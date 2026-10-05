@@ -102,7 +102,7 @@ function UsersSection() {
         <div className={styles.usersRow}>
           {users.map((user) => (
             <a href={user.infoLink} key={user.caption} target="_blank" rel="noreferrer">
-              <img className={styles.userLogo} src={`${baseUrl}${user.image}`} alt={user.caption} />
+              <img className={styles.userLogo} src={`${baseUrl}${user.image}`} alt={user.caption} height={60} />
             </a>
           ))}
         </div>
