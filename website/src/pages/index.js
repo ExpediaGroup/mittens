@@ -97,7 +97,8 @@ function UsersSection() {
   return (
     <section className={styles.usersSection}>
       <div className="container">
-        <h2>Who's using Mittens?</h2>
+        <h2>Who is Using This?</h2>
+        <p>This project is used by:</p>
         <div className={styles.usersRow}>
           {users.map((user) => (
             <a href={user.infoLink} key={user.caption} target="_blank" rel="noreferrer">
