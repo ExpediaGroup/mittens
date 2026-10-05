@@ -29,3 +29,40 @@
 .userLogo {
   max-height: 60px;
 }
+
+.runAsSection {
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.runAsRow {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.runAsCard {
+  max-width: 280px;
+}
+
+.runAsIcon {
+  max-height: 80px;
+  margin-bottom: 0.5rem;
+}
+
+.featuresSection {
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.featuresList {
+  display: inline-block;
+  text-align: left;
+  margin-top: 1rem;
+}
+
+.moreUsers {
+  margin-top: 1rem;
+}

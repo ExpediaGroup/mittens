@@ -4,20 +4,8 @@ import Link from '@docusaurus/Link';
 import Layout from '@theme/Layout';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import useBaseUrl from '@docusaurus/useBaseUrl';
+import {users} from '../data/users';
 import styles from './index.module.css';
-
-const users = [
-  {
-    caption: 'Hotels.com',
-    image: 'img/hotels_logo.svg',
-    infoLink: 'https://www.hotels.com',
-  },
-  {
-    caption: 'Expedia Group',
-    image: 'img/expedia_group_logo.png',
-    infoLink: 'https://www.expediagroup.com/',
-  },
-];
 
 function HomepageHeader() {
   const {siteConfig} = useDocusaurusContext();
@@ -41,6 +29,69 @@ function HomepageHeader() {
   );
 }
 
+const runAsOptions = [
+  {
+    title: 'a standalone cmd tool',
+    image: 'img/cmd.svg',
+    content: 'Mittens can run as a standalone cmd tool to send requests over REST/gRPC.',
+  },
+  {
+    title: 'a linked Docker Container',
+    image: 'img/docker.png',
+    content: 'You can also run it as a Docker container linked to your main app.',
+  },
+  {
+    title: 'a Sidecar on Kubernetes',
+    image: 'img/kubernetes.png',
+    content: "Or even as a sidecar on Kubernetes, in the pod where your app's running.",
+  },
+];
+
+function RunAsSection() {
+  const baseUrl = useBaseUrl('/');
+  return (
+    <section className={styles.runAsSection}>
+      <div className="container">
+        <h2>Run it as:</h2>
+        <div className={styles.runAsRow}>
+          {runAsOptions.map((option) => (
+            <div className={styles.runAsCard} key={option.title}>
+              <img className={styles.runAsIcon} src={`${baseUrl}${option.image}`} alt={option.title} />
+              <h3>{option.title}</h3>
+              <p>{option.content}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const featureList = [
+  'Sends requests continuously for X seconds',
+  'Supports REST and gRPC',
+  'Supports HTTP/1.1, HTTP/2 and HTTP/2 Cleartext protocol for REST',
+  'Supports custom HTTP headers',
+  'Supports concurrent requests',
+  'Supports placeholders for random elements in requests',
+  'Provides files or/and endpoints that can be used as liveness/readiness probes in Kubernetes',
+];
+
+function FeaturesSection() {
+  return (
+    <section className={styles.featuresSection}>
+      <div className="container">
+        <h2>Features</h2>
+        <ul className={styles.featuresList}>
+          {featureList.map((feature) => (
+            <li key={feature}>{feature}</li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
 function UsersSection() {
   const baseUrl = useBaseUrl('/');
   return (
@@ -54,6 +105,11 @@ function UsersSection() {
             </a>
           ))}
         </div>
+        <div className={styles.moreUsers}>
+          <Link className="button button--secondary" to="/users">
+            More Mittens Users
+          </Link>
+        </div>
       </div>
     </section>
   );
@@ -65,6 +121,8 @@ export default function Home() {
     <Layout title={siteConfig.title} description={siteConfig.tagline}>
       <HomepageHeader />
       <main>
+        <RunAsSection />
+        <FeaturesSection />
         <UsersSection />
       </main>
     </Layout>

@@ -83,6 +83,10 @@ const config = {
             {label: 'GitHub', href: 'https://github.com/ExpediaGroup/mittens'},
           ],
         },
+        {
+          title: 'Community',
+          items: [{label: 'User Showcase', to: '/users'}],
+        },
       ],
       copyright: `Copyright © ${new Date().getFullYear()} Expedia, Inc.`,
     },
