@@ -421,6 +421,336 @@ Use this second version — it calls the hook once at the top level, which is co
 
 - [ ] **Step 4: No commit this task** — build verification (next task) must pass first; commits happen in Task 5 Step 4 for the whole Stage A swap.
 
+### Task 3 addendum (found post-hoc, after Task 6): homepage was missing two sections and a page
+
+The brainstorming step that produced this plan only read the first ~80 lines of the original `website/pages/en/index.js` (via `head -60`/`head -80` in exploration) and missed the rest of the file. Comparing the migrated site against the live production site (https://opensource.expediagroup.com/mittens/) after Task 6 was complete surfaced the gap: the original homepage has two more sections after the hero — a "Run it as:" section (3 deployment options: standalone cmd tool, linked Docker container, Kubernetes sidecar, each with an icon from `static/img/{cmd.svg,docker.png,kubernetes.png}`) and a "Features" section (7-item bullet list) — neither of which Task 3 recreated. Additionally, the original site has a separate `/users` page (`website/pages/en/users.js`, deleted by Task 2 with no v2/v3 replacement) listing the same user logos plus an "Add your company" edit link, linked from the homepage's showcase section and the site footer.
+
+- [ ] **Addendum Step 1: Extract shared user data**
+
+Create `website/src/data/users.js`:
+
+```js
+export const users = [
+  {
+    caption: 'Hotels.com',
+    image: 'img/hotels_logo.svg',
+    infoLink: 'https://www.hotels.com',
+  },
+  {
+    caption: 'Expedia Group',
+    image: 'img/expedia_group_logo.png',
+    infoLink: 'https://www.expediagroup.com/',
+  },
+];
+```
+
+Update `website/src/pages/index.js` to `import {users} from '../data/users';` instead of defining the array locally.
+
+- [ ] **Addendum Step 2: Add "Run it as:" and "Features" sections to `website/src/pages/index.js`**
+
+Add these two components (between `HomepageHeader` and `UsersSection` in the file, and render them in that order inside `<main>`):
+
+```jsx
+const runAsOptions = [
+  {
+    title: 'a standalone cmd tool',
+    image: 'img/cmd.svg',
+    content: 'Mittens can run as a standalone cmd tool to send requests over REST/gRPC.',
+  },
+  {
+    title: 'a linked Docker Container',
+    image: 'img/docker.png',
+    content: 'You can also run it as a Docker container linked to your main app.',
+  },
+  {
+    title: 'a Sidecar on Kubernetes',
+    image: 'img/kubernetes.png',
+    content: "Or even as a sidecar on Kubernetes, in the pod where your app's running.",
+  },
+];
+
+function RunAsSection() {
+  const baseUrl = useBaseUrl('/');
+  return (
+    <section className={styles.runAsSection}>
+      <div className="container">
+        <h2>Run it as:</h2>
+        <div className={styles.runAsRow}>
+          {runAsOptions.map((option) => (
+            <div className={styles.runAsCard} key={option.title}>
+              <img className={styles.runAsIcon} src={`${baseUrl}${option.image}`} alt={option.title} />
+              <h3>{option.title}</h3>
+              <p>{option.content}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const featureList = [
+  'Sends requests continuously for X seconds',
+  'Supports REST and gRPC',
+  'Supports HTTP/1.1, HTTP/2 and HTTP/2 Cleartext protocol for REST',
+  'Supports custom HTTP headers',
+  'Supports concurrent requests',
+  'Supports placeholders for random elements in requests',
+  'Provides files or/and endpoints that can be used as liveness/readiness probes in Kubernetes',
+];
+
+function FeaturesSection() {
+  return (
+    <section className={styles.featuresSection}>
+      <div className="container">
+        <h2>Features</h2>
+        <ul className={styles.featuresList}>
+          {featureList.map((feature) => (
+            <li key={feature}>{feature}</li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+```
+
+Update the `UsersSection`'s heading area to add a "More Mittens Users" link to the new `/users` page, right after the `usersRow` div:
+
+```jsx
+        <div className={styles.usersRow}>
+          {users.map((user) => (
+            <a href={user.infoLink} key={user.caption} target="_blank" rel="noreferrer">
+              <img className={styles.userLogo} src={`${baseUrl}${user.image}`} alt={user.caption} />
+            </a>
+          ))}
+        </div>
+        <div className={styles.moreUsers}>
+          <Link className="button button--secondary" to="/users">
+            More Mittens Users
+          </Link>
+        </div>
+```
+
+Update the default-exported `Home` component to render all three sections in order:
+
+```jsx
+export default function Home() {
+  const {siteConfig} = useDocusaurusContext();
+  return (
+    <Layout title={siteConfig.title} description={siteConfig.tagline}>
+      <HomepageHeader />
+      <main>
+        <RunAsSection />
+        <FeaturesSection />
+        <UsersSection />
+      </main>
+    </Layout>
+  );
+}
+```
+
+- [ ] **Addendum Step 3: Add CSS for the new sections to `website/src/pages/index.module.css`**
+
+```css
+.runAsSection {
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.runAsRow {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.runAsCard {
+  max-width: 280px;
+}
+
+.runAsIcon {
+  max-height: 80px;
+  margin-bottom: 0.5rem;
+}
+
+.featuresSection {
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.featuresList {
+  display: inline-block;
+  text-align: left;
+  margin-top: 1rem;
+}
+
+.moreUsers {
+  margin-top: 1rem;
+}
+```
+
+- [ ] **Addendum Step 4: Recreate the `/users` page at `website/src/pages/users.js`**
+
+```jsx
+import React from 'react';
+import Layout from '@theme/Layout';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import {users} from '../data/users';
+import styles from './index.module.css';
+
+export default function Users() {
+  const {siteConfig} = useDocusaurusContext();
+  const baseUrl = useBaseUrl('/');
+  return (
+    <Layout title={`${siteConfig.title} Users`} description="Who is using Mittens">
+      <main className="container margin-vert--lg">
+        <h1>Who is Using This?</h1>
+        <p>This project is used by:</p>
+        <div className={styles.usersRow}>
+          {users.map((user) => (
+            <a href={user.infoLink} key={user.caption} target="_blank" rel="noreferrer">
+              <img className={styles.userLogo} src={`${baseUrl}${user.image}`} alt={user.caption} />
+            </a>
+          ))}
+        </div>
+        <p>Are you using this project?</p>
+        <a
+          className="button button--secondary"
+          href="https://github.com/ExpediaGroup/mittens/edit/main/website/src/data/users.js"
+        >
+          Add your company
+        </a>
+      </main>
+    </Layout>
+  );
+}
+```
+
+- [ ] **Addendum Step 5: Add a footer link to the new `/users` page**
+
+In `website/docusaurus.config.js`'s `themeConfig.footer.links`, add a "User Showcase" entry alongside the existing "Get Started" link, e.g. under a `Community` column:
+
+```js
+        {
+          title: 'Community',
+          items: [{label: 'User Showcase', to: '/users'}],
+        },
+```
+
+- [ ] **Addendum Step 6: Verify and commit**
+
+`npm run build` (from `website/`) must still exit 0. `npm run serve` and re-check: homepage now shows hero → "Run it as:" (3 cards) → "Features" (7-item list) → "Who's using Mittens?" (2 logos + "More Mittens Users" link) → footer (with new "User Showcase" link); `/users` page renders the same 2 logos plus "Add your company". Commit this addendum's changes.
+
+### Footer addendum (found post-hoc, after the homepage addendum): swizzle Footer for full parity
+
+Comparing further against the live site and the original `website/core/Footer.js` (`git show main:website/core/Footer.js`) found the footer is still missing, beyond what config alone can express: a footer logo (mittens_intuit.svg) linking home, a GitHub "Star" button widget (stargazer count via the `buttons.github.io` script), and an "Expedia Group Open Source" logo+link below the link columns. Standard Docusaurus `themeConfig.footer` config can't render a third-party button widget or an extra logo outside the column grid — this requires ejecting (swizzling) the classic theme's `Footer` component.
+
+- [ ] **Footer addendum Step 1: Add the GitHub buttons script**
+
+In `website/docusaurus.config.js`, add a top-level `scripts` array (sibling to `presets`/`themeConfig`):
+
+```js
+  scripts: ['https://buttons.github.io/buttons.js'],
+```
+
+- [ ] **Footer addendum Step 2: Eject the Footer theme component**
+
+Create `website/src/theme/Footer/index.js`:
+
+```jsx
+import React from 'react';
+import Link from '@docusaurus/Link';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import {useThemeConfig} from '@docusaurus/theme-common';
+
+export default function Footer() {
+  const {siteConfig} = useDocusaurusContext();
+  const {footer} = useThemeConfig();
+  const footerIconUrl = useBaseUrl('img/mittens_intuit.svg');
+  const ossLogoUrl = useBaseUrl('img/expedia_oss_logo.png');
+
+  return (
+    <footer className={`footer footer--${footer?.style ?? 'dark'}`}>
+      <div className="container container-fluid">
+        <div className="footer__links">
+          <div className="footer__col">
+            <Link to="/" className="footer__link-item">
+              <img src={footerIconUrl} alt={siteConfig.title} width="66" height="58" />
+            </Link>
+          </div>
+          <div className="footer__col">
+            <div className="footer__title">Docs</div>
+            <ul className="footer__items">
+              <li className="footer__item">
+                <Link className="footer__link-item" to="/docs/about/introduction">
+                  Introduction
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div className="footer__col">
+            <div className="footer__title">Community</div>
+            <ul className="footer__items">
+              <li className="footer__item">
+                <Link className="footer__link-item" to="/users">
+                  User Showcase
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div className="footer__col">
+            <div className="footer__title">More</div>
+            <ul className="footer__items">
+              <li className="footer__item">
+                <Link className="footer__link-item" href="https://github.com/ExpediaGroup/mittens">
+                  GitHub
+                </Link>
+              </li>
+              <li className="footer__item">
+                <a
+                  className="github-button"
+                  href="https://github.com/ExpediaGroup/mittens"
+                  data-icon="octicon-star"
+                  data-count-href="/ExpediaGroup/mittens/stargazers"
+                  data-show-count="true"
+                  data-count-aria-label="# stargazers on GitHub"
+                  aria-label="Star this project on GitHub">
+                  Star
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <a
+          href="https://expediagroup.github.io"
+          target="_blank"
+          rel="noreferrer noopener"
+          className="egOpenSource">
+          <img src={ossLogoUrl} alt="Expedia Group Open Source" width="170" height="45" />
+        </a>
+        {footer?.copyright && (
+          <div className="footer__copyright">{footer.copyright}</div>
+        )}
+      </div>
+    </footer>
+  );
+}
+```
+
+This reuses `themeConfig.footer.style`/`footer.copyright` (already set in `docusaurus.config.js` from Task 2) via `useThemeConfig()`, so the copyright line stays config-driven — only the link columns and extra logos are now hardcoded in this component (matching the original v1 `Footer.js`, which was also hardcoded, not data-driven).
+
+- [ ] **Footer addendum Step 3: Remove the now-unused `themeConfig.footer.links` array**
+
+In `website/docusaurus.config.js`, the `footer.links` array (Docs/Community/More columns) is no longer read by anything — the ejected `Footer` component above hardcodes its own columns instead. Remove the `links: [...]` key from `themeConfig.footer`, leaving just `style` and `copyright`.
+
+- [ ] **Footer addendum Step 4: Verify and commit**
+
+`npm run build` must still exit 0. `npm run serve` and check the footer HTML: a footer logo image linking to `/`, three columns (Docs→Introduction, Community→User Showcase, More→GitHub + a `github-button` anchor), an Expedia Group Open Source logo/link below the columns, and the copyright line. Commit this addendum's changes.
+
 ---
 
 ### Task 4: Add local search plugin and verify the v2 build
