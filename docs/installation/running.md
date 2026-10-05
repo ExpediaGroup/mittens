@@ -11,25 +11,29 @@ You can also run it as a linked Docker container or even as a sidecar in Kuberne
 ## Run as a cmd application
 
 You can run the binary executable as follows:
-        
-    ./mittens -target-readiness-http-path=/health -target-grpc-port=6565 -max-duration-seconds=60 -concurrency=3 -http-request=get:/hotel/potatoes -grpc-requests=service/method:"{\"foo\":\"bar\", \"bar\":\"foo\"}"
+
+```
+./mittens -target-readiness-http-path=/health -target-grpc-port=6565 -max-duration-seconds=60 -concurrency=3 -http-request=get:/hotel/potatoes -grpc-requests=service/method:"{\"foo\":\"bar\", \"bar\":\"foo\"}"
+```
 
 ## Run as a linked Docker container
 
-    version: "2"
+```yaml
+version: "2"
 
-    services:
-    
-      foo:
-        image: lorem/ipsum:1.0
-        ports:
-          - "8080:8080"
-    
-      mittens:
-        image: expediagroup/mittens:latest
-        links:
-          - app
-        command: "-target-readiness-http-path=/health -target-grpc-port=6565 -max-duration-seconds=60 -concurrency=3 -http-requests=get:/hotel/potatoes -grpc-requests=service/method:{\"foo\":\"bar\", \"bar\":\"foo\"}"
+services:
+
+  foo:
+    image: lorem/ipsum:1.0
+    ports:
+      - "8080:8080"
+
+  mittens:
+    image: expediagroup/mittens:latest
+    links:
+      - app
+    command: "-target-readiness-http-path=/health -target-grpc-port=6565 -max-duration-seconds=60 -concurrency=3 -http-requests=get:/hotel/potatoes -grpc-requests=service/method:{\"foo\":\"bar\", \"bar\":\"foo\"}"
+```
 
 _Note_: If you use Docker for Mac/Windows you might need to set the target host (`target-http-host`, `target-grpc-host`) to `host.docker.internal` so that your container can resolve localhost. If you use an older version of Docker (< 18.03), the value will depend on your Operating System, e.g. `docker.for.mac.host.internal` or `docker.for.win.host.internal`. For `target-http-host`, you need to prefix the host with the scheme, e.g. `http://host.docker.internal`.
 
