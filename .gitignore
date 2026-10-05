@@ -18,3 +18,4 @@ website/.docusaurus
 website/i18n/*
 website/package-lock.json
 .superpowers/
+docs/superpowers/
