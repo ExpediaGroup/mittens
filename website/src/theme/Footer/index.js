@@ -13,15 +13,15 @@ export default function Footer() {
   return (
     <footer className={`footer footer--${footer?.style ?? 'dark'}`}>
       <div className="container container-fluid">
-        <div className="footer__links">
-          <div className="footer__col">
+        <div className="row footer__links">
+          <div className="col footer__col">
             <Link to="/" className="footer__link-item">
               <img src={footerIconUrl} alt={siteConfig.title} width="66" height="58" />
             </Link>
           </div>
-          <div className="footer__col">
+          <div className="col footer__col">
             <div className="footer__title">Docs</div>
-            <ul className="footer__items">
+            <ul className="footer__items clean-list">
               <li className="footer__item">
                 <Link className="footer__link-item" to="/docs/about/introduction">
                   Introduction
@@ -29,9 +29,9 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-          <div className="footer__col">
+          <div className="col footer__col">
             <div className="footer__title">Community</div>
-            <ul className="footer__items">
+            <ul className="footer__items clean-list">
               <li className="footer__item">
                 <Link className="footer__link-item" to="/users">
                   User Showcase
@@ -39,9 +39,9 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-          <div className="footer__col">
+          <div className="col footer__col">
             <div className="footer__title">More</div>
-            <ul className="footer__items">
+            <ul className="footer__items clean-list">
               <li className="footer__item">
                 <Link className="footer__link-item" href="https://github.com/ExpediaGroup/mittens">
                   GitHub
