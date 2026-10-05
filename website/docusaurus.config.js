@@ -14,6 +14,8 @@ const config = {
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
 
+  scripts: ['https://buttons.github.io/buttons.js'],
+
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
@@ -72,22 +74,6 @@ const config = {
     },
     footer: {
       style: 'dark',
-      links: [
-        {
-          title: 'Docs',
-          items: [{label: 'Get Started', to: '/docs/about/introduction'}],
-        },
-        {
-          title: 'More',
-          items: [
-            {label: 'GitHub', href: 'https://github.com/ExpediaGroup/mittens'},
-          ],
-        },
-        {
-          title: 'Community',
-          items: [{label: 'User Showcase', to: '/users'}],
-        },
-      ],
       copyright: `Copyright © ${new Date().getFullYear()} Expedia, Inc.`,
     },
     prism: {
