@@ -28,6 +28,13 @@ const config = {
           routeBasePath: 'docs',
           sidebarPath: './sidebars.js',
           editUrl: 'https://github.com/ExpediaGroup/mittens/edit/main/website/',
+          exclude: [
+            '**/_*.{js,jsx,ts,tsx,md,mdx}',
+            '**/_*/**',
+            '**/*.test.{js,jsx,ts,tsx}',
+            '**/__tests__/**',
+            'superpowers/**',
+          ],
         },
         blog: false,
         theme: {
