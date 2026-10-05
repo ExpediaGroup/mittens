@@ -28,6 +28,7 @@
 
 .userLogo {
   max-height: 60px;
+  width: auto;
 }
 
 .runAsSection {
