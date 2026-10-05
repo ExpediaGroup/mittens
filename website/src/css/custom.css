@@ -7,3 +7,9 @@
   --ifm-color-primary-lighter: #0000b2;
   --ifm-color-primary-lightest: #0000c9;
 }
+
+/* Matches the original v1 site's .nav-footer { background: #000099 } */
+[data-theme='light'] .footer--dark,
+[data-theme='dark'] .footer--dark {
+  --ifm-footer-background-color: #000099;
+}
