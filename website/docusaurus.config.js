@@ -57,6 +57,7 @@ const config = {
   ],
 
   themeConfig: {
+    image: 'img/mittens_logo.svg',
     navbar: {
       title: 'Mittens',
       logo: {

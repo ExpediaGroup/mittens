@@ -1,6 +1,7 @@
 ---
 id: contributing
 title: How to Contribute
+slug: /contributing/contributing
 ---
 
 If you would like to contribute code, fork the [GitHub repository](https://github.com/ExpediaGroup/mittens), create a branch, and send a Pull Request.
